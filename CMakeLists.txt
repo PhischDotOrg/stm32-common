@@ -47,7 +47,7 @@ if(("${STM32F4_BOARD}" STREQUAL "")
 endif()
 
 # Configure Board-specific Options
-include(boards/${STM32F4_BOARD}.cmake)
+include(boards/${STM32F4_BOARD}/stm32f4-board.cmake)
 
 ###############################################################################
 # If we're on an embedded system, include a CMake File that sets up the

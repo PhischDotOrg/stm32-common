@@ -53,13 +53,13 @@
 defined in linker script */
 .word  _sidata
 /* start address for the .data section. defined in linker script */  
-.word  _sdata
+.word  sdata
 /* end address for the .data section. defined in linker script */
-.word  _edata
+.word  edata
 /* start address for the .bss section. defined in linker script */
-.word  _sbss
+.word  sbss
 /* end address for the .bss section. defined in linker script */
-.word  _ebss
+.word  ebss
 /* stack used for SystemInit_ExtMemCtl; always internal RAM used */
 
 /**
@@ -75,7 +75,7 @@ defined in linker script */
   .weak  Reset_Handler
   .type  Reset_Handler, %function
 Reset_Handler:  
-  ldr   sp, =_estack     /* set stack pointer */
+  ldr   sp, = eInitStack /* set stack pointer */
 
 /* Copy the data segment initializers from flash to SRAM */  
   movs  r1, #0
@@ -88,12 +88,12 @@ CopyDataInit:
   adds  r1, r1, #4
     
 LoopCopyDataInit:
-  ldr  r0, =_sdata
-  ldr  r3, =_edata
+  ldr  r0, =sdata
+  ldr  r3, =edata
   adds  r2, r0, r1
   cmp  r2, r3
   bcc  CopyDataInit
-  ldr  r2, =_sbss
+  ldr  r2, =sbss
   b  LoopFillZerobss
 /* Zero fill the bss segment. */  
 FillZerobss:
@@ -101,21 +101,39 @@ FillZerobss:
   str  r3, [r2], #4
     
 LoopFillZerobss:
-  ldr  r3, = _ebss
+  ldr  r3, = ebss
   cmp  r2, r3
   bcc  FillZerobss
 
 /* Call the clock system intitialization function.*/
   bl  SystemInit   
 /* Call static constructors */
-  //bl __libc_init_array
+/* Commented out by PhS on Oct 17th, 2017
+    bl __libc_init_array
+ */
+/*
+ * Call static constructors.
+ * Code sample obtained on Oct 6th, 2013 via
+ *    http://forums.arm.com/index.php?/topic/14352-calling-static-ctor-and-dtor/
+ */
+CtorInit:
+    ldr r4, =_ctors_start_
+    ldr r5, =_ctors_end_
+    cmp r4,r5
+    beq CtorInitDone
+CtorInitNext:
+    ldmdb r5!, {r2}
+    blx r2
+    cmp r4,r5
+    blo CtorInitNext
+CtorInitDone:
 /* Call the application's entry point.*/
-  //bl  main
+  bl  main
   // Calling the crt0 'cold-start' entry point. There __libc_init_array is called
   // and when existing hardware_init_hook() and software_init_hook() before 
   // starting main(). software_init_hook() is available and has to be called due 
   // to initializsation when using rtos.
-  bl _start
+  // bl _start
   bx  lr    
 .size  Reset_Handler, .-Reset_Handler
 
@@ -144,7 +162,7 @@ Infinite_Loop:
     
     
 g_pfnVectors:
-  .word  _estack
+  .word  estack
   .word  Reset_Handler
   .word  NMI_Handler
   .word  HardFault_Handler
