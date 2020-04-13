@@ -1,0 +1,7 @@
+set(CMAKE_C_FLAGS "-mcpu=cortex-m4 -mthumb -DARM")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant") # FIXME Is this correct?
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffreestanding")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostdlib -nodefaultlibs -fno-builtin")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-rtti -fno-use-cxa-atexit")
+
