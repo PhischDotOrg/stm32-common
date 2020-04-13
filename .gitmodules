@@ -1,3 +1,6 @@
 [submodule "contrib"]
 	path = contrib
 	url = git@github.com:PhischDotOrg/stm32f4-contrib.git
+[submodule "lib"]
+	path = lib
+	url = git@github.com:PhischDotOrg/phisch-lib.git
