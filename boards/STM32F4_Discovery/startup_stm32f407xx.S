@@ -106,7 +106,15 @@ LoopFillZerobss:
   bcc  FillZerobss
 
 /* Call the clock system intitialization function.*/
-  bl  SystemInit   
+/*
+ * This function call was in the initial Start-up assembly code from STM / Mbed,
+ * but they removed the C-definition of the function.
+ *
+ * I think the functionality should be in the RCC- and SCB-Classes. System starts
+ * up fine even without this call.
+ *
+  bl  SystemInit
+*/
 /* Call static constructors */
 /* Commented out by PhS on Oct 17th, 2017
     bl __libc_init_array
