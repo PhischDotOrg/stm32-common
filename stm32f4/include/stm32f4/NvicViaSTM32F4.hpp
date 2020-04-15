@@ -20,7 +20,7 @@ extern "C" {
 #include <dma/DmaStreamViaSTM32F4.hpp>
 #include <spi/SpiAccessViaSTM32F4.hpp>
 #include <timer/TimerViaSTM32F4.hpp>
-// #include <usb/stm32f4/UsbCore.hpp>
+#include <usb/UsbCore.hpp>
 
 namespace devices {
 
@@ -163,18 +163,16 @@ template<> struct NvicViaSTM32F4_IrqHelper<timer::TimerViaSTM32F4_Tim3> {
     static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::TIM3_IRQn;
 };
 
-#if defined(HAVE_USB)
-    #if defined(USB_OTG_FS_PERIPH_BASE)
-    template<> struct NvicViaSTM32F4_IrqHelper<usb::stm32f4::UsbFullSpeedCore> {
-        static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::OTG_FS_IRQn;
-    };
-    #endif /* defined(USB_OTG_FS_PERIPH_BASE) */
-    #if defined(USB_OTG_HS_PERIPH_BASE)
-    template<> struct NvicViaSTM32F4_IrqHelper<usb::stm32f4::UsbHighSpeedCore> {
-        static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::OTG_HS_IRQn;
-    };
-    #endif /* defined(USB_OTG_HS_PERIPH_BASE) */
-#endif /* defined(HAVE_USB) */
+#if defined(USB_OTG_FS_PERIPH_BASE)
+template<> struct NvicViaSTM32F4_IrqHelper<usb::stm32f4::UsbFullSpeedCore> {
+    static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::OTG_FS_IRQn;
+};
+#endif /* defined(USB_OTG_FS_PERIPH_BASE) */
+#if defined(USB_OTG_HS_PERIPH_BASE)
+template<> struct NvicViaSTM32F4_IrqHelper<usb::stm32f4::UsbHighSpeedCore> {
+    static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::OTG_HS_IRQn;
+};
+#endif /* defined(USB_OTG_HS_PERIPH_BASE) */
 
 /*******************************************************************************
  *

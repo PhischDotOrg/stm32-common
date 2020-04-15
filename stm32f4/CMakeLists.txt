@@ -1,3 +1,6 @@
+###############################################################################
+# stm32f4
+###############################################################################
 set(TARGET_NAME stm32f4)
 set(TARGET_SRC
     AdcViaSTM32F4.cpp
@@ -21,6 +24,7 @@ target_link_libraries(${TARGET_NAME}
     FreeRTOS
     gpio
     uart
+    usb
 )
 target_include_directories(${TARGET_NAME} PRIVATE
 )
@@ -28,4 +32,22 @@ target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/stm32f4
+)
+
+###############################################################################
+# usb
+###############################################################################
+set(TARGET_NAME usb)
+set(TARGET_SRC
+    usb/UsbCore.cpp
+    usb/UsbDevice.cpp
+)
+add_library(${TARGET_NAME} ${TARGET_SRC})
+target_link_libraries(${TARGET_NAME}
+    stm32f4
+)
+target_include_directories(${TARGET_NAME} PRIVATE
+)
+target_include_directories(${TARGET_NAME} PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/usb/include
 )

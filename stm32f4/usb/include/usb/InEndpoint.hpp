@@ -107,6 +107,6 @@ typedef InEndpointT<> InEndpoint;
 } /* namespace stm32f4 */
 } /* namespace usb */
 
-#include "InEndpoint.cpp"
+#include <usb/InEndpoint.cpp>
 
 #endif /* _INENDPOINT_HPP_34f149e0_9f89_489b_a2c0_95b3363fe4a8 */

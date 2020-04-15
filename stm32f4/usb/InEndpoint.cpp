@@ -5,8 +5,8 @@
 #ifndef _INENDPOINT_CPP_a9fc6fbc_90d1_4645_8197_217249205942
 #define _INENDPOINT_CPP_a9fc6fbc_90d1_4645_8197_217249205942
 
-#include "InEndpoint.hpp"
-#include "UsbDevice.hpp"
+#include <usb/InEndpoint.hpp>
+#include <usb/UsbDevice.hpp>
 #include <usb/UsbTypes.hpp>
 
 namespace usb {

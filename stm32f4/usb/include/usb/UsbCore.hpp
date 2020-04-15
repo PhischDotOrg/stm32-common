@@ -5,8 +5,7 @@
 #ifndef _USBCORE_HPP_bd4e7744_c603_4e62_9377_165a9988ac70
 #define	_USBCORE_HPP_bd4e7744_c603_4e62_9377_165a9988ac70
 
-#include <devices/NvicViaSTM32F4.hpp>
-#include <devices/RccViaSTM32F4.hpp>
+#include <stm32f4/RccViaSTM32F4.hpp>
 #include <gpio/GpioPin.hpp>
 
 #include <stm32f4xx.h>
@@ -251,7 +250,5 @@ public:
  *******************************************************************************/
     } /* namespace stm32f4 */
 } /* namespace usb */
-
-#include "UsbCore.cpp"
 
 #endif	/* _USBCORE_HPP_bd4e7744_c603_4e62_9377_165a9988ac70 */

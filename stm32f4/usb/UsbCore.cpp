@@ -5,10 +5,10 @@
 #ifndef _USBCORE_CPP_04381907_921b_416c_8108_0ffc6945ff09
 #define	_USBCORE_CPP_04381907_921b_416c_8108_0ffc6945ff09
 
-#include "UsbCore.hpp"
-#include "UsbDevice.hpp"
+#include <usb/UsbCore.hpp>
+#include <usb/UsbDevice.hpp>
 
-#include <compat/unistd.h>
+#include <unistd.h>
 
 namespace usb {
     namespace stm32f4 {

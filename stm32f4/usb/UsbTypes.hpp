@@ -179,10 +179,10 @@ private:
     UsbStringDescriptorT(void);
 
 public:
-    const uint8_t       m_length;
     const CharT * const m_string;
+    const uint8_t       m_length;
 
-    UsbStringDescriptorT(const CharT * const p_string) : m_length(len(m_string)), m_string(p_string) { };
+    UsbStringDescriptorT(const CharT * const p_string) : m_string(p_string), m_length(len(m_string)) { };
 } __attribute__((packed));
 
 typedef UsbStringDescriptorT<char> UsbStringDescriptor;
