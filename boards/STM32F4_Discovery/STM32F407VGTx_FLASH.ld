@@ -69,11 +69,11 @@ bInitStack = eInitStack - initStackSz;
 /* Specify the memory areas */
 MEMORY
 {
-ISR (r)		: ORIGIN = 0x08000000, LENGTH = 512
-FIXEDDATA (r)	: ORIGIN = 0x08000400, LENGTH = 512
-FLASH (rx)      : ORIGIN = 0x08001000, LENGTH = 1023K
-RAM (xrw)      	: ORIGIN = 0x20000000, LENGTH = 128K
-CCMRAM (rw)     : ORIGIN = 0x10000000, LENGTH = 64K
+  ISR (r)       : ORIGIN = 0x08000000, LENGTH = 512
+  FIXEDDATA (r) : ORIGIN = 0x08000400, LENGTH = 512
+  FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 1023K
+  RAM (xrw)     : ORIGIN = 0x20000000, LENGTH = 128K
+  CCMRAM (rw)   : ORIGIN = 0x10000000, LENGTH = 64K
 }
 
 /* Define output sections */
