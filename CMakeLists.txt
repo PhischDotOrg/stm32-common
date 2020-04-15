@@ -9,8 +9,9 @@ project(${PROJECT_NAME})
 set(PROJECT_ROOT "${CMAKE_SOURCE_DIR}")
 message(STATUS "Project Name: ${PROJECT_NAME}")
 message(STATUS "Project Root: ${PROJECT_ROOT}")
-message(STATUS "System Type: ${CMAKE_SYSTEM_NAME}")
-message(STATUS "System Processor: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "Target System Type: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "Target System Processor: ${CMAKE_SYSTEM_PROCESSOR}")
+message(STATUS "Host System: ${CMAKE_HOST_SYSTEM} @ ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 
 ###############################################################################
 # Set up generic compile flags. If we're on a 'Generic', i.e. embedded system,
