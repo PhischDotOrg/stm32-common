@@ -5,8 +5,8 @@
 #ifndef _OUTENDPOINT_CPP_4c0d9db1_5757_4b12_83e7_69b04d8c655a
 #define _OUTENDPOINT_CPP_4c0d9db1_5757_4b12_83e7_69b04d8c655a
 
-#include "OutEndpoint.hpp"
-#include "UsbDevice.hpp"
+#include <usb/OutEndpoint.hpp>
+#include <usb/UsbDevice.hpp>
 
 extern "C" void led2_off(void);
 extern "C" void led3_off(void);

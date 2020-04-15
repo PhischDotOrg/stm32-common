@@ -177,6 +177,6 @@ typedef class UsbDeviceViaUsbCoreT<> UsbDevice;
     } /* namespace stm32f4 */
 } /* namespace usb */
 
-#include "UsbDevice.cpp"
+#include <usb/UsbDeviceViaUsbCore.cpp>
 
 #endif /* _USBDEVICE_HPP_32f4ccff_87e2_4eac_87e7_6297472e365d */

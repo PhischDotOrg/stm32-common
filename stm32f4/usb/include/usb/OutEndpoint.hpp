@@ -119,6 +119,6 @@ typedef OutEndpointT<> OutEndpoint;
     } /* namespace stm32f4 */
 } /* namespace usb */
 
-#include "OutEndpoint.cpp"
+#include <usb/OutEndpoint.cpp>
 
 #endif /* _OUTENDPOINT_HPP_669fcf90_b666_4583_97b7_e50a9d1447d9 */
