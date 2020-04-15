@@ -66,8 +66,10 @@ bInitStack = eInitStack - initStackSz;
 /* Specify the memory areas */
 MEMORY
 {
-FLASH (rx)     : ORIGIN = 0x08000000, LENGTH = 512K
-RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 128K
+  ISR (r)		      : ORIGIN = 0x08000000, LENGTH = 512
+  FIXEDDATA (r)   : ORIGIN = 0x08000400, LENGTH = 512
+  FLASH (rx)      : ORIGIN = 0x08001000, LENGTH = 511K
+  RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 128K
 }
 
 /* Define output sections */
@@ -79,7 +81,15 @@ SECTIONS
     . = ALIGN(4);
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
-  } >FLASH
+  } >ISR
+
+  .fixeddata : {
+    . = ORIGIN(FIXEDDATA);
+    gFixedDataBegin = .;
+    *(.fixeddata)
+    gFixedDataUsed = .;
+    gFixedDataEnd = ORIGIN(FIXEDDATA) + LENGTH(FIXEDDATA);
+  } >FIXEDDATA
 
   /* The program code and other data goes into FLASH */
   .text :
