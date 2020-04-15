@@ -1,11 +1,10 @@
 /*
 *****************************************************************************
 **
-
-**  File        : LinkerScript.ld
+**  File        : stm32_flash.ld
 **
-**  Abstract    : Linker script for STM32F407VGTx Device with
-**                1024KByte FLASH, 128KByte RAM
+**  Abstract    : Linker script for STM32F411RE Device with
+**                512KByte FLASH, 128KByte RAM
 **
 **                Set heap size, stack size and stack location according
 **                to application requirements.
@@ -14,17 +13,16 @@
 **
 **  Target      : STMicroelectronics STM32
 **
+**  Environment : Atollic TrueSTUDIO(R)
 **
-**  Distribution: The file is distributed as is, without any warranty
+**  Distribution: The file is distributed �as is,� without any warranty
 **                of any kind.
 **
-**  (c)Copyright Ac6.
+**  (c)Copyright Atollic AB.
 **  You may use this file as-is or modify it according to the needs of your
-**  project. Distribution of this file (unmodified or modified) is not
-**  permitted. Ac6 permit registered System Workbench for MCU users the
-**  rights to distribute the assembled, compiled & linked contents of this
-**  file as part of an application binary file, provided that it is built
-**  using the System Workbench for MCU toolchain.
+**  project. This file may only be built (assembled or compiled and linked)
+**  using the Atollic TrueSTUDIO(R) product. The use of this file together
+**  with other tools than Atollic TrueSTUDIO(R) is not permitted.
 **
 *****************************************************************************
 */
@@ -37,7 +35,6 @@ EXTERN (initStackSz stackSz)
 PROVIDE(initStackSz = 0x80);
 PROVIDE(freeRtosStackSz = 0x4000);
 
-/* Highest address of the user mode stack */
 estack = 0x2001FFFF;    /* end of RAM */
 bstack = estack - freeRtosStackSz;
 
@@ -49,7 +46,7 @@ bInitStack = eInitStack - initStackSz;
 /*
  * During startup, the main stack is placed in the region [bstack:estack].
  * The top-of-stack pointer is located through the estack symbol by the startup
- * assembly code in file 'startup_stm32f407xx.s'.
+ * assembly code in file 'startup_stm32f411xe.s'.
  *
  * The FreeRTOS Scheduler re-claims the main stack. It uses the NVIC offset
  * register to locate the address of the 'estack' symbol and uses the value stored
@@ -69,11 +66,10 @@ bInitStack = eInitStack - initStackSz;
 /* Specify the memory areas */
 MEMORY
 {
-  ISR (r)       : ORIGIN = 0x08000000, LENGTH = 512
-  FIXEDDATA (r) : ORIGIN = 0x08000400, LENGTH = 512
-  FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 1023K
-  RAM (xrw)     : ORIGIN = 0x20000000, LENGTH = 128K
-  CCMRAM (rw)   : ORIGIN = 0x10000000, LENGTH = 64K
+  ISR (r)		      : ORIGIN = 0x08000000, LENGTH = 512
+  FIXEDDATA (r)   : ORIGIN = 0x08000400, LENGTH = 512
+  FLASH (rx)      : ORIGIN = 0x08001000, LENGTH = 511K
+  RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 128K
 }
 
 /* Define output sections */
@@ -113,11 +109,12 @@ SECTIONS
     _ctors_end_ = .;
 
 /*
+    . = ALIGN(4);
     KEEP (*(.init))
     KEEP (*(.fini))
  */
     . = ALIGN(4);
-    etext = .;         /* define a global symbols at end of code */
+    etext = .;        /* define a global symbols at end of code */
   } >FLASH
 
   /* Constant data goes into FLASH */
@@ -211,5 +208,3 @@ PhS, June 2nd 2015: Not sure what this is required for, so comment out for now *
 
   .ARM.attributes 0 : { *(.ARM.attributes) }
 }
-
-
