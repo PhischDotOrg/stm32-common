@@ -5,8 +5,8 @@
 #ifndef _INENDPOINT_CPP_a9fc6fbc_90d1_4645_8197_217249205942
 #define _INENDPOINT_CPP_a9fc6fbc_90d1_4645_8197_217249205942
 
-#include <usb/InEndpoint.hpp>
-#include <usb/UsbDevice.hpp>
+#include <usb/InEndpointViaSTM32F4.hpp>
+#include <usb/UsbDeviceViaSTM32F4.hpp>
 #include <usb/UsbTypes.hpp>
 
 namespace usb {
@@ -15,14 +15,14 @@ namespace usb {
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
-InEndpointT<UsbDeviceT>::InEndpointT(UsbDeviceT &p_usbDevice, const size_t p_fifoSzInWords, const unsigned p_endpointNumber)
-  : m_usbDevice(p_usbDevice), m_endpointNumber(p_endpointNumber),
+InEndpointViaSTM32F4::InEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const size_t p_fifoSzInWords, const unsigned p_endpointNumber)
+  : m_usbDevice(p_usbDevice),
+    m_endpointNumber(p_endpointNumber),
+    m_fifoSzInWords(p_fifoSzInWords),
     m_endpoint(reinterpret_cast<USB_OTG_INEndpointTypeDef *>(p_usbDevice.getBaseAddr() + USB_OTG_IN_ENDPOINT_BASE + (p_endpointNumber * USB_OTG_EP_REG_SIZE))),
-    m_txFifoAddr(reinterpret_cast<uint32_t *>(p_usbDevice.getBaseAddr() + USB_OTG_FIFO_BASE + (p_endpointNumber * USB_OTG_FIFO_SIZE))),
-    m_fifoSzInWords(p_fifoSzInWords)
+    m_fifoAddr(reinterpret_cast<uint32_t *>(p_usbDevice.getBaseAddr() + USB_OTG_FIFO_BASE + (p_endpointNumber * USB_OTG_FIFO_SIZE)))
 {
-    m_usbDevice.registerEndpoint(this->getEndpointNumber(), *this);
+    this->m_usbDevice.registerEndpoint(this->getEndpointNumber(), *this);
 
     this->reset();
 
@@ -33,35 +33,31 @@ InEndpointT<UsbDeviceT>::InEndpointT(UsbDeviceT &p_usbDevice, const size_t p_fif
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
-InEndpointT<UsbDeviceT>::~InEndpointT() {
+InEndpointViaSTM32F4::~InEndpointViaSTM32F4() {
     this->m_usbDevice.unregisterEndpoint(this->getEndpointNumber(), *this);
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::reset() const {
+InEndpointViaSTM32F4::reset() const {
     this->m_endpoint->DIEPCTL = 0;
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::setPacketSize(const unsigned p_packetSize) const {
+InEndpointViaSTM32F4::setPacketSize(const unsigned p_packetSize) const {
     this->m_endpoint->DIEPCTL |= (p_packetSize << USB_OTG_DIEPCTL_MPSIZ_Pos) & USB_OTG_DIEPCTL_MPSIZ_Msk;
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::writeString(const ::usb::UsbStringDescriptor &p_str, const size_t p_len) {
+InEndpointViaSTM32F4::writeString(const ::usb::UsbStringDescriptor &p_str, const size_t p_len) {
     size_t len = 0;
     
     while (p_str.m_string[len] != '\0') len++;
@@ -77,9 +73,8 @@ InEndpointT<UsbDeviceT>::writeString(const ::usb::UsbStringDescriptor &p_str, co
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::write(const uint8_t * const p_data,
+InEndpointViaSTM32F4::write(const uint8_t * const p_data,
   const size_t p_dataLength, const size_t p_txLength) {
     assert(((p_txLength == 0) && (p_dataLength == 0)) || (p_data != NULL));
 
@@ -94,9 +89,8 @@ InEndpointT<UsbDeviceT>::write(const uint8_t * const p_data,
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::startTx(void) {
+InEndpointViaSTM32F4::startTx(void) {
     assert(this->m_txBuffer.m_inProgress == false);
 
     this->m_txBuffer.m_inProgress   = true;
@@ -109,17 +103,20 @@ InEndpointT<UsbDeviceT>::startTx(void) {
             | ((numBytes << USB_OTG_DIEPTSIZ_XFRSIZ_Pos) & USB_OTG_DIEPTSIZ_XFRSIZ_Msk);
     this->m_endpoint->DIEPCTL |= USB_OTG_DIEPCTL_CNAK | USB_OTG_DIEPCTL_EPENA;
 
+    this->handleTxFifoEmpty();
+
     this->m_usbDevice.enableEndpointFifoIrq(*this);
 
     this->enableIrq();
+
+    // USB_PRINTF("InEndpointViaSTM32F4T::%s(numPackets=%d, numBytes=%d)\r\n", __func__, numPackets, numBytes);
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::setNack(const bool p_nack) const {
+InEndpointViaSTM32F4::setNack(const bool p_nack) const {
     if (p_nack) {
         this->m_endpoint->DIEPCTL |= USB_OTG_DIEPCTL_NAKSTS;
     } else {
@@ -130,9 +127,8 @@ InEndpointT<UsbDeviceT>::setNack(const bool p_nack) const {
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::setupTxFifoNumber(const unsigned p_fifoNumber) const {
+InEndpointViaSTM32F4::setupTxFifoNumber(const unsigned p_fifoNumber) const {
     this->m_endpoint->DIEPCTL &= ~USB_OTG_DIEPCTL_TXFNUM;
     this->m_endpoint->DIEPCTL |= (p_fifoNumber << 22) & USB_OTG_DIEPCTL_TXFNUM;
 }
@@ -144,30 +140,28 @@ InEndpointT<UsbDeviceT>::setupTxFifoNumber(const unsigned p_fifoNumber) const {
  * Table of interrupt handlers. Is handled in order from first to last, i.e.
  * functions listed earlier are handled before the functions listed later.
  */
-template<typename UsbDeviceT>
 const
-typename InEndpointT<UsbDeviceT>::irq_handler_t InEndpointT<UsbDeviceT>::m_irq_handler[] = {
-    { USB_OTG_DIEPINT_TXFE,     &InEndpointT<UsbDeviceT>::handleTxFifoEmpty },
-    { USB_OTG_DIEPINT_INEPNE,   &InEndpointT<UsbDeviceT>::handleNakEffective },
-    { USB_OTG_DIEPINT_ITTXFE,   &InEndpointT<UsbDeviceT>::handleInTokenWhenTxFifoEmpty },
-    { USB_OTG_DIEPINT_TOC,      &InEndpointT<UsbDeviceT>::handleTimeoutCondition },
-    { USB_OTG_DIEPINT_EPDISD,   &InEndpointT<UsbDeviceT>::handleEndpointDisabled },
-    { USB_OTG_DIEPINT_XFRC,     &InEndpointT<UsbDeviceT>::handleTransferComplete },
+typename InEndpointViaSTM32F4::irq_handler_t InEndpointViaSTM32F4::m_irq_handler[] = {
+    { USB_OTG_DIEPINT_TXFE,     &InEndpointViaSTM32F4::handleTxFifoEmpty },
+    { USB_OTG_DIEPINT_INEPNE,   &InEndpointViaSTM32F4::handleNakEffective },
+    { USB_OTG_DIEPINT_ITTXFE,   &InEndpointViaSTM32F4::handleInTokenWhenTxFifoEmpty },
+    { USB_OTG_DIEPINT_TOC,      &InEndpointViaSTM32F4::handleTimeoutCondition },
+    { USB_OTG_DIEPINT_EPDISD,   &InEndpointViaSTM32F4::handleEndpointDisabled },
+    { USB_OTG_DIEPINT_XFRC,     &InEndpointViaSTM32F4::handleTransferComplete },
     { 0, NULL }
 };
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::handleIrq(void) {
+InEndpointViaSTM32F4::handleIrq(void) {
     const uint32_t  irq = this->m_endpoint->DIEPINT;
     uint32_t        handledIrq = 0;
 
     this->disableIrq();
 
-    for (const typename InEndpointT<UsbDeviceT>::irq_handler_t *cur = InEndpointT<UsbDeviceT>::m_irq_handler; cur->m_irq != 0; cur++) {
+    for (const typename InEndpointViaSTM32F4::irq_handler_t *cur = InEndpointViaSTM32F4::m_irq_handler; cur->m_irq != 0; cur++) {
         if (irq & cur->m_irq) {
             (this->*(cur->m_fn))(); // Call member function via pointer
             handledIrq |= cur->m_irq;
@@ -182,9 +176,8 @@ InEndpointT<UsbDeviceT>::handleIrq(void) {
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::txString(void) {
+InEndpointViaSTM32F4::txString(void) {
     union buffer_u {
         uint8_t     m_u8[sizeof(uint32_t)];
         uint16_t    m_u16[sizeof(m_u8) / sizeof(uint16_t)];
@@ -214,7 +207,7 @@ InEndpointT<UsbDeviceT>::txString(void) {
             this->m_txBuffer.m_offs += 1;
         }
 
-        *this->m_txFifoAddr = tmp.m_u32;
+        *this->m_fifoAddr = tmp.m_u32;
     }
 
     /*
@@ -235,16 +228,15 @@ InEndpointT<UsbDeviceT>::txString(void) {
             tmp.m_u8[idx + 1]   = 0;
         }
 
-        *this->m_txFifoAddr = tmp.m_u32;
+        *this->m_fifoAddr = tmp.m_u32;
     }
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::txData(void) {
+InEndpointViaSTM32F4::txData(void) {
     union buffer_u {
         uint8_t     m_u8[sizeof(uint32_t)];
         uint16_t    m_u16[sizeof(m_u8) / sizeof(uint16_t)];
@@ -268,9 +260,9 @@ InEndpointT<UsbDeviceT>::txData(void) {
                 tmp.m_u8[idx] = this->m_txBuffer.m_data.m_u8[this->m_txBuffer.m_offs + idx];
             }
 
-            *this->m_txFifoAddr = tmp.m_u32;
+            *this->m_fifoAddr = tmp.m_u32;
         } else {
-            *this->m_txFifoAddr = this->m_txBuffer.m_data.m_u32[this->m_txBuffer.m_offs / 4];
+            *this->m_fifoAddr = this->m_txBuffer.m_data.m_u32[this->m_txBuffer.m_offs / 4];
         }
         this->m_txBuffer.m_offs += sizeof(uint32_t);
     }
@@ -279,35 +271,36 @@ InEndpointT<UsbDeviceT>::txData(void) {
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::handleTxFifoEmpty(void) {
+InEndpointViaSTM32F4::handleTxFifoEmpty(void) {
+    // USB_PRINTF("InEndpointViaSTM32F4T::%s() m_data=%p, txLength=%d\r\n", __func__, this->m_txBuffer.m_data.m_u8, this->m_txBuffer.m_txLength);
+
     this->m_usbDevice.disableEndpointFifoIrq(*this);
 
-    while ((this->m_endpoint->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV) == 0);
+    assert((this->m_endpoint->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV) != 0);
 
     if (this->m_txBuffer.m_data.m_u8 == NULL) {
-        this->m_txBuffer.m_inProgress = false;
         goto out;
     }
 
     if (this->m_txBuffer.m_isString) {
         this->txString();
-        this->m_txBuffer.m_inProgress = false;
     } else {
         this->txData();
     }
 
 out:
+    this->m_txBuffer.m_inProgress = false;
     return;
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::handleTransferComplete(void) {
+InEndpointViaSTM32F4::handleTransferComplete(void) {
+    // USB_PRINTF("InEndpointViaSTM32F4T::%s()\r\n", __func__);
+
     this->m_txBuffer.m_isString     = 0;
     this->m_txBuffer.m_data.m_u8    = NULL;
     this->m_txBuffer.m_dataLength   = 0;
@@ -322,54 +315,48 @@ InEndpointT<UsbDeviceT>::handleTransferComplete(void) {
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::handleNakEffective(void) {
+InEndpointViaSTM32F4::handleNakEffective(void) {
 
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::handleInTokenWhenTxFifoEmpty(void) {
+InEndpointViaSTM32F4::handleInTokenWhenTxFifoEmpty(void) {
 
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::handleTimeoutCondition(void) {
+InEndpointViaSTM32F4::handleTimeoutCondition(void) {
 
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::handleEndpointDisabled(void) {
+InEndpointViaSTM32F4::handleEndpointDisabled(void) {
 
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::disableIrq(void) const {
+InEndpointViaSTM32F4::disableIrq(void) const {
     this->m_usbDevice.disableEndpointIrq(*this);
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-InEndpointT<UsbDeviceT>::enableIrq(void) const {
+InEndpointViaSTM32F4::enableIrq(void) const {
     this->m_usbDevice.enableEndpointIrq(*this);
 }
 

@@ -5,8 +5,9 @@
 #ifndef _USBCORE_CPP_04381907_921b_416c_8108_0ffc6945ff09
 #define	_USBCORE_CPP_04381907_921b_416c_8108_0ffc6945ff09
 
-#include <usb/UsbCore.hpp>
-#include <usb/UsbDevice.hpp>
+#include <usb/UsbCoreViaSTM32F4.hpp>
+#include <usb/UsbDeviceViaSTM32F4.hpp>
+#include <usb/UsbTypes.hpp>
 
 #include <unistd.h>
 
@@ -16,14 +17,14 @@ namespace usb {
 /*******************************************************************************
  *
  ******************************************************************************/
-UsbCore::UsbCore(USB_OTG_GlobalTypeDef * const p_usbCore, intptr_t p_usbPowerCtrl, const uint32_t p_rxFifoSzInWords)
+UsbCoreViaSTM32F4::UsbCoreViaSTM32F4(USB_OTG_GlobalTypeDef * const p_usbCore, intptr_t p_usbPowerCtrl, const uint32_t p_rxFifoSzInWords)
   : m_usbCore(p_usbCore), m_usbPwrCtrl(reinterpret_cast<PowerAndClockGatingControl_t *>(p_usbPowerCtrl)), m_rxFifoSzInWords(p_rxFifoSzInWords) {
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-UsbCore::~UsbCore() {
+UsbCoreViaSTM32F4::~UsbCoreViaSTM32F4() {
 }
 
 
@@ -31,7 +32,7 @@ UsbCore::~UsbCore() {
  *
  ******************************************************************************/
 void
-UsbCore::initialize() const {
+UsbCoreViaSTM32F4::initialize() const {
     this->reset();
 
     this->startPhy();
@@ -48,7 +49,7 @@ UsbCore::initialize() const {
  *
  ******************************************************************************/
 void
-UsbCore::terminate() const {
+UsbCoreViaSTM32F4::terminate() const {
     this->reset();
 }
 
@@ -56,7 +57,7 @@ UsbCore::terminate() const {
  *
  ******************************************************************************/
 void
-UsbCore::registerDevice(UsbDeviceViaUsbCoreT<UsbCore> &p_device) {
+UsbCoreViaSTM32F4::registerDevice(UsbDeviceViaSTM32F4 &p_device) {
     assert(this->m_usbDevice == NULL);
     
     m_usbDevice = &p_device;
@@ -66,7 +67,7 @@ UsbCore::registerDevice(UsbDeviceViaUsbCoreT<UsbCore> &p_device) {
  *
  ******************************************************************************/
 void
-UsbCore::unregisterDevice(UsbDeviceViaUsbCoreT<UsbCore> &p_device) {
+UsbCoreViaSTM32F4::unregisterDevice(UsbDeviceViaSTM32F4 &p_device) {
     assert(this->m_usbDevice == &p_device);
     
     this->m_usbDevice = NULL;
@@ -76,10 +77,10 @@ UsbCore::unregisterDevice(UsbDeviceViaUsbCoreT<UsbCore> &p_device) {
  *
  ******************************************************************************/
 void
-UsbCore::setupTxFifo(const unsigned p_endpoint, const uint16_t p_fifoSzInWords) const {
+UsbCoreViaSTM32F4::setupTxFifo(const unsigned p_endpoint, const uint16_t p_fifoSzInWords) const {
     uint16_t offset;
 
-    /* FIXME: Host mode not (yet) supported */
+    /* Host mode not (yet) supported */
     assert((this->m_usbCore->GUSBCFG & USB_OTG_GUSBCFG_FDMOD) != 0);
 
     if (p_endpoint == 0) {
@@ -99,20 +100,22 @@ UsbCore::setupTxFifo(const unsigned p_endpoint, const uint16_t p_fifoSzInWords) 
  *
  ******************************************************************************/
 void
-UsbCore::reset(void) const {
+UsbCoreViaSTM32F4::reset(void) const {
     this->performReset(USB_OTG_GRSTCTL_CSRST);
 
     usleep(25);
 
     this->disableInterrupt();
     this->stopPhy();
+
+    USB_PRINTF("UsbCoreViaSTM32F4::%s(): Core Reset\r\n", __func__);
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
 void
-UsbCore::performReset(const uint32_t p_reset) const {
+UsbCoreViaSTM32F4::performReset(const uint32_t p_reset) const {
     while (!(this->m_usbCore->GRSTCTL & USB_OTG_GRSTCTL_AHBIDL));
 
     this->m_usbCore->GRSTCTL |= p_reset;
@@ -125,7 +128,7 @@ UsbCore::performReset(const uint32_t p_reset) const {
  *
  ******************************************************************************/
 void
-UsbCore::setRxFifoSz(const uint16_t p_rxFifoSzInWords) const {
+UsbCoreViaSTM32F4::setRxFifoSz(const uint16_t p_rxFifoSzInWords) const {
     // Minimum Rx FIFO size is 16, maximum size is 256 (all in words)
     assert((m_rxFifoSzInWords > 16) && (m_rxFifoSzInWords <= 256));
 
@@ -136,7 +139,7 @@ UsbCore::setRxFifoSz(const uint16_t p_rxFifoSzInWords) const {
  *
  ******************************************************************************/
 void
-UsbCore::flushRxFifo(void) const {
+UsbCoreViaSTM32F4::flushRxFifo(void) const {
     this->performReset(USB_OTG_GRSTCTL_RXFFLSH);
 }
 
@@ -144,7 +147,7 @@ UsbCore::flushRxFifo(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::flushTxFifo(const uint8_t p_fifo) const {
+UsbCoreViaSTM32F4::flushTxFifo(const uint8_t p_fifo) const {
     assert(p_fifo <= 16);
     
     this->m_usbCore->GRSTCTL &= ~USB_OTG_GRSTCTL_TXFNUM;
@@ -157,7 +160,7 @@ UsbCore::flushTxFifo(const uint8_t p_fifo) const {
  *
  ******************************************************************************/
 void
-UsbCore::enableInterrupt(void) const {
+UsbCoreViaSTM32F4::enableInterrupt(void) const {
     this->m_usbCore->GINTSTS = 0xffffffff;
     this->m_usbCore->GAHBCFG |= USB_OTG_GAHBCFG_GINT;
 }
@@ -166,7 +169,7 @@ UsbCore::enableInterrupt(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::enableInterrupt(const Interrupt_t p_irq) const {
+UsbCoreViaSTM32F4::enableInterrupt(const Interrupt_t p_irq) const {
     this->m_usbCore->GINTSTS = static_cast<uint32_t>(p_irq);
     this->m_usbCore->GINTMSK |= static_cast<uint32_t>(p_irq);
 }
@@ -175,7 +178,7 @@ UsbCore::enableInterrupt(const Interrupt_t p_irq) const {
  *
  ******************************************************************************/
 void
-UsbCore::disableInterrupt(void) const {
+UsbCoreViaSTM32F4::disableInterrupt(void) const {
     this->m_usbCore->GAHBCFG &= ~USB_OTG_GAHBCFG_GINT;
 }
 
@@ -183,7 +186,7 @@ UsbCore::disableInterrupt(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::disableInterrupt(const Interrupt_t p_irq) const {
+UsbCoreViaSTM32F4::disableInterrupt(const Interrupt_t p_irq) const {
     this->m_usbCore->GINTMSK &= ~(static_cast<uint32_t>(p_irq));
 }
 
@@ -191,7 +194,7 @@ UsbCore::disableInterrupt(const Interrupt_t p_irq) const {
  *
  ******************************************************************************/
 void
-UsbCore::startPhy(void) const {
+UsbCoreViaSTM32F4::startPhy(void) const {
     this->m_usbPwrCtrl->PCGCCTL &= ~USB_OTG_PCGCCTL_PHYSUSP;
     this->resumePhy();
 }
@@ -200,7 +203,7 @@ UsbCore::startPhy(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::resumePhy(void) const {
+UsbCoreViaSTM32F4::resumePhy(void) const {
     this->m_usbPwrCtrl->PCGCCTL &= ~(USB_OTG_PCGCCTL_STOPCLK | USB_OTG_PCGCCTL_GATECLK);
     
     while (this->m_usbPwrCtrl->PCGCCTL  & USB_OTG_PCGCCTL_PHYSUSP);
@@ -210,7 +213,7 @@ UsbCore::resumePhy(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::suspendPhy(void) const {
+UsbCoreViaSTM32F4::suspendPhy(void) const {
     this->m_usbPwrCtrl->PCGCCTL |= (USB_OTG_PCGCCTL_STOPCLK | USB_OTG_PCGCCTL_GATECLK);
 
     while (!(this->m_usbPwrCtrl->PCGCCTL & USB_OTG_PCGCCTL_PHYSUSP));
@@ -220,7 +223,7 @@ UsbCore::suspendPhy(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::stopPhy(void) const {
+UsbCoreViaSTM32F4::stopPhy(void) const {
     this->m_usbPwrCtrl->PCGCCTL |= USB_OTG_PCGCCTL_PHYSUSP;
     this->suspendPhy();
 }
@@ -229,7 +232,7 @@ UsbCore::stopPhy(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::startTransceiver(void) const {
+UsbCoreViaSTM32F4::startTransceiver(void) const {
     this->m_usbCore->GCCFG |= USB_OTG_GCCFG_PWRDWN;
 }
 
@@ -237,7 +240,7 @@ UsbCore::startTransceiver(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::stopTransceiver(void) const {
+UsbCoreViaSTM32F4::stopTransceiver(void) const {
     this->m_usbCore->GCCFG &= ~USB_OTG_GCCFG_PWRDWN;
 }
 
@@ -245,7 +248,7 @@ UsbCore::stopTransceiver(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::setupMode(const DeviceMode_e p_mode) {
+UsbCoreViaSTM32F4::setupMode(const DeviceMode_e p_mode) {
     this->m_mode = p_mode;
 
     this->setupModeInHw(this->m_mode);
@@ -255,7 +258,7 @@ UsbCore::setupMode(const DeviceMode_e p_mode) {
  *
  ******************************************************************************/
 void
-UsbCore::setupModeInHw(const DeviceMode_e p_mode) const {
+UsbCoreViaSTM32F4::setupModeInHw(const DeviceMode_e p_mode) const {
     switch (p_mode) {
     case e_UsbDevice:
         this->m_usbCore->GCCFG |= USB_OTG_GCCFG_VBUSBSEN;
@@ -288,7 +291,7 @@ UsbCore::setupModeInHw(const DeviceMode_e p_mode) const {
  *
  ******************************************************************************/
 void
-UsbCore::start(void) const {
+UsbCoreViaSTM32F4::start(void) const {
     this->startPhy();
     this->startTransceiver();
 
@@ -305,7 +308,9 @@ UsbCore::start(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::stop(void) const {
+UsbCoreViaSTM32F4::stop(void) const {
+    USB_PRINTF("UsbCoreViaSTM32F4::%s()\r\n", __func__);
+
     this->disableInterrupt();
 
     this->stopTransceiver();
@@ -316,7 +321,9 @@ UsbCore::stop(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::handleSessionEnd(void) const {
+UsbCoreViaSTM32F4::handleSessionEnd(void) const {
+    USB_PRINTF("UsbCoreViaSTM32F4::%s()\r\n", __func__);
+
     if (this->m_mode == e_UsbDevice) {
         assert(this->m_usbDevice != NULL);
         
@@ -332,8 +339,8 @@ UsbCore::handleSessionEnd(void) const {
  * functions listed earlier are handled before the functions listed later.
  */
 const
-UsbCore::irq_handler_t UsbCore::m_otgirq_handler[] = {
-    { USB_OTG_GOTGINT_SEDET,    &UsbCore::handleSessionEnd },
+UsbCoreViaSTM32F4::irq_handler_t UsbCoreViaSTM32F4::m_otgirq_handler[] = {
+    { USB_OTG_GOTGINT_SEDET,    &UsbCoreViaSTM32F4::handleSessionEnd },
     { 0, NULL }
 };
 
@@ -341,10 +348,10 @@ UsbCore::irq_handler_t UsbCore::m_otgirq_handler[] = {
  *
  ******************************************************************************/
 void
-UsbCore::handleOtgIrq(void) const {
+UsbCoreViaSTM32F4::handleOtgIrq(void) const {
     uint32_t irqStatus = this->m_usbCore->GOTGINT;
 
-    for (const UsbCore::irq_handler_t *cur = UsbCore::m_otgirq_handler; cur->m_irq != 0; cur++) {
+    for (const UsbCoreViaSTM32F4::irq_handler_t *cur = UsbCoreViaSTM32F4::m_otgirq_handler; cur->m_irq != 0; cur++) {
         if (irqStatus & cur->m_irq) {
             this->m_usbCore->GOTGINT = cur->m_irq;
             (this->*(cur->m_fn))(); // Call member function via pointer
@@ -356,7 +363,7 @@ UsbCore::handleOtgIrq(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::handleModeMismatchIrq(void) const {
+UsbCoreViaSTM32F4::handleModeMismatchIrq(void) const {
     assert(false);
 }
 
@@ -364,8 +371,22 @@ UsbCore::handleModeMismatchIrq(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::handleSessionRequest(void) const {
+UsbCoreViaSTM32F4::wakeUpDetectedIrq(void) const {
+    USB_PRINTF("UsbCoreViaSTM32F4::%s\r\n", __func__);
+}
 
+/*******************************************************************************
+ *
+ ******************************************************************************/
+void
+UsbCoreViaSTM32F4::handleSessionRequest(void) const {
+    USB_PRINTF("UsbCoreViaSTM32F4::%s(): GINTMSK=%x\r\n", __func__, this->m_usbCore->GINTMSK);
+
+    if (this->m_mode == DeviceMode_e::e_UsbDevice) {
+        assert(this->m_usbDevice != NULL);
+        
+        this->m_usbDevice->start();
+    }
 }
 
 /*******************************************************************************
@@ -376,10 +397,12 @@ UsbCore::handleSessionRequest(void) const {
  * functions listed earlier are handled before the functions listed later.
  */
 const
-UsbCore::irq_handler_t UsbCore::m_irq_handler[] = {
-    { USB_OTG_GINTSTS_SRQINT,   &UsbCore::handleSessionRequest },
-    { USB_OTG_GINTSTS_MMIS,     &UsbCore::handleModeMismatchIrq },
-    { USB_OTG_GINTSTS_OTGINT,   &UsbCore::handleOtgIrq },
+UsbCoreViaSTM32F4::irq_handler_t UsbCoreViaSTM32F4::m_irq_handler[] = {
+    { USB_OTG_GINTSTS_SRQINT,   &UsbCoreViaSTM32F4::handleSessionRequest },
+    { USB_OTG_GINTSTS_MMIS,     &UsbCoreViaSTM32F4::handleModeMismatchIrq },
+    { USB_OTG_GINTSTS_OTGINT,   &UsbCoreViaSTM32F4::handleOtgIrq },
+    { USB_OTG_GINTSTS_WKUINT,   &UsbCoreViaSTM32F4::wakeUpDetectedIrq },
+
     { 0, NULL }
 };
 
@@ -387,16 +410,16 @@ UsbCore::irq_handler_t UsbCore::m_irq_handler[] = {
  *
  ******************************************************************************/
 void
-UsbCore::handleIrq(void) const {
+UsbCoreViaSTM32F4::handleIrq(void) const {
     uint32_t irqStatus = this->m_usbCore->GINTSTS;
     uint32_t handledIrq = 0;
 
     this->disableInterrupt();
 
-    for (const UsbCore::irq_handler_t *cur = UsbCore::m_irq_handler; cur->m_irq != 0; cur++) {
+    for (const UsbCoreViaSTM32F4::irq_handler_t *cur = UsbCoreViaSTM32F4::m_irq_handler; cur->m_irq != 0; cur++) {
         if (irqStatus & cur->m_irq) {
             handledIrq |= cur->m_irq;
-            this->acknowledgeIrq(static_cast<typename UsbCore::Interrupt_t>(cur->m_irq));
+            this->acknowledgeIrq(static_cast<typename UsbCoreViaSTM32F4::Interrupt_t>(cur->m_irq));
 
             (this->*(cur->m_fn))(); // Call member function via pointer
         }
@@ -408,6 +431,8 @@ UsbCore::handleIrq(void) const {
     
     this->m_usbCore->GINTSTS = handledIrq;
 
+    // USB_PRINTF("UsbCoreViaSTM32F4::%s(): Ignored IRQ=%x (status=%x, handled=%x)\r\n", __func__, irqStatus & ~handledIrq, irqStatus, handledIrq );
+
     this->enableInterrupt();
 }
 
@@ -415,7 +440,7 @@ UsbCore::handleIrq(void) const {
  *
  ******************************************************************************/
 void
-UsbCore::acknowledgeIrq(const Interrupt_t p_irq) const {
+UsbCoreViaSTM32F4::acknowledgeIrq(const Interrupt_t p_irq) const {
 	this->m_usbCore->GINTSTS = static_cast<uint32_t>(p_irq);
 }
 
@@ -423,7 +448,7 @@ UsbCore::acknowledgeIrq(const Interrupt_t p_irq) const {
  *
  ******************************************************************************/
 void
-UsbCore::setUsbTurnAroundTime(const uint8_t p_turnaroundTime) const {
+UsbCoreViaSTM32F4::setUsbTurnAroundTime(const uint8_t p_turnaroundTime) const {
 	this->m_usbCore->GUSBCFG |= (p_turnaroundTime << USB_OTG_GUSBCFG_TRDT_Pos) & USB_OTG_GUSBCFG_TRDT_Msk;
 }
 
@@ -431,7 +456,7 @@ UsbCore::setUsbTurnAroundTime(const uint8_t p_turnaroundTime) const {
  *
  ******************************************************************************/
 uint32_t
-UsbCore::getRxStatus(void) const {
+UsbCoreViaSTM32F4::getRxStatus(void) const {
 	return this->m_usbCore->GRXSTSP;
 }
 /*******************************************************************************

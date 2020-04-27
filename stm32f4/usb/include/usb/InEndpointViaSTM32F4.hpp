@@ -5,27 +5,29 @@
 #ifndef _INENDPOINT_HPP_34f149e0_9f89_489b_a2c0_95b3363fe4a8
 #define _INENDPOINT_HPP_34f149e0_9f89_489b_a2c0_95b3363fe4a8
 
-#include "UsbDevice.hpp"
+#include <usb/UsbHwInEndpoint.hpp>
+#include <stm32f4xx.h>
 
 namespace usb {
-namespace stm32f4 {
+    namespace stm32f4 {
+
+class UsbDeviceViaSTM32F4;
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT = UsbDevice>
-class InEndpointT {
+class InEndpointViaSTM32F4 : public UsbHwInEndpoint {
 private:
-    UsbDeviceT &                        m_usbDevice;
+    UsbDeviceViaSTM32F4 &               m_usbDevice;
     const unsigned                      m_endpointNumber;
-    USB_OTG_INEndpointTypeDef * const   m_endpoint;
-    volatile uint32_t * const           m_txFifoAddr;
     const size_t                        m_fifoSzInWords;
+    USB_OTG_INEndpointTypeDef * const   m_endpoint;
+    volatile uint32_t * const           m_fifoAddr;
 
     /*******************************************************************************
      * Typedefs and static buffer for IRQ Handler
      ******************************************************************************/
-    typedef void (usb::stm32f4::InEndpointT<UsbDeviceT> ::*irq_handler_fn)();
+    typedef void (usb::stm32f4::InEndpointViaSTM32F4::*irq_handler_fn)();
 
     typedef struct irq_handler_s {
         uint32_t m_irq;
@@ -67,11 +69,9 @@ private:
     void    handleEndpointDisabled(void);
     void    handleTransferComplete(void);
 
-protected:
-
 public:
-    InEndpointT(UsbDeviceT &p_usbDevice, const size_t p_fifoSzInWords, const unsigned p_endpointNumber = 0);
-    ~InEndpointT();
+    InEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const size_t p_fifoSzInWords, const unsigned p_endpointNumber = 0);
+    virtual ~InEndpointViaSTM32F4();
 
     void disableIrq(void) const;
     void enableIrq(void) const;
@@ -86,27 +86,25 @@ public:
 
     void setPacketSize(const unsigned p_packetSize) const;
 
-    void write(const uint8_t * const p_data, const size_t p_dataLength, const size_t p_txLength);
-    void writeString(const ::usb::UsbStringDescriptor &p_string, const size_t p_len);
+    size_t getFifoSzInWords(void) const {
+        return this->m_fifoSzInWords;
+    }
 
     unsigned getEndpointNumber(void) const {
         return this->m_endpointNumber;
     }
 
-    size_t getFifoSzInWords(void) const {
-        return this->m_fifoSzInWords;
-    }
-
+    /*******************************************************************************
+     * Implementation of UsbHwInEndpoint Interface
+     ******************************************************************************/
+    void write(const uint8_t * const p_data, const size_t p_dataLength, const size_t p_txLength);
+    void writeString(const ::usb::UsbStringDescriptor &p_string, const size_t p_len);
 };
 
 /*******************************************************************************
  *
  ******************************************************************************/
-typedef InEndpointT<> InEndpoint;
-
-} /* namespace stm32f4 */
+    } /* namespace stm32f4 */
 } /* namespace usb */
-
-#include <usb/InEndpoint.cpp>
 
 #endif /* _INENDPOINT_HPP_34f149e0_9f89_489b_a2c0_95b3363fe4a8 */

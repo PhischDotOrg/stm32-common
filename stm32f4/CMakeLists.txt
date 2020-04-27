@@ -24,7 +24,7 @@ target_link_libraries(${TARGET_NAME}
     FreeRTOS
     gpio
     uart
-    usb
+    usb-stm32f4
 )
 target_include_directories(${TARGET_NAME} PRIVATE
 )

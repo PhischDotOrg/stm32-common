@@ -20,7 +20,7 @@ extern "C" {
 #include <dma/DmaStreamViaSTM32F4.hpp>
 #include <spi/SpiAccessViaSTM32F4.hpp>
 #include <timer/TimerViaSTM32F4.hpp>
-#include <usb/UsbCore.hpp>
+#include <usb/UsbCoreViaSTM32F4FromAddressPointer.hpp>
 
 namespace devices {
 

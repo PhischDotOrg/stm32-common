@@ -5,11 +5,9 @@
 #ifndef _OUTENDPOINT_CPP_4c0d9db1_5757_4b12_83e7_69b04d8c655a
 #define _OUTENDPOINT_CPP_4c0d9db1_5757_4b12_83e7_69b04d8c655a
 
-#include <usb/OutEndpoint.hpp>
-#include <usb/UsbDevice.hpp>
-
-extern "C" void led2_off(void);
-extern "C" void led3_off(void);
+#include <usb/OutEndpointViaSTM32F4.hpp>
+#include <usb/UsbDeviceViaSTM32F4.hpp>
+#include <usb/UsbOutEndpoint.hpp>
 
 namespace usb {
     namespace stm32f4 {
@@ -17,14 +15,13 @@ namespace usb {
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
-OutEndpointT<UsbDeviceT>::OutEndpointT(UsbDeviceT &p_usbDevice, const unsigned p_endpointNumber)
-  : m_usbDevice(p_usbDevice), m_endpointNumber(p_endpointNumber),
+OutEndpointViaSTM32F4::OutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const unsigned p_endpointNumber)
+  : m_usbDevice(p_usbDevice),
+    m_endpointNumber(p_endpointNumber),
     m_endpoint(reinterpret_cast<USB_OTG_OUTEndpointTypeDef *>(p_usbDevice.getBaseAddr() + USB_OTG_OUT_ENDPOINT_BASE + (p_endpointNumber * USB_OTG_EP_REG_SIZE))),
-    m_rxFifoAddr(reinterpret_cast<uint32_t *>(p_usbDevice.getBaseAddr() + USB_OTG_FIFO_BASE + (p_endpointNumber * USB_OTG_FIFO_SIZE))),
-    m_rxBufferCurPos(0)
+    m_fifoAddr(reinterpret_cast<uint32_t *>(p_usbDevice.getBaseAddr() + USB_OTG_FIFO_BASE + (p_endpointNumber * USB_OTG_FIFO_SIZE)))
 {
-    m_usbDevice.registerEndpoint(this->getEndpointNumber(), *this);
+    this->m_usbDevice.registerEndpoint(this->getEndpointNumber(), *this);
 
     this->reset();
 }
@@ -32,17 +29,15 @@ OutEndpointT<UsbDeviceT>::OutEndpointT(UsbDeviceT &p_usbDevice, const unsigned p
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
-OutEndpointT<UsbDeviceT>::~OutEndpointT() {
-    m_usbDevice.unregisterEndpoint(this->getEndpointNumber(), *this);
+OutEndpointViaSTM32F4::~OutEndpointViaSTM32F4() {
+    this->m_usbDevice.unregisterEndpoint(this->getEndpointNumber(), *this);
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-OutEndpointT<UsbDeviceT>::reset(void) const {
+OutEndpointViaSTM32F4::reset(void) const {
     this->disable();
 
     this->m_endpoint->DOEPCTL = 0;
@@ -51,9 +46,8 @@ OutEndpointT<UsbDeviceT>::reset(void) const {
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-OutEndpointT<UsbDeviceT>::disable(void) const {
+OutEndpointViaSTM32F4::disable(void) const {
     this->setNack(true);
     this->m_endpoint->DOEPCTL |= USB_OTG_DOEPCTL_EPDIS;
 }
@@ -61,9 +55,11 @@ OutEndpointT<UsbDeviceT>::disable(void) const {
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-OutEndpointT<UsbDeviceT>::enable(void) const {
+OutEndpointViaSTM32F4::enable(void) const {
+    this->m_endpoint->DOEPCTL = ((0x2 << USB_OTG_DOEPCTL_EPTYP_Pos) & USB_OTG_DOEPCTL_EPTYP_Msk)
+        | USB_OTG_DOEPCTL_USBAEP | ((64 << USB_OTG_DOEPCTL_MPSIZ_Pos) & USB_OTG_DOEPCTL_MPSIZ_Msk);
+    
     if (!(this->m_endpoint->DOEPCTL & USB_OTG_DOEPCTL_EPENA)) {
         uint32_t reg = this->m_endpoint->DOEPTSIZ;
 
@@ -77,15 +73,15 @@ OutEndpointT<UsbDeviceT>::enable(void) const {
 
     this->setNack(false);
 
+    this->m_endpoint->DOEPCTL |= USB_OTG_DOEPCTL_EPENA;
     this->m_endpoint->DOEPCTL &= ~USB_OTG_DOEPCTL_EPDIS;
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-OutEndpointT<UsbDeviceT>::setNack(const bool p_nack) const {
+OutEndpointViaSTM32F4::setNack(const bool p_nack) const {
     if (p_nack) {
         this->m_endpoint->DOEPCTL |= USB_OTG_DOEPCTL_SNAK;
     } else {
@@ -97,9 +93,8 @@ OutEndpointT<UsbDeviceT>::setNack(const bool p_nack) const {
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-OutEndpointT<UsbDeviceT>::enableSetupPackets(const unsigned p_numPackets) const {
+OutEndpointViaSTM32F4::enableSetupPackets(const unsigned p_numPackets) const {
 	uint32_t reg = this->m_endpoint->DOEPTSIZ;
 
 	reg &= ~USB_OTG_DOEPTSIZ_PKTCNT_Msk;
@@ -112,19 +107,62 @@ OutEndpointT<UsbDeviceT>::enableSetupPackets(const unsigned p_numPackets) const 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-OutEndpointT<UsbDeviceT>::handleRxData(const size_t p_numBytes) {
+OutEndpointViaSTM32F4::handleSetupData(const size_t p_numBytes) {
     size_t numWords = (p_numBytes + (sizeof(uint32_t) - 1)) / sizeof(uint32_t);
 
-    this->m_rxBufferCurPos = 0;
+    assert(p_numBytes == 8);
+    assert(numWords == 2);
+    assert(this->m_endpointCallback != NULL);
 
-    assert(p_numBytes <= sizeof(this->m_rxBuffer));
+    uint32_t *setupPacketBuffer;
+    size_t setupPacketBufferLength;
+    
+    setupPacketBuffer = static_cast<uint32_t *>(this->m_endpointCallback->getSetupPacketBuffer(&setupPacketBufferLength));
+    assert(setupPacketBufferLength >= p_numBytes);
 
     for (unsigned idx = 0; idx < numWords; idx++) {
-        this->m_rxBuffer.m_rxBuffer32[this->m_rxBufferCurPos] = *this->m_rxFifoAddr;
-        this->m_rxBufferCurPos++;
+        setupPacketBuffer[idx] = *(this->m_fifoAddr);
     }
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+void
+OutEndpointViaSTM32F4::handleSetupComplete(void) {
+    assert(this->m_endpointCallback != NULL);
+
+    /* FIXME There is really no need to get and pass the Setup Packet Buffer from the Callback here. */
+    size_t setupPacketBufferLength;
+    uint32_t *setupPacketBuffer = static_cast<uint32_t *>(this->m_endpointCallback->getSetupPacketBuffer(&setupPacketBufferLength));
+    assert(setupPacketBufferLength >= (2 * sizeof(uint32_t)));
+
+    this->m_endpointCallback->setupComplete(setupPacketBuffer, setupPacketBufferLength);
+}
+
+    
+/*******************************************************************************
+ *
+ ******************************************************************************/
+void
+OutEndpointViaSTM32F4::handleRxData(const size_t p_numBytes, const typename UsbDeviceViaSTM32F4::DataPID_e & /* p_dataPID */) {
+    size_t numWords = (p_numBytes + (sizeof(uint32_t) - 1)) / sizeof(uint32_t);
+
+    // assert(p_numBytes <= sizeof(this->m_rxBuffer));
+    assert(this->m_endpointCallback != NULL);
+
+    for (unsigned idx = 0; idx < numWords; idx++) {
+        this->m_endpointCallback->rxData(*(this->m_fifoAddr));
+    }
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+void
+OutEndpointViaSTM32F4::handleOutTransferComplete(void) {
+
 }
 
 /*******************************************************************************
@@ -134,24 +172,22 @@ OutEndpointT<UsbDeviceT>::handleRxData(const size_t p_numBytes) {
  * Table of interrupt handlers. Is handled in order from first to last, i.e.
  * functions listed earlier are handled before the functions listed later.
  */
-template<typename UsbDeviceT>
 const
-typename OutEndpointT<UsbDeviceT>::irq_handler_t OutEndpointT<UsbDeviceT>::m_irq_handler[] = {
-    { USB_OTG_DOEPINT_STUP, &OutEndpointT<UsbDeviceT>::handleSetupDone },
-    { USB_OTG_DOEPINT_XFRC, &OutEndpointT<UsbDeviceT>::handleTransferComplete },
+typename OutEndpointViaSTM32F4::irq_handler_t OutEndpointViaSTM32F4::m_irq_handler[] = {
+    { USB_OTG_DOEPINT_STUP, &OutEndpointViaSTM32F4::handleSetupDoneIrq },
+    { USB_OTG_DOEPINT_XFRC, &OutEndpointViaSTM32F4::handleTransferComplete },
     { 0, NULL }
 };
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-OutEndpointT<UsbDeviceT>::handleIrq(void) {
+OutEndpointViaSTM32F4::handleIrq(void) {
     const uint32_t  irq = this->m_endpoint->DOEPINT;
     uint32_t        handledIrq = 0;
 
-    for (const typename OutEndpointT<UsbDeviceT>::irq_handler_t *cur = OutEndpointT<UsbDeviceT>::m_irq_handler; cur->m_irq != 0; cur++) {
+    for (const typename OutEndpointViaSTM32F4::irq_handler_t *cur = OutEndpointViaSTM32F4::m_irq_handler; cur->m_irq != 0; cur++) {
         if (irq & cur->m_irq) {
             handledIrq |= cur->m_irq;
 
@@ -161,38 +197,24 @@ OutEndpointT<UsbDeviceT>::handleIrq(void) {
         }
     }
 }
+
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-OutEndpointT<UsbDeviceT>::handleTransferComplete(void) {
+OutEndpointViaSTM32F4::handleTransferComplete(void) {
+    assert(this->m_endpointCallback != NULL);
 
+    this->m_endpointCallback->transferComplete();
+
+    this->enable();
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-template<typename UsbDeviceT>
 void
-OutEndpointT<UsbDeviceT>::handleSetupDone(void) {
-    const UsbRecipient_t usbRecipient = static_cast<UsbRecipient_t>(this->m_rxBuffer.m_setupPacket.m_bmRequestType & 0x0F);
-
-    switch (usbRecipient) {
-    case e_Device:
-        this->handleDeviceRequest();
-        break;
-    case e_Interface:
-    case e_Endpoint:
-    case e_Other:
-    default:
-        /* FIXME Not yet implemented */
-        assert(false);
-        break;
-    }
-
-    this->m_rxBufferCurPos = 0;
-
+OutEndpointViaSTM32F4::handleSetupDoneIrq(void) {
     /*
      * The USB Core clears the Enable Bit in the OTG_FS_DIEPCTL after the Setup
      * Phase is done. We need to re-enable the endpoint (which means also that
@@ -205,31 +227,6 @@ OutEndpointT<UsbDeviceT>::handleSetupDone(void) {
      * the NACK bit is not set.
      */
     this->enable();
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-template<typename UsbDeviceT>
-void
-OutEndpointT<UsbDeviceT>::handleDeviceRequest(void) const {
-    switch (this->m_rxBuffer.m_setupPacket.m_bRequest) {
-    case e_SetAddress:
-        this->m_usbDevice.setAddress(this->m_rxBuffer.m_setupPacket.m_wValue & 0x7F);
-        break;
-    case e_GetDescriptor:
-        this->m_usbDevice.getDescriptor(this->m_rxBuffer.m_setupPacket.m_wValue, this->m_rxBuffer.m_setupPacket.m_wLength);
-        break;
-    case e_SetConfiguration:
-        this->m_usbDevice.setConfiguration(this->m_rxBuffer.m_setupPacket.m_wValue);
-        break;
-    case e_GetStatus:
-        this->m_usbDevice.getStatus(this->m_rxBuffer.m_setupPacket.m_wLength);
-        break;
-    default:
-        assert(false);
-        break;
-    }
 }
 
 /*******************************************************************************
