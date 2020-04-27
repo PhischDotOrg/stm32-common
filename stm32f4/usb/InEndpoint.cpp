@@ -97,7 +97,7 @@ InEndpointT<UsbDeviceT>::write(const uint8_t * const p_data,
 template<typename UsbDeviceT>
 void
 InEndpointT<UsbDeviceT>::startTx(void) {
-    assert(this->m_txBuffer.m_inProgress == false || this->m_txBuffer.m_data.m_u8 == 0);
+    assert(this->m_txBuffer.m_inProgress == false);
 
     this->m_txBuffer.m_inProgress   = true;
 
@@ -287,6 +287,7 @@ InEndpointT<UsbDeviceT>::handleTxFifoEmpty(void) {
     while ((this->m_endpoint->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV) == 0);
 
     if (this->m_txBuffer.m_data.m_u8 == NULL) {
+        this->m_txBuffer.m_inProgress = false;
         goto out;
     }
 
