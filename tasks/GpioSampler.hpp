@@ -13,11 +13,11 @@ namespace tasks {
 template<typename UartT, typename PinT>
 class GpioSamplerT : public Task {
 private:
-    uart::UartDevice &  m_uart;
-    gpio::Pin  &        m_pin;
-    const unsigned      m_periodMs;
-    uint8_t             m_register;
-    bool                m_pinState;
+    UartT &         m_uart;
+    PinT &          m_pin;
+    const unsigned  m_periodMs;
+    uint8_t         m_register;
+    bool            m_pinState;
     
     virtual void run(void);
 

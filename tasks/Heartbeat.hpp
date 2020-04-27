@@ -15,9 +15,9 @@ namespace tasks {
 template<typename UartT = uart::UartDevice, typename PinT = gpio::Pin>
 class HeartbeatT : public Task {
 private:
-    uart::UartDevice &  m_uart;
-    gpio::Pin  &        m_led;
-    const unsigned      m_periodMs;
+    UartT &         m_uart;
+    PinT  &         m_led;
+    const unsigned  m_periodMs;
 
     virtual void run(void);
 
