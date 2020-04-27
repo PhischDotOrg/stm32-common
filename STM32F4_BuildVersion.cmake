@@ -18,7 +18,7 @@ FILE(WRITE ${BUILD_VERSION_CMAKE_FILE}
 FILE(APPEND ${BUILD_VERSION_CMAKE_FILE}
     "execute_process(COMMAND git describe --always --dirty=+\n"
     "   WORKING_DIRECTORY " ${CMAKE_CURRENT_SOURCE_DIR}/.. "\n"
-    "   TIMEOUT 1\n"
+    "   TIMEOUT 5\n"
     "   RESULT_VARIABLE   GIT_RESULT\n"
     "   OUTPUT_VARIABLE   GIT_OUTPUT\n"
     "   ERROR_VARIABLE    GIT_ERROR\n"
