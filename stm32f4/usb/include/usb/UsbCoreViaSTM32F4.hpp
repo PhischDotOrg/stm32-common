@@ -15,8 +15,11 @@ namespace usb {
 
         class UsbDeviceViaSTM32F4;
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * \brief Driver for the STM32F4 USB Core.
+ * 
+ * Class that encapsulates the operation of the STM32F4's USB On-the-Go (OTG)
+ * Core. This is code common to both Device and Host mode operation.
  ******************************************************************************/
 class UsbCoreViaSTM32F4 {
 public:
@@ -29,6 +32,7 @@ public:
     };
 
     typedef enum Interrupt_e {
+        e_None                  = 0,
         e_ModeMismatch          = USB_OTG_GINTMSK_MMISM,
         e_OnTheGo               = USB_OTG_GINTMSK_OTGINT,
         e_StartOfFrame          = USB_OTG_GINTMSK_SOFM,

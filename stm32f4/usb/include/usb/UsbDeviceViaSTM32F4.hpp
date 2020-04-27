@@ -16,6 +16,7 @@ namespace usb {
  *
  ******************************************************************************/
 class InEndpointViaSTM32F4;
+class CtrlOutEndpointViaSTM32F4;
 class OutEndpointViaSTM32F4;
 
 /*******************************************************************************
@@ -30,6 +31,13 @@ public:
         e_MData = 0x3
     } DataPID_t;
 
+    typedef enum EndpointType_e {
+        e_Control       = EP_TYPE_CTRL,
+        e_Isochronous   = EP_TYPE_ISOC,
+        e_Bulk          = EP_TYPE_BULK,
+        e_Interrupt     = EP_TYPE_ISOC
+    } EndpointType_t;
+
 private:
     /*******************************************************************************
      * Private Variables
@@ -39,8 +47,8 @@ private:
     typedef void (usb::stm32f4::UsbDeviceViaSTM32F4::*irq_handler_fn)() const;
 
     typedef struct irq_handler_s {
-        uint32_t            m_irq;
-        irq_handler_fn      m_fn;
+        UsbCoreViaSTM32F4::Interrupt_e  m_irq;
+        irq_handler_fn                  m_fn;
     } irq_handler_t;
 
     static const irq_handler_t m_irq_handler[];
@@ -52,8 +60,8 @@ protected:
     static const size_t             m_maxOutEndpoints = 4;
 
     InEndpointViaSTM32F4 *          m_inEndpoints[m_maxInEndpoints];
+    CtrlOutEndpointViaSTM32F4 *     m_ctrlOutEndpoint;
     OutEndpointViaSTM32F4 *         m_outEndpoints[m_maxOutEndpoints];
-
     union UsbDeviceStatus_u {
         uint16_t        m_status;
         struct {
@@ -72,10 +80,13 @@ public:
     virtual ~UsbDeviceViaSTM32F4();
 
     void registerEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint);
-    void registerEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint);
-
     void unregisterEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint);
+
+    void registerEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint);
     void unregisterEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint);
+
+    void registerEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint);
+    void unregisterEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint);
 
     void disableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
     void disableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
@@ -100,6 +111,8 @@ public:
     intptr_t getBaseAddr(void) const {
         return m_usbCore.getBaseAddr();
     };
+
+    DeviceSpeed_e getEnumeratedSpeed(void) const;
 
 /*******************************************************************************
  * UsbHwDevice Interface
@@ -132,8 +145,6 @@ private:
 
     void disableEndpointIrq(const unsigned &p_endpointNumber, bool p_isOutEndpoint) const;
     void enableEndpointIrq(const unsigned &p_endpointNumber, bool p_isOutEndpoint) const;
-
-    void handleUsbSuspend(void) const;
 
     virtual void setupTxFifos(void) const;
 

@@ -141,6 +141,8 @@ include(STM32F4_BuildVersion.cmake)
 include(STM32F4_OpenOCD.cmake)
 include(STM32F4_Startup.cmake)
 
+include(STM32F4_Doxygen.cmake)  # Include after STM32F4_BuildVersion.cmake b/c it needs ${GIT_VERSION} being set.
+
 target_link_options(${TARGET_ELF} PRIVATE
     -T ${CMAKE_CURRENT_SOURCE_DIR}/${STM32F4_LDSCRIPT}
 )

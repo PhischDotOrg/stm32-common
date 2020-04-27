@@ -82,6 +82,26 @@ UsbDeviceViaSTM32F4::unregisterEndpoint(const unsigned p_endpointNumber, OutEndp
     this->m_outEndpoints[p_endpointNumber] = NULL;
 }
 
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+void
+UsbDeviceViaSTM32F4::registerEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint) {
+    assert(this->m_ctrlOutEndpoint == NULL);
+
+    this->m_ctrlOutEndpoint = &p_endpoint;
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+void
+UsbDeviceViaSTM32F4::unregisterEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint) {
+    assert(this->m_ctrlOutEndpoint == &p_endpoint);
+    this->m_ctrlOutEndpoint = nullptr;
+}
+
 /*******************************************************************************
  *
  ******************************************************************************/
@@ -138,14 +158,30 @@ UsbDeviceViaSTM32F4::handleInEndpointIrq(void) const {
     }
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief OUT Endpoint IRQ Handler.
+ * 
+ * Handles \c OEPINT Bit of the \c GINTSTS register. This handler will use the
+ * \c OEPINT bits in the \c DAINT register to determine which endpoint has caused
+ * the interrupt. If multiple endpoints triggered an interrupt at the same time,
+ * then the individual endpoint handlers will be called from low number to high.
+ * In other words: Endpoint #0 is called before Endpoint #1, etc.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::handleOutEndpointIrq(void) const {
     uint16_t irqs = (this->m_usbDevice->DAINT & USB_OTG_DAINT_OEPINT_Msk) >> USB_OTG_DAINT_OEPINT_Pos;
 
-    for (unsigned idx = 0; idx < this->m_maxOutEndpoints; idx++) {
+    /*
+     * OUT Endpoint 0 is Control Endpoint and thus needs to be handled by the callback
+     * object of type CtrlOutEndpointViaSTM32F4 pointed to by m_ctrlOutEndpoint.
+     * 
+     * This is b/c OutEndpointViaSTM32F4::handleIrq is not a virtual method.
+     */
+    if (irqs & (1 << 0)) {
+        this->m_ctrlOutEndpoint->handleIrq();
+    }
+
+    for (unsigned idx = 1; idx < this->m_maxOutEndpoints; idx++) {
         if (irqs & (1 << idx)) {
             if (this->m_outEndpoints[idx] != NULL) {
                 this->m_outEndpoints[idx]->handleIrq();
@@ -166,53 +202,47 @@ UsbDeviceViaSTM32F4::handleConnectorIdStatusChangeIrq(void) const {
  *
  ******************************************************************************/
 void
-UsbDeviceViaSTM32F4::handleUsbSuspendIrq(void) const {
-    USB_PRINTF("UsbDeviceViaSTM32F4::%s()\r\n", __func__);
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
 UsbDeviceViaSTM32F4::handleEarlySuspendIrq(void) const {
     USB_PRINTF("UsbDeviceViaSTM32F4::%s()\r\n", __func__);  
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * \brief Handle the _USB Enumeration Done_ Interrupt.
+ * 
+ * Handles the \c ENUMDNEM IRQ signalled in the \c GINTSTS register.
+ * 
+ * The hardware sets this bit and signals this IRQ sets when the USB Speed
+ * Enumeration is complete.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::handleEnumerationDone(void) const {
-	/*
-	 * As per STM32F4 Datasheet, we could read the enumerated speed here from
-	 * the DSTS register.
-	 */
-	assert((this->m_usbDevice->DSTS & USB_OTG_DSTS_ENUMSPD_Msk) == (3 << USB_OTG_DSTS_ENUMSPD_Pos));
+    const ::usb::UsbHwDevice::DeviceSpeed_e enumeratedSpeed = this->getEnumeratedSpeed();
+
+    /* FIXME USB High Speed Mode not yet supported */
+    assert(enumeratedSpeed == ::usb::UsbHwDevice::DeviceSpeed_e::e_UsbFullSpeed);
 
 	/*
 	 * Because we're a FullSpeed device, we must set the max. packet size for
-	 * control IN packets to 64 Bytes
+	 * control packets to 64 Bytes.
 	 */
+	assert(this->m_outEndpoints[0] != NULL);
+	this->m_outEndpoints[0]->setPacketSize(64);
+
 	assert(this->m_inEndpoints[0] != NULL);
 	this->m_inEndpoints[0]->setPacketSize(64);
 
+    /* Device is ready, so clear global NAK */
 	this->m_usbDevice->DCTL |= USB_OTG_DCTL_CGINAK;
 
-	/* Enable Control Endpoint 0 */
-#if 0
+	/* Enable Control Endpoints 0 */
 	assert(this->m_inEndpoints[0] != NULL);
-	this->m_inEndpoints[0]->enable();
-#endif
-
 	assert(this->m_outEndpoints[0] != NULL);
-	this->m_outEndpoints[0]->enable();
+	this->m_outEndpoints[0]->enableSetupPackets(1);
 
 	this->m_usbCore.setUsbTurnAroundTime(5); // Value 5 is taken from ST Example Code
 
 	this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_InEndpoint);
 	this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_OutEndpoint);
-
-    // USB_PRINTF("UsbDeviceViaSTM32F4::%s() USB Device enumeration done.\r\n", __func__);
 }
 
 /*******************************************************************************
@@ -242,13 +272,8 @@ UsbDeviceViaSTM32F4::handleUsbReset(void) const {
      *     - INEP0 = 1 in OTG_FS_DAINTMSK (control 0 IN endpoint)
      *     - OUTEP0 = 1 in OTG_FS_DAINTMSK (control 0 OUT endpoint)
      */
-#if 0
-    assert(this->m_inEndpoints[0] != NULL);
-    this->enableEndpointIrq(*(this->m_inEndpoints[0]));
-#endif
 
-    assert(this->m_outEndpoints[0] != NULL);
-    this->enableEndpointIrq(*(this->m_outEndpoints[0]));
+    /* Nothing to do here b/c it's done in the Endpoint's enable() method. */
 
     /*
      *     - STUP = 1 in DOEPMSK (SETUP phase done)
@@ -269,8 +294,6 @@ UsbDeviceViaSTM32F4::handleUsbReset(void) const {
      */
     setupTxFifos();
 
-    // These are programmed during construction of the C++ Objects (Usb Core, Endpoints)
-
     /* 4. Program the endpoint-specific registers for control OUT endpoint 0
      *    to receive a SETUP packet
      */
@@ -287,7 +310,67 @@ UsbDeviceViaSTM32F4::handleStartOfFrame(void) const {
 
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Rx FIFO Non-Empty IRQ Handler.
+ * 
+ * Handles the \c RXFLVL Bit in the USB Device's \c GINTSTS register. The USB
+ * hardware triggers this interrupt if there is at least one packet pending to
+ * be read from the Rx FIFO.
+ *
+ * This involves reading the \c GRXSTSP register, thereby pop-ing the front
+ * of the Rx FIFO queue.
+ * 
+ * This is the main entry function for handling OUT packets.
+ * 
+ * - - -
+ *
+ * For a Control OUT Transfer, the sequence of events is:
+ * 
+ * 1. SETUP data packet received (\c PKTSTS == \c b0110 ).
+ * 
+ *    This is handled in ::usb::stm32f4::OutEndpointViaSTM32F4::setupDataReceivedDeviceCallback.
+ *    
+ * 2. Setup Transaction Complete (\c PKTSTS == \c b0100 ).
+ * 
+ *    This is handled in ::usb::stm32f4::OutEndpointViaSTM32F4::setupCompleteDeviceCallback.
+ * 
+ *    After the Packet has been read from the Rx FIFO, the USB hardware triggers the
+ *    _SETUP Done_ Interrupt in the OUT Endpoint (Bit \c STUP in register \c DOEPINT ).
+ * 
+ *    \see ::usb::stm32f4::OutEndpointViaSTM32F4::handleSetupDoneIrq.
+ * 
+ * 3. OUT Data Packet received (\c PKTSTS == \c b0010 ).
+ * 
+ *    The OUT Packet is either a zero-length packet to indicate that the Control request doesn't
+ *    carry any host-to-device data in its Data Phase.
+ * 
+ *    Otherwise, if the Data Phase of the Control request needs to transmit data from USB host to
+ *    device, then this is when the data should be read from the hardware's Rx FIFO and put into
+ *    application RAM for further processing.
+ * 
+ *    This is handled in ::usb::stm32f4::OutEndpointViaSTM32F4::dataReceivedDeviceCallback.
+ * 
+ * 4. OUT Transfer completed (\c PKTSTS == \c b0011 ).
+ * 
+ *    This is handled in ::usb::stm32f4::OutEndpointViaSTM32F4::transferCompleteDeviceCallback.
+ * 
+ *    This signals that all OUT data has been read from the hardware's Rx FIFO. After this entry
+ *    is pop-ed from the \c GRXSTSP register, the USB hardware triggers the
+ *    _Transfer Complete_ Interrupt in the OUT Endpoint (Bit \c XFRC in register \c DOEPINT ).
+ * 
+ *    \see ::usb::stm32f4::OutEndpointViaSTM32F4::handleTransferCompleteIrq.
+ * 
+ * - - -
+ * 
+ * For a Bulk OUT Transfer, the sequence of events is:
+ * 
+ * 1. OUT Data Packet received (\c PKTSTS == \c b0010 ).
+ *
+ *    This is handled in ::usb::stm32f4::OutEndpointViaSTM32F4::dataReceivedDeviceCallback.
+ * 
+ * 2. OUT Transfer completed (\c PKTSTS == \c b0011 ).
+ *
+ *    This is handled in ::usb::stm32f4::OutEndpointViaSTM32F4::transferCompleteDeviceCallback.
  *
  ******************************************************************************/
 void
@@ -321,10 +404,8 @@ UsbDeviceViaSTM32F4::handleRxFIFO(void) const {
          */
         assert(numBytes <= 1024);
 
-        USB_PRINTF("UsbDeviceViaSTM32F4::%s(): OUT Packet Received -- numBytes=%d, endpointNum = %d, dataPID=%x\r\n", __func__, numBytes, endpointNum, dataPID);
-
 		if (this->m_outEndpoints[endpointNum] != NULL) {
-			this->m_outEndpoints[endpointNum]->handleRxData(numBytes, dataPID);
+			this->m_outEndpoints[endpointNum]->dataReceivedDeviceCallback(numBytes, dataPID);
 		}
 		break;
 	case 0x03: /* OUT Txfr Completed */
@@ -339,11 +420,11 @@ UsbDeviceViaSTM32F4::handleRxFIFO(void) const {
          */
         assert(numBytes == 0);
 
-        USB_PRINTF("UsbDeviceViaSTM32F4::%s(): OUT Txfr Completed -- endpointNum = %i, dataPID=%x\r\n", __func__, endpointNum, dataPID);
-        
+#if 0
 		if (this->m_outEndpoints[endpointNum] != NULL) {
-			this->m_outEndpoints[endpointNum]->handleOutTransferComplete();
+			this->m_outEndpoints[endpointNum]->transferCompleteDeviceCallback();
 		}
+#endif
 		break;
 	case 0x04: /* Setup Transaction Complete */
         /*
@@ -354,15 +435,14 @@ UsbDeviceViaSTM32F4::handleRxFIFO(void) const {
          * Data stage has started. After this entry is popped from the receive FIFO, the core asserts
          * a Setup interrupt on the specified control OUT endpoint.
          */
-        USB_PRINTF("UsbDeviceViaSTM32F4::%s(): SETUP Transaction complete -- numBytes=%d, endpointNum = %d, dataPID=%x\r\n", __func__, numBytes, endpointNum, dataPID);
-
         assert(endpointNum == 0);
         assert(numBytes == 0);
-        assert(dataPID == 0);
+        // assert(dataPID == 0);
 
-		if (this->m_outEndpoints[endpointNum] != NULL) {
-			this->m_outEndpoints[endpointNum]->handleSetupComplete();
-		}
+#if 0
+        assert(this->m_ctrlOutEndpoint != NULL);
+        this->m_ctrlOutEndpoint->setupCompleteDeviceCallback();
+#endif
 		break;
 	case 0x06: /* Setup Data Packet Received */
         /*
@@ -375,11 +455,8 @@ UsbDeviceViaSTM32F4::handleRxFIFO(void) const {
         assert(numBytes == 8);
         assert(dataPID == 0);
 
-        USB_PRINTF("UsbDeviceViaSTM32F4::%s(): SETUP Packet numBytes=%d, endpointNum = %d, dataPID=%x\r\n", __func__, numBytes, endpointNum, dataPID);
-
-		if (this->m_outEndpoints[endpointNum] != NULL) {
-			this->m_outEndpoints[endpointNum]->handleSetupData(numBytes);
-		}
+        assert(this->m_ctrlOutEndpoint != NULL);
+        this->m_ctrlOutEndpoint->setupDataReceivedDeviceCallback(numBytes);
 		break;
     default:
         assert(false);
@@ -403,8 +480,12 @@ UsbDeviceViaSTM32F4::disableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) 
     this->disableEndpointIrq(p_endpoint.getEndpointNumber(), false);
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Enable the given IN Endpoints IRQs.
+ * 
+ * This enables the IN Endpoints IRQs in the \c DAINTMSK register.
+ * 
+ * @param p_endpoint Number of IN Endpoint.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::enableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const {
@@ -457,6 +538,9 @@ UsbDeviceViaSTM32F4::disableEndpointIrq(const unsigned &p_endpointNumber, bool p
 void
 UsbDeviceViaSTM32F4::enableEndpointIrq(const unsigned &p_endpointNumber, bool p_isOutEndpoint) const {
     this->m_usbDevice->DAINTMSK |= 1 << (p_endpointNumber + (p_isOutEndpoint ? 16 : 0));
+
+    // USB_PRINTF("UsbDeviceViaSTM32F4::%s() -- p_endpointNumber=%d, p_isOutEndpoint=%d, DAINTMSK=0x%x\r\n",
+    //   __func__, p_endpointNumber, p_isOutEndpoint, this->m_usbDevice->DAINTMSK);
 }
 
 /*******************************************************************************
@@ -475,16 +559,6 @@ UsbDeviceViaSTM32F4::setAddress(const uint8_t p_address) const {
 /*******************************************************************************
  *
  ******************************************************************************/
-#if defined(USB_DEBUG)
-void
-UsbDeviceViaSTM32F4::debugPrint(void) const {
-    USB_PRINTF("UsbDeviceViaSTM32F4::%s(): DAINTMSK=%x, \r\n", __func__, this->m_usbDevice->DAINTMSK);
-}
-#endif /* defined(USB_DEBUG) */
-
-/*******************************************************************************
- *
- ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::start(void) const {
     this->setupDeviceSpeed(this->m_deviceSpeed);
@@ -496,12 +570,17 @@ UsbDeviceViaSTM32F4::start(void) const {
         }
     }
     
-    this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_Suspend);
+    for (const UsbDeviceViaSTM32F4::irq_handler_t *cur = UsbDeviceViaSTM32F4::m_irq_handler; cur->m_irq != 0; cur++) {
+        this->m_usbCore.enableInterrupt(cur->m_irq);
+    }
+
+#if 0
     this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_StartOfFrame);
     this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_Reset);
     this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_EnumerationDone);
     this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_SessionRequest);
     this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_OnTheGo);
+#endif
 }
 
 /*******************************************************************************
@@ -514,31 +593,47 @@ UsbDeviceViaSTM32F4::stop(void) const {
     this->m_usbCore.stop();
 }
 
-/*******************************************************************************
- *
- ******************************************************************************/
-/*
+/***************************************************************************//**
+ * @brief USB Device Interrupt Handlers.
+ * 
  * Table of interrupt handlers. Is handled in order from first to last, i.e.
  * functions listed earlier are handled before the functions listed later.
- */
+ * 
+ * \warning The OUT Endpoint IRQ needs to be served before the Rx FIFO IRQ. This makes
+ *   sure that the Setup Packet is decoded before potential Data OUT Stage Data is
+ *   transferred to the device-independent layer.
+ *   In other words: On the Control OUT Endpoint, ::usb::stm32f4::OutEndpointViaSTM32F4::dataReceivedDeviceCallback
+ *   must not be called before ::usb::stm32f4::CtrlOutEndpointViaSTM32F4::handleSetupDoneIrq as otherwise the
+ *   Data OUT Pointers have not been set up.
+ * 
+ * \see ::usb::stm32f4::UsbDeviceViaSTM32F4::handleIrq.
+ ******************************************************************************/
 const
 typename UsbDeviceViaSTM32F4::irq_handler_t UsbDeviceViaSTM32F4::m_irq_handler[] = {
-    { USB_OTG_GINTSTS_USBSUSP,  &UsbDeviceViaSTM32F4::handleUsbSuspend },
-    { USB_OTG_GINTSTS_SOF,      &UsbDeviceViaSTM32F4::handleStartOfFrame },
-    { USB_OTG_GINTSTS_RXFLVL,   &UsbDeviceViaSTM32F4::handleRxFIFO },
-    { USB_OTG_GINTSTS_USBRST,   &UsbDeviceViaSTM32F4::handleUsbReset },
-    { USB_OTG_GINTSTS_ENUMDNE,  &UsbDeviceViaSTM32F4::handleEnumerationDone },
-    { USB_OTG_GINTSTS_IEPINT,   &UsbDeviceViaSTM32F4::handleInEndpointIrq },
-    { USB_OTG_GINTSTS_OEPINT,   &UsbDeviceViaSTM32F4::handleOutEndpointIrq },
-    { USB_OTG_GINTSTS_CIDSCHG,  &UsbDeviceViaSTM32F4::handleConnectorIdStatusChangeIrq },
-    { USB_OTG_GINTSTS_ESUSP,    &UsbDeviceViaSTM32F4::handleEarlySuspendIrq },
-    { USB_OTG_GINTSTS_USBSUSP,  &UsbDeviceViaSTM32F4::handleUsbSuspendIrq },
-    { 0, NULL }
+    { UsbCoreViaSTM32F4::Interrupt_e::e_Suspend,            &UsbDeviceViaSTM32F4::handleUsbSuspendIrq },
+    // { UsbCoreViaSTM32F4::Interrupt_e::e_StartOfFrame,       &UsbDeviceViaSTM32F4::handleStartOfFrame },
+    { UsbCoreViaSTM32F4::Interrupt_e::e_OutEndpoint,        &UsbDeviceViaSTM32F4::handleOutEndpointIrq },   // Must be served before e_RxFifoNonEmpty!
+    { UsbCoreViaSTM32F4::Interrupt_e::e_RxFifoNonEmpty,     &UsbDeviceViaSTM32F4::handleRxFIFO },
+    { UsbCoreViaSTM32F4::Interrupt_e::e_Reset,              &UsbDeviceViaSTM32F4::handleUsbReset },
+    { UsbCoreViaSTM32F4::Interrupt_e::e_EnumerationDone,    &UsbDeviceViaSTM32F4::handleEnumerationDone },
+    { UsbCoreViaSTM32F4::Interrupt_e::e_InEndpoint,         &UsbDeviceViaSTM32F4::handleInEndpointIrq },
+    { UsbCoreViaSTM32F4::Interrupt_e::e_ConnectorIdStatus,  &UsbDeviceViaSTM32F4::handleConnectorIdStatusChangeIrq },
+    // { UsbCoreViaSTM32F4::Interrupt_e::e_EarlySuspend,       &UsbDeviceViaSTM32F4::handleEarlySuspendIrq },
+    { UsbCoreViaSTM32F4::Interrupt_e::e_None,               NULL }
 };
 
+/***************************************************************************//**
+ * @brief USB Device Interrupt Handler.
+ * 
+ * 
+ * @param p_irq 
+ * @return uint32_t 
+ ******************************************************************************/
 uint32_t
 UsbDeviceViaSTM32F4::handleIrq(const uint32_t p_irq) const {
     uint32_t handledIrq = 0;
+
+    USB_PRINTF("--> UsbDeviceViaSTM32F4::%s() p_irq=0x%x\r\n", __func__, p_irq);
 
     for (const UsbDeviceViaSTM32F4::irq_handler_t *cur = UsbDeviceViaSTM32F4::m_irq_handler; cur->m_irq != 0; cur++) {
         if (p_irq & cur->m_irq) {
@@ -549,6 +644,8 @@ UsbDeviceViaSTM32F4::handleIrq(const uint32_t p_irq) const {
         }
     }
 
+    USB_PRINTF("<-- UsbDeviceViaSTM32F4::%s() handledIrq=0x%x\r\n", __func__, handledIrq);
+
     return handledIrq;
 }
 
@@ -556,9 +653,7 @@ UsbDeviceViaSTM32F4::handleIrq(const uint32_t p_irq) const {
  *
  ******************************************************************************/
 void
-UsbDeviceViaSTM32F4::handleUsbSuspend(void) const {
-    // USB_PRINTF("%s()\r\n", __func__);
-
+UsbDeviceViaSTM32F4::handleUsbSuspendIrq(void) const {
     if (this->isSuspendableState()) {
         this->m_usbCore.suspendPhy();
         
@@ -618,6 +713,45 @@ UsbDeviceViaSTM32F4::setupTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const {
 void
 UsbDeviceViaSTM32F4::flushTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const {
     this->m_usbCore.flushTxFifo(p_endpoint.getEndpointNumber());
+}
+
+/***************************************************************************//**
+ * @brief Read enumerated speed from USB Hardware.
+ * 
+ * Reads the \c ENUMSPD bits from the \c DSTS register and decodes it into an
+ * enumerated USB Speed.
+ * 
+ * \warning This method will only yield deterministic results after the USB
+ * enumeration is complete.
+ * 
+ * \see ::usb::stm32f4::UsbDeviceViaSTM32F4::handleEnumerationDone.
+ * 
+ * \return Enumerated Device Speed.
+ ******************************************************************************/
+::usb::UsbHwDevice::DeviceSpeed_e
+UsbDeviceViaSTM32F4::getEnumeratedSpeed(void) const {
+    ::usb::UsbHwDevice::DeviceSpeed_e enumeratedSpeed = ::usb::UsbHwDevice::DeviceSpeed_e::e_UsbUnknown;
+
+    enum EnumeratedSpeed_e {
+        e_HighSpeed     = 0x00,
+        e_Reserved_Init = 0x01, /* Datasheet marks this combination as reserved, seems to be set up as initial value */
+        e_FullSpeed     = 0x03
+    };
+
+    switch((this->m_usbDevice->DSTS & USB_OTG_DSTS_ENUMSPD_Msk) >> USB_OTG_DSTS_ENUMSPD_Pos) {
+    case e_FullSpeed:
+        enumeratedSpeed = e_UsbFullSpeed;
+        break;
+    case e_HighSpeed:
+        /* FIXME USB High Speed Mode not yet implemented */
+        assert(false);
+        break;
+    default:
+        assert(false);
+        break;
+    }
+
+    return enumeratedSpeed;
 }
 
 /*******************************************************************************

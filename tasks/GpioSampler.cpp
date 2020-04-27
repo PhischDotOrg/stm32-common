@@ -50,12 +50,11 @@ template<typename UartT, typename PinT>
 void
 GpioSamplerT<UartT, PinT>::run(void) {
     this->m_uart.printf("Task '%s' sampling at %d ms.\r\n", this->m_name, this->m_periodMs);
-    typename PinT::mode_t pinState;
+    typename PinT::mode_t pinState = PinT::mode_t::HiZ;
 
     TickType_t period = this->m_periodMs / portTICK_PERIOD_MS;
     do {
         this->m_pin.get(pinState);
-
         this->m_register = this->m_register - (this->m_register >> 4) + ((pinState == PinT::mode_t::On ? 1u : 0) << 3);
 
         if (!(this->m_pinState) && (this->m_register >> 7)) {
