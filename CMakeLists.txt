@@ -112,12 +112,14 @@ add_executable(${TARGET_ELF}
     ${TARGET_SRC}
     FreeRTOSCallback.cpp
     CompatStdCpp.cpp
+    # $<TARGET_OBJECTS:startup>
 )
 target_link_libraries(${TARGET_ELF}
     build_version
     cmsis
     compatc
     FreeRTOS
+    startup
     stm32f4
     tasks
     uart
@@ -138,6 +140,10 @@ include(STM32F4_Archives.cmake)
 include(STM32F4_BuildVersion.cmake)
 include(STM32F4_OpenOCD.cmake)
 include(STM32F4_Startup.cmake)
+
+target_link_options(${TARGET_ELF} PRIVATE
+    -T ${CMAKE_CURRENT_SOURCE_DIR}/${STM32F4_LDSCRIPT}
+)
 
 ###############################################################################
 # If we're on an embedded system, include a CMake File that defines how the
