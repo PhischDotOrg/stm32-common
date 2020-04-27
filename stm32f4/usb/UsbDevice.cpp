@@ -24,7 +24,7 @@ UsbDeviceBase::UsbDeviceBase(intptr_t p_deviceAddr, const void * const p_configu
         sizeof(m_deviceDescriptor),                                     /* m_bLength */
         ::usb::UsbDescriptorTypeId_t::e_Device,                         /* m_bDescriptorType */
         { 0x00, 0x02 },                                                 /* m_bLength */
-        0x00,                                                           /* m_bDeviceClass */
+        ::usb::UsbInterfaceClass_e::e_UsbInterface_VendorSpecific,      /* m_bDeviceClass */
         0x00,                                                           /* m_bDeviceSubClass */
         0x00,                                                           /* m_bDeviceProtocol */
         static_cast<uint8_t>(p_deviceSpeed == e_UsbFullSpeed ? 64 : 0), /* m_bMaxPacketSize0 */
