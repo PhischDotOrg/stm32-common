@@ -53,7 +53,7 @@ void
 HeartbeatT<UartT, PinT>::run(void) {
     this->m_uart.printf("Task '%s' ticking at %d ms.\r\n", this->m_name, this->m_periodMs);
 
-    volatile TickType_t period = (this->m_periodMs / 2) / portTICK_PERIOD_MS;
+    TickType_t period = (this->m_periodMs / 2) / portTICK_PERIOD_MS;
     do {
         this->m_led.set(PinT::On);
         vTaskDelay(period);
