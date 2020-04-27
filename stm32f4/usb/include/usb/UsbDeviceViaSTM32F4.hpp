@@ -9,6 +9,8 @@
 #include <usb/UsbTypes.hpp>
 #include <usb/UsbCoreViaSTM32F4.hpp>
 
+#include <stm32f4xx.h>
+
 namespace usb {
     namespace stm32f4 {
 
@@ -58,10 +60,10 @@ public:
      * \see InEndpointViaSTM32F4::setupEndpointType
      */
     typedef enum EndpointType_e {
-        e_Control       = EP_TYPE_CTRL,
-        e_Isochronous   = EP_TYPE_ISOC,
-        e_Bulk          = EP_TYPE_BULK,
-        e_Interrupt     = EP_TYPE_ISOC
+        e_Control       = 0,
+        e_Isochronous   = 1,
+        e_Bulk          = 2,
+        e_Interrupt     = 3
     } EndpointType_t;
 
 private:
@@ -224,7 +226,7 @@ public:
      * @return constexpr intptr_t Base Address of the USB Core Registers.
      * 
      */
-    constexpr intptr_t getBaseAddr(void) const {
+    intptr_t getBaseAddr(void) const {
         return m_usbCore.getBaseAddr();
     };
 

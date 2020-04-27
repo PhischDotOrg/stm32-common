@@ -105,7 +105,7 @@ CtrlOutEndpointViaSTM32F4::enableSetupPackets(const unsigned p_numPackets) const
 	uint32_t reg = this->m_outEndpoint.m_endpoint->DOEPTSIZ;
 
 	reg &= ~USB_OTG_DOEPTSIZ_PKTCNT_Msk;
-	reg |= ((p_numPackets << USB_OTG_DOEPTSIZ_PKTCNT_Pos) && USB_OTG_DOEPTSIZ_PKTCNT_Msk);
+	reg |= ((p_numPackets << USB_OTG_DOEPTSIZ_PKTCNT_Pos) & USB_OTG_DOEPTSIZ_PKTCNT_Msk);
 
 	this->m_outEndpoint.m_endpoint->DOEPTSIZ = reg;
 }

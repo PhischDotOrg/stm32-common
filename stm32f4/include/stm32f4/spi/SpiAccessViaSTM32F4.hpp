@@ -14,8 +14,13 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif /* defined(__cplusplus) */
+
+#if !defined(HOSTBUILD)
 #include <FreeRTOS.h>
 #include <semphr.h>
+#else
+typedef void * SemaphoreHandle_t;
+#endif /* defined(HOSTBUILD) */
 
 #undef USE_STDPERIPH_DRIVER
 #include "stm32f4xx.h"

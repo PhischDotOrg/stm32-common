@@ -11,9 +11,11 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#if 0  /* TODO Should this be !defined(HOSTBUILD)? */
 #include <FreeRTOS.h>
 #include <semphr.h>
-    
+#endif
+
 #include <stm32f4xx.h>
 
 #if defined(__cplusplus)

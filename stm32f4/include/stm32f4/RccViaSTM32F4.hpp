@@ -5,6 +5,8 @@
 #ifndef _RCC_STM32F4_HPP_89fcdf0c_4b73_427d_92e2_93986e806bb5
 #define _RCC_STM32F4_HPP_89fcdf0c_4b73_427d_92e2_93986e806bb5
 
+#include <cstdint>
+
 #if defined(__cplusplus)
 extern "C" {
 #endif /* defined(__cplusplus) */

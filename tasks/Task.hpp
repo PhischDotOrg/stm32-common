@@ -10,8 +10,12 @@ extern "C"{
 #endif /* defined(__cplusplus) */
 void run_task(void *);
 
+#if !defined(HOSTBUILD)
 #include <FreeRTOS.h>
 #include <task.h>
+#else
+typedef void * TaskHandle_t;
+#endif
 
 #if defined(__cplusplus)
 } /* extern "C"*/

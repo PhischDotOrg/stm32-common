@@ -35,20 +35,23 @@ set_property(GLOBAL PROPERTY ARCH_NAME ${ARCH_NAME})
 ###############################################################################
 list(APPEND STM32F4_SUPPORTED_BOARDS "STM32F4_Discovery")
 list(APPEND STM32F4_SUPPORTED_BOARDS "STM32F4_Nucleo_F411RE")
+list(APPEND STM32F4_SUPPORTED_BOARDS "")
 
 if(NOT DEFINED STM32F4_BOARD)
     set(STM32F4_BOARD "" CACHE STRING "STM32F4 Board Type. Must be set to one of ${STM32F4_SUPPORTED_BOARDS}")
 endif()
 
-if(("${STM32F4_BOARD}" STREQUAL "")
-  OR NOT ("${STM32F4_BOARD}" IN_LIST STM32F4_SUPPORTED_BOARDS))
+if(NOT ("${STM32F4_BOARD}" IN_LIST STM32F4_SUPPORTED_BOARDS))
     message(FATAL_ERROR "STM32F4_BOARD is set to \"${STM32F4_BOARD}\" which is "
       "not in the list of supported Boards. Please configure STM32F4 Board "
       "(Cache Variable \"STM32F4_BOARD\") to one of [${STM32F4_SUPPORTED_BOARDS}]")
 endif()
 
-# Configure Board-specific Options
-include(boards/${STM32F4_BOARD}/stm32f4-board.cmake)
+
+if(NOT("${STM32F4_BOARD}" STREQUAL ""))
+    # Configure Board-specific Options
+    include(boards/${STM32F4_BOARD}/stm32f4-board.cmake)
+endif()
 
 ###############################################################################
 # If we're on an embedded system, include a CMake File that sets up the
@@ -95,25 +98,37 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
         add_definitions("-DCORTEX_M4")
         add_definitions("-DUSE_FULL_ASSERT")
     endif()
+else()
+    add_definitions("-DHOSTBUILD")
+
+    add_definitions("-DGPIO_ENV=STM32F4")
+#    add_definitions("-DUART_ENV=${CMAKE_SYSTEM_NAME}")
 endif()
 
 ###############################################################################
 # Include Search Paths for project
 ###############################################################################
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/compat/include)
-endif()
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/compat/include)
 
 ###############################################################################
 # Actually build the target binary
 ###############################################################################
 set(TARGET_ELF ${TARGET_NAME}.elf)
 set(TARGET_BIN ${TARGET_NAME}.bin)
+if(NOT("${STM32F4_BOARD}" STREQUAL ""))
+    set(TARGET_SRC
+        ${TARGET_SRC}
+        FreeRTOSCallback.cpp
+        CompatStdCpp.cpp
+        # $<TARGET_OBJECTS:startup>
+    )
+else()
+    add_library(tasks
+        empty.c
+    )
+endif()
 add_executable(${TARGET_ELF}
     ${TARGET_SRC}
-    FreeRTOSCallback.cpp
-    CompatStdCpp.cpp
-    # $<TARGET_OBJECTS:startup>
 )
 target_link_libraries(${TARGET_ELF}
     build_version
@@ -132,7 +147,9 @@ target_link_libraries(${TARGET_ELF}
 add_subdirectory(contrib)
 add_subdirectory(lib)
 add_subdirectory(stm32f4)
-add_subdirectory(tasks)
+if(NOT("${STM32F4_BOARD}" STREQUAL ""))
+    add_subdirectory(tasks)
+endif()
 
 ###############################################################################
 # Include Build Version Support
@@ -142,11 +159,13 @@ include(STM32F4_BuildVersion.cmake)
 include(STM32F4_OpenOCD.cmake)
 include(STM32F4_Startup.cmake)
 
-include(STM32F4_Doxygen.cmake)  # Include after STM32F4_BuildVersion.cmake b/c it needs ${GIT_VERSION} being set.
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
+    target_link_options(${TARGET_ELF} PRIVATE
+        -T ${CMAKE_CURRENT_SOURCE_DIR}/${STM32F4_LDSCRIPT}
+    )
+endif()
 
-target_link_options(${TARGET_ELF} PRIVATE
-    -T ${CMAKE_CURRENT_SOURCE_DIR}/${STM32F4_LDSCRIPT}
-)
+include(STM32F4_Doxygen.cmake)
 
 ###############################################################################
 # If we're on an embedded system, include a CMake File that defines how the

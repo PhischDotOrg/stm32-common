@@ -25,6 +25,7 @@ static DMA_Stream_TypeDef * const g_dmaStreams[2][8] = {
     }
 };
 
+#if !defined(HOSTBUILD)
 static const IRQn_Type g_dmaIrq[2][8] = {
     { /* DMA-1 Streams */
         DMA1_Stream0_IRQn, DMA1_Stream1_IRQn, DMA1_Stream2_IRQn, DMA1_Stream3_IRQn,
@@ -35,6 +36,7 @@ static const IRQn_Type g_dmaIrq[2][8] = {
         DMA2_Stream4_IRQn, DMA2_Stream5_IRQn, DMA2_Stream6_IRQn, DMA2_Stream7_IRQn
     }
 };
+#endif
 
 /*******************************************************************************
  *

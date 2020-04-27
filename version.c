@@ -12,8 +12,13 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-const char gSwVersionId[]  __attribute__((section(".fixeddata"))) = BUILD_ID;
-const char gSwBuildTime[]  __attribute__((section(".fixeddata"))) = BUILD_TIME;
+#if defined(HOSTBUILD)
+    const char gSwVersionId[] = BUILD_ID;
+    const char gSwBuildTime[] = BUILD_TIME;
+#else
+    const char gSwVersionId[]  __attribute__((section(".fixeddata"))) = BUILD_ID;
+    const char gSwBuildTime[]  __attribute__((section(".fixeddata"))) = BUILD_TIME;
+#endif
 
 #if defined(__cplusplus)
 } /* extern "C" */

@@ -39,7 +39,7 @@ NvicViaSTM32F4T<ScbT>::~NvicViaSTM32F4T(void) {
 /*******************************************************************************
  * 
  ******************************************************************************/
-NvicViaSTM32F4Base::NvicViaSTM32F4Base(NVIC_Type *p_nvic) : m_nvic(p_nvic) {
+NvicViaSTM32F4Base::NvicViaSTM32F4Base(NVIC_Type * p_nvic) : m_nvic(p_nvic) {
 }
 
 /*******************************************************************************
@@ -49,14 +49,17 @@ NvicViaSTM32F4Base::~NvicViaSTM32F4Base(void) {
 
 }
 
+#if defined(HOSTBUILD)
+#define configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY 0
+#endif
+
 /*******************************************************************************
  * 
  ******************************************************************************/
 void
 NvicViaSTM32F4Base::enableIrqWithPriorityGroup(const Irq_t p_irq, const unsigned p_priorityGroup) const {
-    NVIC_Type *nvic = NVIC; // For debugging
-    nvic->IP[p_irq] = (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (p_priorityGroup - 3)) << (8 - __NVIC_PRIO_BITS);
-    nvic->ISER[p_irq >> 0x05] = 1 << (p_irq & 0x1F);
+    m_nvic->IP[p_irq] = (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (p_priorityGroup - 3)) << (8 - __NVIC_PRIO_BITS);
+    m_nvic->ISER[p_irq >> 0x05] = 1 << (p_irq & 0x1F);
 }
 
 /*******************************************************************************
@@ -64,8 +67,7 @@ NvicViaSTM32F4Base::enableIrqWithPriorityGroup(const Irq_t p_irq, const unsigned
  ******************************************************************************/
 void
 NvicViaSTM32F4Base::disableIrq(const Irq_t p_irq) const {
-    NVIC_Type *nvic = NVIC; // For debugging
-    nvic->ISER[p_irq >> 0x05] &= ~(1 << (p_irq & 0x1F));
+    m_nvic->ISER[p_irq >> 0x05] &= ~(1 << (p_irq & 0x1F));
 }
 
 /*******************************************************************************

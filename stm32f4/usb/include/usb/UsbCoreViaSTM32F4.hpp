@@ -166,7 +166,7 @@ public:
      * @param p_usbPowerCtrl Pointer to USB Core's \c PCGCCTL Register.
      * @param p_rxFifoSzInWords USB Rx FIFO Size in Words.
      */
-    constexpr UsbCoreViaSTM32F4(USB_OTG_GlobalTypeDef * const p_usbCore, intptr_t p_usbPowerCtrl, const uint32_t p_rxFifoSzInWords)
+    UsbCoreViaSTM32F4(USB_OTG_GlobalTypeDef * const p_usbCore, intptr_t p_usbPowerCtrl, const uint32_t p_rxFifoSzInWords)
       : m_usbCore(p_usbCore), m_usbPwrCtrl(reinterpret_cast<PowerAndClockGatingControl_t *>(p_usbPowerCtrl)), m_rxFifoSzInWords(p_rxFifoSzInWords), m_usbDevice(nullptr), m_mode(DeviceMode_e::e_UsbDevice) {
         // Minimum Rx FIFO size is 16, maximum size is 256 (all in words)
         assert((m_rxFifoSzInWords >= 16) && (m_rxFifoSzInWords <= 256));
@@ -250,7 +250,7 @@ public:
      * @return constexpr intptr_t Base Address of the USB Core Registers.
      * 
      */
-    constexpr intptr_t getBaseAddr(void) const {
+    intptr_t getBaseAddr(void) const {
         return reinterpret_cast<intptr_t>(this->m_usbCore);
     };
 
