@@ -142,6 +142,8 @@ private:
     void notify(const dma::DmaTransferStatus_t p_status, const unsigned p_id);
 
     int shiftViaDma(const uint32_t p_bits, uint8_t * const p_rx, const uint8_t * const p_tx, const spi::Mode p_mode);
+
+    bool addressIsDmaCapable(const void * const p_addr) const;
 };
 
 /*

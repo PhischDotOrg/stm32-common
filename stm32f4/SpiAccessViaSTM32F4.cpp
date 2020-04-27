@@ -249,8 +249,9 @@ extern "C" {
     extern char bstack, estack;
 }
 
-static bool
-addressIsDmaCapable(const void * const p_addr) {
+template<typename DmaChannelT>
+bool
+SpiAccessViaSTM32F4<true, DmaChannelT>::addressIsDmaCapable(const void * const p_addr) const {
     assert(&bstack == (void *) (intptr_t) 0x10000000);
     assert(&estack == (void *) (intptr_t) (0x10000000 + 0x10000));
 
