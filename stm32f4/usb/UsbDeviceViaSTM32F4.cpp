@@ -649,8 +649,17 @@ UsbDeviceViaSTM32F4::handleIrq(const uint32_t p_irq) const {
     return handledIrq;
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Handles the _USB Suspend_ IRQ
+ * 
+ * The USB Hardware will trigger this IRQ when the Host has suspended the Bus.
+ * 
+ * The method will suspend the USB hardware to reduce power consumption.
+ * 
+ * \bug For USB-powered devices, it would be good to reduce power consumption
+ * even more, e.g. by shutting of the µC. This however is not (yet) supported.
+ * 
+ * \see ::usb::stm32f4::UsbCoreViaSTM32F4::suspendPhy
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::handleUsbSuspendIrq(void) const {

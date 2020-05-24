@@ -14,22 +14,9 @@
 namespace usb {
     namespace stm32f4 {
 
-/*******************************************************************************
- *
- ******************************************************************************/
-UsbCoreViaSTM32F4::UsbCoreViaSTM32F4(USB_OTG_GlobalTypeDef * const p_usbCore, intptr_t p_usbPowerCtrl, const uint32_t p_rxFifoSzInWords)
-  : m_usbCore(p_usbCore), m_usbPwrCtrl(reinterpret_cast<PowerAndClockGatingControl_t *>(p_usbPowerCtrl)), m_rxFifoSzInWords(p_rxFifoSzInWords) {
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-UsbCoreViaSTM32F4::~UsbCoreViaSTM32F4() {
-}
-
-
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Initialize the USB Core.
+ * 
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::initialize() const {
@@ -38,6 +25,8 @@ UsbCoreViaSTM32F4::initialize() const {
     this->startPhy();
     this->startTransceiver();
 
+    /* TODO Is the wait really needed? If it asked for by the Spec, then include a reference if so. */
+
     /*
      * Let USB Core settle for a bit. If not, then the session request IRQ will
      * fire immediately.
@@ -45,42 +34,35 @@ UsbCoreViaSTM32F4::initialize() const {
     usleep(25000);
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Terminate the USB Core.
+ * 
+ * This method will reset the Hardware by calling #reset internally.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::terminate() const {
     this->reset();
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Set up the Tx FIFO for a given endpoint.
  *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::registerDevice(UsbDeviceViaSTM32F4 &p_device) {
-    assert(this->m_usbDevice == NULL);
-    
-    m_usbDevice = &p_device;
-}
-
-/*******************************************************************************
+ * Sets up the Tx FIFO for a given endpoint.
+ * 
+ * \warning Please note that there is currently no check on the FIFO sizes of all
+ * Endpoints. I.e. the FIFO sizes can be requested such that the total amount of
+ * all enpoint FIFOs exceeds the hardware capabilities.
  *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::unregisterDevice(UsbDeviceViaSTM32F4 &p_device) {
-    assert(this->m_usbDevice == &p_device);
-    
-    this->m_usbDevice = NULL;
-}
-
-/*******************************************************************************
- *
+ * @param p_endpoint IN Endpoint Number whose FIFO is to be set up.
+ * @param p_fifoSzInWords Endpoint's Tx FIFO Size in Words.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::setupTxFifo(const unsigned p_endpoint, const uint16_t p_fifoSzInWords) const {
     uint16_t offset;
 
-    /* Host mode not (yet) supported */
+    /* FIXME It would be nice if the FIFO Size could be checked; ideally at compile time. */
+
+    /* TODO Host mode not (yet) supported */
     assert((this->m_usbCore->GUSBCFG & USB_OTG_GUSBCFG_FDMOD) != 0);
 
     if (p_endpoint == 0) {
@@ -96,13 +78,17 @@ UsbCoreViaSTM32F4::setupTxFifo(const unsigned p_endpoint, const uint16_t p_fifoS
     }
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Resets the USB Core.
+ * 
+ * Performs a reset of the USB Core's Hardware.
  *
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::reset(void) const {
     this->performReset(USB_OTG_GRSTCTL_CSRST);
 
+    /* TODO Is the wait really needed? If it asked for by the Spec, then include a reference if so. */
     usleep(25);
 
     this->disableInterrupt();
@@ -111,13 +97,25 @@ UsbCoreViaSTM32F4::reset(void) const {
     USB_PRINTF("UsbCoreViaSTM32F4::%s(): Core Reset\r\n", __func__);
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Performs a partial reset of the USB Hardware.
+ * 
+ * Performs a partial reset of the USB Hardware via the \c GRSTCTL register.
+ * 
+ * @param p_reset Type of reset to be performed. Must be one of the allowed reset
+ *   types as defined in the hardware documentation of the \c GRSTCTL register.
  *
+ * @attention This method blocks until the reset is complete by waiting for the
+ *   \c AHBIDL bit in the \c GRSTCTL register to be set.
+ * 
+ * @bug This method should probably use an enum to define the allowed types of
+ *   reset.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::performReset(const uint32_t p_reset) const {
     while (!(this->m_usbCore->GRSTCTL & USB_OTG_GRSTCTL_AHBIDL));
 
+    /* FIXME Use an enum to define the allowed types of resets */
     this->m_usbCore->GRSTCTL |= p_reset;
 
     while (this->m_usbCore->GRSTCTL & p_reset);
@@ -126,27 +124,20 @@ UsbCoreViaSTM32F4::performReset(const uint32_t p_reset) const {
     // this->m_usbCore->GAHBCFG |= (USB_OTG_GAHBCFG_PTXFELVL | USB_OTG_GAHBCFG_TXFELVL);
 }
 
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::setRxFifoSz(const uint16_t p_rxFifoSzInWords) const {
-    // Minimum Rx FIFO size is 16, maximum size is 256 (all in words)
-    assert((m_rxFifoSzInWords > 16) && (m_rxFifoSzInWords <= 256));
-
-    this->m_usbCore->GRXFSIZ = p_rxFifoSzInWords;
-}
-
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Flushes the Rx FIFO.
+ * 
+ * Flushes the Rx FIFO by performing the \c RXFFLSH Reset via #performReset.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::flushRxFifo(void) const {
     this->performReset(USB_OTG_GRSTCTL_RXFFLSH);
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Flushes a given Tx FIFO.
+ * 
+ * @param p_fifo Index of Tx FIFO to be flushed.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::flushTxFifo(const uint8_t p_fifo) const {
@@ -158,51 +149,31 @@ UsbCoreViaSTM32F4::flushTxFifo(const uint8_t p_fifo) const {
     this->performReset(USB_OTG_GRSTCTL_TXFFLSH);
 }
 
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::enableInterrupt(void) const {
-    this->m_usbCore->GINTSTS = 0xffffffff;
-    this->m_usbCore->GAHBCFG |= USB_OTG_GAHBCFG_GINT;
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::enableInterrupt(const Interrupt_t p_irq) const {
-    this->m_usbCore->GINTSTS = static_cast<uint32_t>(p_irq);
-    this->m_usbCore->GINTMSK |= static_cast<uint32_t>(p_irq);
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::disableInterrupt(void) const {
-    this->m_usbCore->GAHBCFG &= ~USB_OTG_GAHBCFG_GINT;
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::disableInterrupt(const Interrupt_t p_irq) const {
-    this->m_usbCore->GINTMSK &= ~(static_cast<uint32_t>(p_irq));
-}
-
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Stops the USB PHY.
+ * 
+ * \bug This method essentially does the same thing as #resumePhy.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::startPhy(void) const {
+    /* FIXME Remove this method, it's the same as suspendPhy() */
     this->m_usbPwrCtrl->PCGCCTL &= ~USB_OTG_PCGCCTL_PHYSUSP;
     this->resumePhy();
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Resumes the USB PHY.
+ * 
+ * Resumes the USB PHY by enabling the clocks via the \c PCGCCTL register.
+ * 
+ * \attention This method blocks until the Hardware reports the PHY as actually
+ * running via the \c PCGCCTL register.
+ * 
+ * \bug I think the \c STPPCLK and the \c GATEHCLK should be separated as only
+ * the \c STPPCLK bit should be set when a _USB Suspend_ IRQ ( #e_Suspend )
+ * occurs.
+ * 
+ * \see #suspendPhy
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::resumePhy(void) const {
@@ -211,8 +182,22 @@ UsbCoreViaSTM32F4::resumePhy(void) const {
     while (this->m_usbPwrCtrl->PCGCCTL  & USB_OTG_PCGCCTL_PHYSUSP);
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Suspends the USB PHY.
+ * 
+ * Suspends the USB PHY by disabling the clocks via the \c PCGCCTL register.
+ * - Stops the PHY 48 MHz Clock (\c STPPCLK Bit). This will shut off most
+ *   hardware logic except the resume / remote wake-up capabilities.
+ * - Gates the HCLK (\c GATEHCLK Bit). This will shut down all hardware logic
+ *   except the register read / write interface.
+ * 
+ * \attention This method blocks until the Hardware reports the PHY as actually
+ * suspended via the \c PCGCCTL register.
+ * 
+ * \bug I think the \c STPPCLK and the \c GATEHCLK should be separated as only
+ * the \c STPPCLK bit should be set when a _USB Suspend_ IRQ ( #e_Suspend )
+ * occurs.
+ * 
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::suspendPhy(void) const {
@@ -221,43 +206,34 @@ UsbCoreViaSTM32F4::suspendPhy(void) const {
     while (!(this->m_usbPwrCtrl->PCGCCTL & USB_OTG_PCGCCTL_PHYSUSP));
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Stops the USB PHY.
+ * 
+ * \bug This method essentially does the same thing as #suspendPhy.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::stopPhy(void) const {
+    /* FIXME Remove this method, it's the same as suspendPhy() */
     this->m_usbPwrCtrl->PCGCCTL |= USB_OTG_PCGCCTL_PHYSUSP;
     this->suspendPhy();
 }
 
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::startTransceiver(void) const {
-    this->m_usbCore->GCCFG |= USB_OTG_GCCFG_PWRDWN;
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::stopTransceiver(void) const {
-    this->m_usbCore->GCCFG &= ~USB_OTG_GCCFG_PWRDWN;
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::setupMode(const DeviceMode_e p_mode) {
-    this->m_mode = p_mode;
-
-    this->setupModeInHw(this->m_mode);
-}
-
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Set up the USB Mode in the Hardware.
+ * 
+ * This method will set up the requested USB Mode (Host or Device) in the
+ * USB Core Hardware.
+ * 
+ * In case of Device Mode, the method will
+ * - Enable Vbus sensing by setting the \c VBUSBSEN Bit in the \c GCCFG register.
+ * - Force Device Mode by setting the \c FDMOD bit in the \c GUSBCFG register.
+ * - Start the PHY via #startPhy.
+ * - Start the Transceiver via #startTransceiver.
+ * - Flush the Rx FIFO via #flushRxFifo
+ * - Flush all Tx FIFOs via #flushTxFifo
+ * - Set up the Rx FIFO Size via #setRxFifoSz
+ * 
+ * @bug USB Host Mode (#e_UsbHost) is not yet supported.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::setupModeInHw(const DeviceMode_e p_mode) const {
@@ -268,6 +244,8 @@ UsbCoreViaSTM32F4::setupModeInHw(const DeviceMode_e p_mode) const {
 
         this->startPhy();
         this->startTransceiver();
+
+        /* TODO Is the wait really needed? If it asked for by the Spec, then include a reference if so. */
 
         /*
          * Let USB Core settle for a bit. If not, then the session request IRQ will
@@ -289,13 +267,23 @@ UsbCoreViaSTM32F4::setupModeInHw(const DeviceMode_e p_mode) const {
     }
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Starts the USB Core.
+ * 
+ * Starts the USB Core Operation by:
  *
+ * - Starting the PHY.
+ * - Starting the USB Transceiver.
+ * - Enabling the IRQ.
+ *
+ * \see #stop
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::start(void) const {
     this->startPhy();
     this->startTransceiver();
+
+    /* TODO Is the wait really needed? If it asked for by the Spec, then include a reference if so. */
 
     /*
      * Let USB Core settle for a bit. If not, then the session request IRQ will
@@ -306,19 +294,33 @@ UsbCoreViaSTM32F4::start(void) const {
     this->enableInterrupt();
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Stops the USB Core.
+ * 
+ * Stops the USB Core by
+ * - Stopping the Transceiver.
+ * - Stopping the PHY.
+ * 
+ * \see #start
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::stop(void) const {
     USB_PRINTF("UsbCoreViaSTM32F4::%s()\r\n", __func__);
 
+    /* TODO start() enables the IRQs, should we disable them here? */
+
     this->stopTransceiver();
     this->stopPhy();
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Handle the _Session End_ IRQ
+ * 
+ * In USB Device Mode, this interrupt is triggered when the host is disconnected,
+ * e.g. when the USB cable is unplugged.
+ * 
+ * \attention This will re-enable IRQs and unmask the _Session Request_ IRQ. This
+ * is needed so the Application can react if the device is plugged back in.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::handleSessionEnd(void) const {
@@ -337,21 +339,28 @@ UsbCoreViaSTM32F4::handleSessionEnd(void) const {
     this->enableInterrupt(UsbCoreViaSTM32F4::e_SessionRequest);
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief USB Core On-the-Go (OTG) Interrupt Handlers.
+ * 
+ * Table of On-the-Go (OTG) interrupt handlers. Is handled in order from first
+ * to last, i.e. functions listed earlier are handled before the functions
+ * listed later.
+ * 
+ * \see #handleOtgIrq
  ******************************************************************************/
-/*
- * Table of OTG interrupt handlers. Is handled in order from first to last, i.e.
- * functions listed earlier are handled before the functions listed later.
- */
 const
 UsbCoreViaSTM32F4::irq_handler_t UsbCoreViaSTM32F4::m_otgirq_handler[] = {
     { USB_OTG_GOTGINT_SEDET,    &UsbCoreViaSTM32F4::handleSessionEnd },
     { 0, NULL }
 };
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief USB Core On-the-Go (OTG) Interrupt Handler.
+ * 
+ * Handles the USB On-the-Go (OTG) Core's Interrupts as signalled in the
+ * \c GOTGINT register.
+ * 
+ * \see #m_otgirq_handler
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::handleOtgIrq(void) const {
@@ -367,24 +376,42 @@ UsbCoreViaSTM32F4::handleOtgIrq(void) const {
     }
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Handle the USB Mode Mismatch IRQ.
+ * 
+ * According to the Data Sheet, this interrupt is triggered when the Software
+ * attempts to access a Host-mode register when operating in Device-Mode and
+ * vice-versa.
+ * 
+ * In Debug Mode, this method will \c assert() and thus serves as a debugging aid.
  *
+ * \see #e_ModeMismatch
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::handleModeMismatchIrq(void) const {
     assert(false);
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Handle the _Wake-up Detected_ IRQ.
+ * 
+ * \bug From the Datasheed it seems this is the complement to the _USB Suspend_
+ * IRQ (#e_Suspend). We should probably call #resumePhy here.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::wakeUpDetectedIrq(void) const {
     USB_PRINTF("UsbCoreViaSTM32F4::%s\r\n", __func__);
+    /* FIXME Call resumePhy here? */
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Handle the _Session Request_ IRQ.
+ * 
+ * In USB Device Mode, this is triggered when the Device is connected to a USB
+ * Host.
+ * 
+ * \see #m_irq_handler
+ * \see #e_SessionRequest
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::handleSessionRequest(void) const {
@@ -403,7 +430,7 @@ UsbCoreViaSTM32F4::handleSessionRequest(void) const {
  * Table of interrupt handlers. Is handled in order from first to last, i.e.
  * functions listed earlier are handled before the functions listed later.
  * 
- * \see ::usb::stm32f4::UsbCoreViaSTM32F4::handleIrq
+ * \see #handleIrq
  ******************************************************************************/
 const
 UsbCoreViaSTM32F4::irq_handler_t UsbCoreViaSTM32F4::m_irq_handler[] = {
@@ -421,9 +448,12 @@ UsbCoreViaSTM32F4::irq_handler_t UsbCoreViaSTM32F4::m_irq_handler[] = {
  * \c GINTSTS register. This handler will process the interrupts valid for both
  * Host- and Device-Mode.
  * 
- * If a valid USB Device Callback is registered in ::m_usbDevice, then further
+ * If a valid USB Device Callback is registered in #m_usbDevice, then further
  * processing of Device-specific interrupts is handled in the UsbDeviceViaSTM32F4
  * object.
+ * 
+ * \see #m_irq_handler
+ *
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::handleIrq(void) const {
@@ -453,32 +483,6 @@ UsbCoreViaSTM32F4::handleIrq(void) const {
     this->enableInterrupt();
 }
 
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::acknowledgeIrq(const Interrupt_t p_irq) const {
-	this->m_usbCore->GINTSTS = static_cast<uint32_t>(p_irq);
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::setUsbTurnAroundTime(const uint8_t p_turnaroundTime) const {
-	this->m_usbCore->GUSBCFG |= (p_turnaroundTime << USB_OTG_GUSBCFG_TRDT_Pos) & USB_OTG_GUSBCFG_TRDT_Msk;
-}
-
-/***************************************************************************//**
- * @brief Read receive Status from Rx FIFO.
- * 
- * The reads the USB Device's Rx FIFO Receive Status via the \c GRXSTSP register.
- * This means the status is read and removed (pop-ed) from the FIFO.
- ******************************************************************************/
-uint32_t
-UsbCoreViaSTM32F4::getRxStatus(void) const {
-	return this->m_usbCore->GRXSTSP;
-}
 /*******************************************************************************
  *
  ******************************************************************************/

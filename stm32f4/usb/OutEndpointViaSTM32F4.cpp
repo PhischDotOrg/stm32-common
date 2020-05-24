@@ -190,7 +190,7 @@ CtrlOutEndpointViaSTM32F4::setupCompleteDeviceCallback(void) const {
 
     
 /***************************************************************************//**
-* @brief Callback to read received OUT data from the hardware's Rx FIFO.
+ * @brief Callback to read received OUT data from the Hardware's Rx FIFO.
  * 
  * This callback method is called from ::usb::stm32f4::UsbDeviceViaSTM32F4::handleRxFIFO
  * when there is OUT data in the USB Device hardware's Rx FIFO.

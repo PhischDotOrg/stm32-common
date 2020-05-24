@@ -935,7 +935,40 @@ EXCLUDE_SYMLINKS       = NO
 
 EXCLUDE_PATTERNS       = */build*/* 
 EXCLUDE_PATTERNS      += .git/*
+EXCLUDE_PATTERNS      += */common/.github/*
+EXCLUDE_PATTERNS      += */common/boards/*
 EXCLUDE_PATTERNS      += */common/contrib/*
+
+# EXCLUDE_PATTERNS      += */common/lib/*
+EXCLUDE_PATTERNS      += */common/lib/compat/*
+EXCLUDE_PATTERNS      += */common/lib/devices/*
+EXCLUDE_PATTERNS      += */common/lib/dma/*
+EXCLUDE_PATTERNS      += */common/lib/gpio/*
+EXCLUDE_PATTERNS      += */common/lib/spi/*
+EXCLUDE_PATTERNS      += */common/lib/timer/*
+EXCLUDE_PATTERNS      += */common/lib/uart/*
+# EXCLUDE_PATTERNS      += */common/lib/usb/*
+
+# EXCLUDE_PATTERNS      += */common/stm32f4/*
+EXCLUDE_PATTERNS      += */common/stm32f4/AdcViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/DmaChannelViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/DmaEngineViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/DmaStreamViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/FlashViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/GpioAccessViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/NvicViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/PwrViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/RccViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/ScbViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/SpiAccessViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/TimerChannelViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/TimerViaSTM32F4.cpp
+EXCLUDE_PATTERNS      += */common/stm32f4/UartAccessViaSTM32F4.cpp
+
+EXCLUDE_PATTERNS      += */common/stm32f4/include/*
+# EXCLUDE_PATTERNS      += */common/stm32f4/usb/*
+
+EXCLUDE_PATTERNS      += */common/tasks/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
