@@ -144,7 +144,6 @@ public:
     void            disable(void) const;
     void            enable(void) const;
 
-    void            enableSetupPackets(const unsigned p_numPackets) const;
     void            setPacketSize(const unsigned p_packetSize) const;
 
     void            setup(const OutEndpointViaSTM32F4 &) const;
@@ -253,6 +252,8 @@ public:
      * Interface to UsbDeviceViaSTM32F4
      ******************************************************************************/
     void    handleIrq(void) const;
+
+    void    enableSetupPackets(const unsigned p_numPackets) const;
 
     /*******************************************************************************
      * Interface to UsbDeviceViaSTM32F4::handleRxFIFO

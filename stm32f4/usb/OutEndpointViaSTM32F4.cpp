@@ -97,15 +97,15 @@ OutEndpointViaSTM32F4::enable(void) const {
  * will lead to a failed \c assert().
  ******************************************************************************/
 void
-OutEndpointViaSTM32F4::enableSetupPackets(const unsigned p_numPackets) const {
+CtrlOutEndpointViaSTM32F4::enableSetupPackets(const unsigned p_numPackets) const {
     assert(p_numPackets >= 1);
 
-	uint32_t reg = this->m_endpoint->DOEPTSIZ;
+	uint32_t reg = this->m_outEndpoint.m_endpoint->DOEPTSIZ;
 
 	reg &= ~USB_OTG_DOEPTSIZ_PKTCNT_Msk;
 	reg |= ((p_numPackets << USB_OTG_DOEPTSIZ_PKTCNT_Pos) && USB_OTG_DOEPTSIZ_PKTCNT_Msk);
 
-	this->m_endpoint->DOEPTSIZ = reg;
+	this->m_outEndpoint.m_endpoint->DOEPTSIZ = reg;
 }
 
 /***************************************************************************//**

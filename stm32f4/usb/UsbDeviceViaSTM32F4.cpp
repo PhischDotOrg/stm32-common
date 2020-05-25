@@ -237,7 +237,7 @@ UsbDeviceViaSTM32F4::handleEnumerationDone(void) const {
 	/* Enable Control Endpoints 0 */
 	assert(this->m_inEndpoints[0] != NULL);
 	assert(this->m_outEndpoints[0] != NULL);
-	this->m_outEndpoints[0]->enableSetupPackets(1);
+	this->m_ctrlOutEndpoint->enableSetupPackets(1);
 
 	this->m_usbCore.setUsbTurnAroundTime(5); // Value 5 is taken from ST Example Code
 
