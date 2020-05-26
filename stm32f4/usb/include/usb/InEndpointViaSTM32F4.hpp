@@ -5,7 +5,6 @@
 #ifndef _INENDPOINT_HPP_34f149e0_9f89_489b_a2c0_95b3363fe4a8
 #define _INENDPOINT_HPP_34f149e0_9f89_489b_a2c0_95b3363fe4a8
 
-#include <usb/UsbHwInEndpoint.hpp>
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 #include <stm32f4xx.h>
 
@@ -107,8 +106,6 @@ private:
     void    fillTxFifo(void);
     void    markTxBufferComplete(void);
     
-    void    enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const;
-
     void    setupEndpointType(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const;
 
     unsigned    getPacketSize(void) const;
@@ -123,7 +120,11 @@ public:
      ******************************************************************************/
     void handleIrq(void);
 
-    void setupTxFifoNumber(const unsigned p_fifoNumber) const;
+    void setupTxFifoNumber(const unsigned p_fifoNumber) const {
+        this->m_endpoint->DIEPCTL &= ~USB_OTG_DIEPCTL_TXFNUM_Msk;
+        this->m_endpoint->DIEPCTL |= (p_fifoNumber << USB_OTG_DIEPCTL_TXFNUM_Pos) & USB_OTG_DIEPCTL_TXFNUM_Msk;
+    }
+
     void setPacketSize(const unsigned p_packetSize) const;
 
     /***************************************************************************//**
@@ -154,28 +155,7 @@ public:
     void write(const uint8_t * const p_data, const size_t p_length); 
     void writeString(const ::usb::UsbStringDescriptor &p_string, const size_t p_len);
 
-    /***************************************************************************//**
-     * @brief Enable the IN Endpoint as a Control IN Endpoint.
-     * 
-     * This method is a type-safe way for the device-independent USB layers to enable
-     * the endpoint with the right type.
-     */
-    void enable(const CtrlInEndpointViaSTM32F4 & /* p_endpoint */) const {
-        assert(this->m_endpointNumber == 0);
-        this->enable(UsbDeviceViaSTM32F4::EndpointType_e::e_Control);
-    };
-
-    /***************************************************************************//**
-     * @brief Enable the IN Endpoint as a Bulk IN Endpoint.
-     * 
-     * This method is a type-safe way for the device-independent USB layers to enable
-     * the endpoint with the right type.
-     */
-    void enable(const BulkInEndpointViaSTM32F4 & /* p_endpoint */) const {
-        assert(this->m_endpointNumber != 0);
-        this->enable(UsbDeviceViaSTM32F4::EndpointType_e::e_Bulk);
-    };
-
+    void enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const;
     void disable(void) const;
 };
 
@@ -227,7 +207,7 @@ public:
     }
 
     void enable(void) const {
-        this->m_inEndpoint.enable(*this);
+        this->m_inEndpoint.enable(UsbDeviceViaSTM32F4::EndpointType_e::e_Bulk);
     };
 
     void disable(void) const {

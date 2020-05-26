@@ -35,7 +35,7 @@ UsbDeviceViaSTM32F4::UsbDeviceViaSTM32F4(UsbCoreViaSTM32F4 &p_usbCore, const Dev
  *
  ******************************************************************************/
 UsbDeviceViaSTM32F4::~UsbDeviceViaSTM32F4() {
-    m_usbCore.unregisterDevice(*this);
+    m_usbCore.unregisterDevice();
 }
 
 /*******************************************************************************
@@ -53,9 +53,9 @@ UsbDeviceViaSTM32F4::registerEndpoint(const unsigned p_endpointNumber, InEndpoin
  *
  ******************************************************************************/
 void
-UsbDeviceViaSTM32F4::unregisterEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint) {
+UsbDeviceViaSTM32F4::unregisterEndpoint(const unsigned p_endpointNumber) {
     assert(p_endpointNumber < this->m_maxInEndpoints);
-    assert(this->m_inEndpoints[p_endpointNumber] == &p_endpoint);
+    assert(this->m_inEndpoints[p_endpointNumber] != nullptr);
 
     this->m_inEndpoints[p_endpointNumber] = NULL;
 }
@@ -75,18 +75,6 @@ UsbDeviceViaSTM32F4::registerEndpoint(const unsigned p_endpointNumber, OutEndpoi
  *
  ******************************************************************************/
 void
-UsbDeviceViaSTM32F4::unregisterEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint) {
-    assert(p_endpointNumber < this->m_maxOutEndpoints);
-    assert(this->m_outEndpoints[p_endpointNumber] == &p_endpoint);
-
-    this->m_outEndpoints[p_endpointNumber] = NULL;
-}
-
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
 UsbDeviceViaSTM32F4::registerEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint) {
     assert(this->m_ctrlOutEndpoint == NULL);
 
@@ -97,8 +85,8 @@ UsbDeviceViaSTM32F4::registerEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint) {
  *
  ******************************************************************************/
 void
-UsbDeviceViaSTM32F4::unregisterEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint) {
-    assert(this->m_ctrlOutEndpoint == &p_endpoint);
+UsbDeviceViaSTM32F4::unregisterEndpoint(void) {
+    assert(this->m_ctrlOutEndpoint != nullptr);
     this->m_ctrlOutEndpoint = nullptr;
 }
 
@@ -216,19 +204,21 @@ UsbDeviceViaSTM32F4::handleEarlySuspendIrq(void) const {
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::handleEnumerationDone(void) const {
+#if defined(USB_DEBUG)
     const ::usb::UsbHwDevice::DeviceSpeed_e enumeratedSpeed = this->getEnumeratedSpeed();
 
     /* FIXME USB High Speed Mode not yet supported */
     assert(enumeratedSpeed == ::usb::UsbHwDevice::DeviceSpeed_e::e_UsbFullSpeed);
+#endif /* defined(USB_DEBUG) */
 
 	/*
 	 * Because we're a FullSpeed device, we must set the max. packet size for
 	 * control packets to 64 Bytes.
 	 */
-	assert(this->m_outEndpoints[0] != NULL);
+	assert(this->m_outEndpoints[0] != nullptr);
 	this->m_outEndpoints[0]->setPacketSize(64);
 
-	assert(this->m_inEndpoints[0] != NULL);
+	assert(this->m_inEndpoints[0] != nullptr);
 	this->m_inEndpoints[0]->setPacketSize(64);
 
     /* Device is ready, so clear global NAK */

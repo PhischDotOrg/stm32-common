@@ -7,7 +7,6 @@
 
 #include <usb/OutEndpointViaSTM32F4.hpp>
 #include <usb/UsbDeviceViaSTM32F4.hpp>
-#include <usb/UsbOutEndpoint.hpp>
 #include <usb/UsbCtrlOutEndpoint.hpp>
 
 #include <algorithm>
@@ -45,7 +44,7 @@ OutEndpointViaSTM32F4::OutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, c
  * \see ::usb::stm32f4::UsbDeviceViaSTM32F4::unregisterEndpoint
  ******************************************************************************/
 OutEndpointViaSTM32F4::~OutEndpointViaSTM32F4() {
-    this->m_usbDevice.unregisterEndpoint(this->getEndpointNumber(), *this);
+    this->m_usbDevice.unregisterEndpoint(this->getEndpointNumber());
 }
 
 /***************************************************************************//**
@@ -165,7 +164,6 @@ CtrlOutEndpointViaSTM32F4::setupDataReceivedDeviceCallback(const size_t p_numByt
 
     assert(p_numBytes == sizeof(UsbSetupPacket_t));                     // Expect 8 Bytes
     assert(numWords == sizeof(UsbSetupPacket_t) / sizeof(uint32_t));    // Expect two Words
-    assert(this->m_endpointCallback != nullptr);
 
     for (unsigned idx = 0; idx < numWords; idx++) {
         m_setupPacketBuffer[idx] = *(this->m_outEndpoint.m_fifoAddr);
@@ -212,7 +210,7 @@ OutEndpointViaSTM32F4::dataReceivedDeviceCallback(const size_t p_numBytes, const
      * on the Endpoint and thus are handled through that path.
      */
     if (p_numBytes != 0) {
-        const ::usb::UsbOutEndpoint::DataBuffer_t &dataBuffer = this->m_endpointCallback->getDataBuffer();
+        const OutEndpointViaSTM34F4Callback::DataBuffer_t &dataBuffer = this->m_endpointCallback->getDataBuffer();
 
         assert(dataBuffer.m_buffer != nullptr);
         /* TODO We require the upper layer to fit the entire packet into RAM for now. */
@@ -374,11 +372,9 @@ OutEndpointViaSTM32F4::handleTransferCompleteIrq(void) const {
  ******************************************************************************/
 void
 CtrlOutEndpointViaSTM32F4::handleSetupDoneIrq(void) const {
-    USB_PRINTF("OutEndpointViaSTM32F4::%s()\r\n", __func__);
+    USB_PRINTF("CtrlOutEndpointViaSTM32F4::%s()\r\n", __func__);
 
-    assert(this->m_endpointCallback != NULL);
-
-    this->m_endpointCallback->setupComplete(this->m_setupPacketBuffer);
+    this->m_endpointCallout.setupComplete(this->m_setupPacketBuffer);
 
     /*
      * The USB Core clears the Enable Bit in the OTG_FS_DIEPCTL after the Setup
@@ -428,22 +424,10 @@ OutEndpointViaSTM32F4::setup(const UsbDeviceViaSTM32F4::EndpointType_e p_endpoin
         break;
     }
 
-    const ::usb::UsbOutEndpoint::DataBuffer_t &dataBuffer = this->m_endpointCallback->getDataBuffer();
+    const OutEndpointViaSTM34F4Callback::DataBuffer_t &dataBuffer = this->m_endpointCallback->getDataBuffer();
     packetSz = std::min<unsigned>(dataBuffer.m_numWords * sizeof(uint32_t), maxPacketSz);
 
     this->setPacketSize(packetSz);
-
-    this->m_endpoint->DOEPCTL |= USB_OTG_DOEPCTL_USBAEP;
-}
-
-/***************************************************************************//**
- * @brief Setup Endpoint as Control OUT Endpoint.
- *
- ******************************************************************************/
-void
-OutEndpointViaSTM32F4::setup(const OutEndpointViaSTM32F4 & /* p_endpoint */) const {
-    this->m_endpoint->DOEPCTL &= ~(USB_OTG_DOEPCTL_EPTYP_Msk);
-    this->m_endpoint->DOEPCTL |= ((UsbDeviceViaSTM32F4::EndpointType_e::e_Control << USB_OTG_DOEPCTL_EPTYP_Pos) & USB_OTG_DOEPCTL_EPTYP_Msk);
 
     this->m_endpoint->DOEPCTL |= USB_OTG_DOEPCTL_USBAEP;
 }

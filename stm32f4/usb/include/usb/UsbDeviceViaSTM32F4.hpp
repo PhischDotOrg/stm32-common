@@ -83,10 +83,11 @@ public:
     void unregisterEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint);
 
     void registerEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint);
-    void unregisterEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint);
+    void unregisterEndpoint(const unsigned p_endpointNumber);
 
+    /* FIXME Rename to (un)registerCtrlEndpoint */
     void registerEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint);
-    void unregisterEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint);
+    void unregisterEndpoint(void);
 
     void disableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
     void disableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const;

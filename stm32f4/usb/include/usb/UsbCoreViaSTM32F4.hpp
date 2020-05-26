@@ -216,8 +216,8 @@ public:
      * 
      * \see registerDevice
      */
-    constexpr void unregisterDevice(const UsbDeviceViaSTM32F4 &p_device) {
-        assert(this->m_usbDevice == &p_device);
+    constexpr void unregisterDevice(void) {
+        assert(this->m_usbDevice != nullptr);
         this->m_usbDevice = NULL;
     }
 

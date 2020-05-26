@@ -38,7 +38,7 @@ InEndpointViaSTM32F4::InEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, con
  *
  ******************************************************************************/
 InEndpointViaSTM32F4::~InEndpointViaSTM32F4() {
-    this->m_usbDevice.unregisterEndpoint(this->getEndpointNumber(), *this);
+    this->m_usbDevice.unregisterEndpoint(this->getEndpointNumber());
 }
 
 /*******************************************************************************
@@ -252,15 +252,6 @@ InEndpointViaSTM32F4::fillTxFifo(void) {
     } else {
         this->txData();
     }
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-InEndpointViaSTM32F4::setupTxFifoNumber(const unsigned p_fifoNumber) const {
-    this->m_endpoint->DIEPCTL &= ~USB_OTG_DIEPCTL_TXFNUM_Msk;
-    this->m_endpoint->DIEPCTL |= (p_fifoNumber << USB_OTG_DIEPCTL_TXFNUM_Pos) & USB_OTG_DIEPCTL_TXFNUM_Msk;
 }
 
 /***************************************************************************//**
@@ -571,8 +562,10 @@ void
 InEndpointViaSTM32F4::enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const {
     uint16_t packetSize;
 
+#if defined(USB_DEBUG)
     const ::usb::UsbHwDevice::DeviceSpeed_e enumeratedSpeed = this->m_usbDevice.getEnumeratedSpeed();
     assert(enumeratedSpeed == ::usb::UsbHwDevice::DeviceSpeed_e::e_UsbFullSpeed);
+#endif /* defined(USB_DEBUG) */
 
     /* FIXME Should Packet Sizes really be a magic numbers here or in the USB Device Class? */
     if (this->m_endpointNumber == 0) {
