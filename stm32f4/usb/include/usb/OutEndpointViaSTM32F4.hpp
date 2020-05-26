@@ -155,41 +155,10 @@ public:
     void            transferCompleteDeviceCallback(void) const;
 };
 
-template<class OutEndpointT>
-class OutEndpointAdapterT : public UsbOutEndpoint {
-private:
-    OutEndpointT &                          m_outEndpoint;
-    ::usb::UsbOutEndpoint::DataBuffer_t     m_dataBuffer;
-
-public:
-    constexpr OutEndpointAdapterT(OutEndpointT &p_outEndpoint)
-        : m_outEndpoint(p_outEndpoint), m_dataBuffer { nullptr, 0 } {
-    }
-
-    virtual ~OutEndpointAdapterT() {
-    }
-
-    void transferComplete(const size_t p_numBytes) const override {
-        assert(m_outEndpoint.m_endpointCallback != nullptr);
-        m_outEndpoint.m_endpointCallback->transferComplete(p_numBytes);
-    }
-
-    const DataBuffer_t &getDataBuffer(void) const override {
-        USB_PRINTF("OutEndpointAdapterT::%s(p_buffer=%p, p_length=%d)\r\n", __func__, this->m_dataBuffer.m_buffer, this->m_dataBuffer.m_numWords * 4);
-
-        return this->m_dataBuffer;
-    };
-
-    void setDataBuffer(uint32_t * const p_buffer, size_t p_length) {
-        this->m_dataBuffer.m_buffer = p_buffer;
-        this->m_dataBuffer.m_numWords = p_length / sizeof(uint32_t);
-    }
-};
-
 /*******************************************************************************
  *
  ******************************************************************************/
-class CtrlOutEndpointViaSTM32F4 {
+class CtrlOutEndpointViaSTM32F4 : public UsbOutEndpoint {
 private:
     /**
      * \brief Private Typedef for the Endpoint IRQ Handlers.
@@ -216,9 +185,6 @@ private:
     OutEndpointViaSTM32F4 &     m_outEndpoint;
     UsbSetupPacket_t            m_setupPacketBuffer;
 
-    OutEndpointAdapterT<CtrlOutEndpointViaSTM32F4>      m_usbOutEndpAdapter;
-    friend class OutEndpointAdapterT<CtrlOutEndpointViaSTM32F4>;
-
     /***************************************************************************//**
      * @brief Callback to USB-generic Control OUT Endpoint implementation.
      ******************************************************************************/
@@ -238,13 +204,11 @@ public:
         assert(this->m_endpointCallback == nullptr);
 
         this->m_endpointCallback = &p_endpointCallback;
-        this->m_outEndpoint.registerEndpointCallback(m_usbOutEndpAdapter);
     }
 
     void unregisterEndpointCallback(UsbCtrlOutEndpoint &p_endpointCallback) {
         assert(this->m_endpointCallback == &p_endpointCallback);
 
-        this->m_outEndpoint.unregisterEndpointCallback(m_usbOutEndpAdapter);
         this->m_endpointCallback = nullptr;
     }
 
@@ -262,32 +226,40 @@ public:
     void    setupCompleteDeviceCallback(void) const;
 
     constexpr CtrlOutEndpointViaSTM32F4(OutEndpointViaSTM32F4 &p_outEndpoint)
-      : m_outEndpoint(p_outEndpoint), m_setupPacketBuffer {}, m_usbOutEndpAdapter(*this), m_endpointCallback(nullptr) {
+      : m_outEndpoint(p_outEndpoint), m_setupPacketBuffer {}, m_endpointCallback(nullptr) {
           this->m_outEndpoint.m_usbDevice.registerEndpoint(*this);
+          this->m_outEndpoint.registerEndpointCallback(*this);
     };
 
     ~CtrlOutEndpointViaSTM32F4() {
+        this->m_outEndpoint.unregisterEndpointCallback(*this);
         this->m_outEndpoint.m_usbDevice.unregisterEndpoint(*this);
     }
 
     void setDataStageBuffer(uint32_t * const p_buffer, const size_t p_length) {
         USB_PRINTF("CtrlOutEndpointViaSTM32F4::%s(p_buffer=%p, p_length=%d)\r\n", __func__, p_buffer, p_length);
 
-        m_usbOutEndpAdapter.setDataBuffer(p_buffer, p_length);
+        this->setDataBuffer(p_buffer, p_length);
+    }
+
+    /*******************************************************************************
+     * UsbOutEndpoint Interface
+     ******************************************************************************/
+    void transferComplete(const size_t p_numBytes) const override {
+        assert(m_endpointCallback != nullptr);
+        m_endpointCallback->transferComplete(p_numBytes);
     }
 };
 
 /*******************************************************************************
  *
  ******************************************************************************/
-class BulkOutEndpointViaSTM32F4 {
+class BulkOutEndpointViaSTM32F4 : public UsbOutEndpoint {
 private:
     /*******************************************************************************
      * Private Class Attributes
      ******************************************************************************/
     OutEndpointViaSTM32F4 &                         m_outEndpoint;
-    OutEndpointAdapterT<BulkOutEndpointViaSTM32F4>  m_usbOutEndpAdapter;
-    friend class OutEndpointAdapterT<BulkOutEndpointViaSTM32F4>;
 
     /***************************************************************************//**
      * @brief Callback to USB-generic Bulk OUT Endpoint implementation.
@@ -296,12 +268,12 @@ private:
     
 public:
     constexpr BulkOutEndpointViaSTM32F4(OutEndpointViaSTM32F4 &p_outEndpoint)
-      : m_outEndpoint(p_outEndpoint), m_usbOutEndpAdapter(*this), m_endpointCallback(nullptr) {
-
+      : m_outEndpoint(p_outEndpoint), m_endpointCallback(nullptr) {
+        this->m_outEndpoint.registerEndpointCallback(*this);
     };
 
     ~BulkOutEndpointViaSTM32F4() {
-
+        this->m_outEndpoint.unregisterEndpointCallback(*this);
     }
 
     /*******************************************************************************
@@ -311,13 +283,11 @@ public:
         assert(this->m_endpointCallback == nullptr);
 
         this->m_endpointCallback = &p_endpointCallback;
-        this->m_outEndpoint.registerEndpointCallback(m_usbOutEndpAdapter);
     }
 
     constexpr void unregisterEndpointCallback(UsbBulkOutEndpoint &p_endpointCallback) {
         assert(this->m_endpointCallback == &p_endpointCallback);
 
-        this->m_outEndpoint.unregisterEndpointCallback(m_usbOutEndpAdapter);
         this->m_endpointCallback = nullptr;
     }
 
@@ -336,9 +306,13 @@ public:
         this->m_outEndpoint.setup(UsbDeviceViaSTM32F4::EndpointType_e::e_Bulk);
     }
 
-    void setDataBuffer(uint32_t * const p_buffer, size_t p_length) {
-        m_usbOutEndpAdapter.setDataBuffer(p_buffer, p_length);
-    };
+    /*******************************************************************************
+     * UsbOutEndpoint Interface
+     ******************************************************************************/
+    void transferComplete(const size_t p_numBytes) const override {
+        assert(m_endpointCallback != nullptr);
+        m_endpointCallback->transferComplete(p_numBytes);
+    }
 };
 
 /*******************************************************************************
