@@ -9,7 +9,16 @@
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 #include <usb/UsbTypes.hpp>
 
-#include <unistd.h>
+#include <cstdlib>
+
+extern "C" {
+    #if (__cplusplus == 201103L) || (__cplusplus == 201402L) || (__cplusplus == 201703L) || (__cplusplus > 201703L)
+        int usleep(unsigned p_usec);
+    #else
+        #include <unistd.h>
+    #endif
+}
+
 
 namespace usb {
     namespace stm32f4 {
@@ -21,17 +30,6 @@ namespace usb {
 void
 UsbCoreViaSTM32F4::initialize() const {
     this->reset();
-
-    this->startPhy();
-    this->startTransceiver();
-
-    /* TODO Is the wait really needed? If it asked for by the Spec, then include a reference if so. */
-
-    /*
-     * Let USB Core settle for a bit. If not, then the session request IRQ will
-     * fire immediately.
-     */
-    usleep(25000);
 }
 
 /***************************************************************************//**

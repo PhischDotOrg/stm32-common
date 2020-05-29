@@ -199,7 +199,7 @@ public:
      *
      * \see unregisterDevice
      */
-    constexpr void registerDevice(const UsbDeviceViaSTM32F4 &p_device) {
+    void registerDevice(const UsbDeviceViaSTM32F4 &p_device) {
         assert(this->m_usbDevice == NULL);
         m_usbDevice = &p_device;
     }
@@ -217,7 +217,7 @@ public:
      * 
      * \see registerDevice
      */
-    constexpr void unregisterDevice(void) {
+    void unregisterDevice(void) {
         assert(this->m_usbDevice != nullptr);
         this->m_usbDevice = NULL;
     }
@@ -535,7 +535,7 @@ private:
     GpioPinT &  m_pinId;
 
 public:
-    constexpr UsbCoreViaSTM32F4FromAddressPointerT(NvicT &p_nvic, RccT &p_rcc,
+    UsbCoreViaSTM32F4FromAddressPointerT(NvicT &p_nvic, RccT &p_rcc,
       GpioPinT &p_pinDm, GpioPinT &p_pinDp, GpioPinT &p_pinVbus, GpioPinT &p_pinId, uint32_t p_rxFifoSzInWords = 128)
         : UsbCoreViaSTM32F4(reinterpret_cast<USB_OTG_GlobalTypeDef *>(UsbT), UsbT + USB_OTG_PCGCCTL_BASE, p_rxFifoSzInWords), m_nvic(p_nvic),
             m_rcc(p_rcc), m_pinDm(p_pinDm), m_pinDp(p_pinDp), m_pinVbus(p_pinVbus), m_pinId(p_pinId)

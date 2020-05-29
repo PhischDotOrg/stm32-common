@@ -111,12 +111,12 @@ public:
     /*******************************************************************************
      * UsbHwOutEndpoint Interface
      ******************************************************************************/
-    constexpr void registerEndpointCallback(OutEndpointViaSTM34F4Callback &p_endpointCallback) {
+    void registerEndpointCallback(OutEndpointViaSTM34F4Callback &p_endpointCallback) {
         assert(this->m_endpointCallback == nullptr);
         this->m_endpointCallback = &p_endpointCallback;
     }
 
-    constexpr void unregisterEndpointCallback(void) {
+    void unregisterEndpointCallback(void) {
         assert(this->m_endpointCallback != nullptr);
         this->m_endpointCallback = nullptr;
     }
@@ -254,7 +254,7 @@ private:
     void            handleStatusPhaseReceivedIrq(void) const;
 
 public:
-    constexpr CtrlOutEndpointViaSTM32F4(OutEndpointViaSTM32F4 &p_outEndpoint, UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &p_endpointCallout)
+    CtrlOutEndpointViaSTM32F4(OutEndpointViaSTM32F4 &p_outEndpoint, UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &p_endpointCallout)
       : OutEndpointViaSTM34F4Callback(p_outEndpoint), m_setupPacketBuffer {}, m_endpointCallout(p_endpointCallout) {
           p_endpointCallout.registerHwEndpoint(*this);
           this->m_outEndpoint.registerEndpointCallback(*this);
@@ -305,7 +305,7 @@ private:
     UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> * m_endpointCallback;
     
 public:
-    constexpr BulkOutEndpointViaSTM32F4(OutEndpointViaSTM32F4 &p_outEndpoint)
+    BulkOutEndpointViaSTM32F4(OutEndpointViaSTM32F4 &p_outEndpoint)
       : OutEndpointViaSTM34F4Callback(p_outEndpoint), m_endpointCallback(nullptr) {
         this->m_outEndpoint.registerEndpointCallback(*this);
     };
@@ -317,13 +317,13 @@ public:
     /*******************************************************************************
      * UsbHwOutEndpoint Interface
      ******************************************************************************/
-    constexpr void registerEndpointCallback(UsbBulkOutEndpoint &p_endpointCallback) {
+    void registerEndpointCallback(UsbBulkOutEndpoint &p_endpointCallback) {
         assert(this->m_endpointCallback == nullptr);
 
         this->m_endpointCallback = &p_endpointCallback;
     }
 
-    constexpr void unregisterEndpointCallback(void) {
+    void unregisterEndpointCallback(void) {
         assert(this->m_endpointCallback != nullptr);
 
         this->m_endpointCallback = nullptr;

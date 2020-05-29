@@ -1,7 +1,17 @@
 set(CMAKE_C_FLAGS "-mcpu=cortex-m4 -mthumb -DARM")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfpu=fpv4-sp-d16 -mfloat-abi=hard -fsingle-precision-constant") # Not sure if this is this correct, but it has worked for a long time.
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fdata-sections")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-common")
+# if(NOT ("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel"))
+#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector-strong")
+# endif ()
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffreestanding")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostdlib -nodefaultlibs -fno-builtin")
-set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -fno-exceptions -fno-rtti -fno-use-cxa-atexit")
 
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-use-cxa-atexit")
