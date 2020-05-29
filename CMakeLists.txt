@@ -70,6 +70,7 @@ elseif("${CMAKE_BUILD_TYPE}" STREQUAL "RelWithDebInfo")
     add_definitions("-g")
 elseif("${CMAKE_BUILD_TYPE}" STREQUAL "MinSizeRel")
     add_definitions("-Os")
+    add_definitions("-g")
 else()
     add_definitions("-O0")
     add_definitions("-g")
@@ -80,7 +81,6 @@ if ((NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
     # For some reason, -Os and -O3 optimizes things in a way that cause the
     # compiler to throw a bunch of warnings about unused parameters and/or
     # variables.  Degrade those to a warning here so we can still compile.
-    add_definitions("-Wno-error=unused-parameter")
     add_definitions("-Wno-error=unused-variable")
 endif()
 
