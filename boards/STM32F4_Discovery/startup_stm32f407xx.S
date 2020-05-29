@@ -77,6 +77,36 @@ defined in linker script */
 Reset_Handler:  
   ldr   sp, = eInitStack /* set stack pointer */
 
+  /*
+   * Enable FPU.
+   *
+   * This is needed when compiling with "-mfloat-abi=hard -mfpu=fpv4-sp-d16", even
+   * if no explicit FPU operations are required by the application code: When compiling
+   * with -Os, GCC 9.2.1 would emit a "vpush	{d8}" instruction for some reason. This
+   * instruction is pushing an FPU register and leads to a Hard Fault if the FPU is
+   * disabled.
+   *
+   * The Code to enable the FPU is taken directly from the CPU's Datasheet:
+   *
+   *  PM0214 Programming manual
+   *  STM32F3xxx and STM32F4xxx Cortex-M4 programming manual
+   *  Doc ID 022708 Rev 3
+   *  September 2012
+   *
+   *  Section 4.6.6 "Enabling the FPU", pg. 239
+   */
+  // CPACR is located at address 0xE000ED88
+  LDR.W R0, =0xE000ED88
+  // Read CPACR
+  LDR R1, [R0]
+  // Set bits 20-23 to enable CP10 and CP11 coprocessors
+  ORR R1, R1, #(0xF << 20)
+  // Write back the modified value to the CPACR
+  STR     R1, [R0]  // wait for store to complete
+  DSB
+  // reset pipeline now the FPU is enabled
+  ISB
+
 /* Copy the data segment initializers from flash to SRAM */  
   movs  r1, #0
   b  LoopCopyDataInit
