@@ -168,7 +168,8 @@ public:
      */
     constexpr UsbCoreViaSTM32F4(USB_OTG_GlobalTypeDef * const p_usbCore, intptr_t p_usbPowerCtrl, const uint32_t p_rxFifoSzInWords)
       : m_usbCore(p_usbCore), m_usbPwrCtrl(reinterpret_cast<PowerAndClockGatingControl_t *>(p_usbPowerCtrl)), m_rxFifoSzInWords(p_rxFifoSzInWords), m_usbDevice(nullptr), m_mode(DeviceMode_e::e_UsbDevice) {
-
+        // Minimum Rx FIFO size is 16, maximum size is 256 (all in words)
+        assert((m_rxFifoSzInWords >= 16) && (m_rxFifoSzInWords <= 256));
     }
 
     /**
@@ -455,11 +456,7 @@ private:
      * @param p_rxFifoSzInWords Rx FIFO Size in Words.
      *  \pre The \p p_rxFifoSzInWords must be between 16 and 256 words.
      */
-    void setRxFifoSz(const uint16_t p_rxFifoSzInWords) const {
-        /* TODO Use static_assert here? */
-        // Minimum Rx FIFO size is 16, maximum size is 256 (all in words)
-        assert((m_rxFifoSzInWords >= 16) && (m_rxFifoSzInWords <= 256));
-
+    constexpr void setRxFifoSz(const uint16_t p_rxFifoSzInWords) const {
         this->m_usbCore->GRXFSIZ = p_rxFifoSzInWords;
     }
 
