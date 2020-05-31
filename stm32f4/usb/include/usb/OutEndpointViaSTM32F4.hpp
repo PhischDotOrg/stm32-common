@@ -176,13 +176,13 @@ public:
     } DataBuffer_t;
 
 protected:
-    OutEndpointViaSTM32F4 & m_outEndpoint;
+    OutEndpointViaSTM32F4   m_outEndpoint;
     size_t                  m_transmitLength;
     DataBuffer_t            m_dataBuffer;
 
 public:
-    constexpr OutEndpointViaSTM34F4Callback(OutEndpointViaSTM32F4 &p_outEndpoint)
-      : m_outEndpoint(p_outEndpoint), m_transmitLength(0), m_dataBuffer { nullptr, 0 } {
+    OutEndpointViaSTM34F4Callback(UsbDeviceViaSTM32F4 &p_usbDevice, const unsigned p_endpointNumber)
+      : m_outEndpoint(p_usbDevice, p_endpointNumber), m_transmitLength(0), m_dataBuffer { nullptr, 0 } {
         /* Nothing to do. */
     }
 
@@ -223,7 +223,7 @@ private:
      * \see ::usb::stm32f4::CtrlOutEndpointViaSTM32F4::m_irq_handler
      */
     typedef void (usb::stm32f4::CtrlOutEndpointViaSTM32F4::*irq_handler_fn)() const;
-    
+
     /**
      * @brief Private Data Type to construct the Table of IRQ Handlers.
      * 
@@ -253,8 +253,8 @@ private:
     void            handleStatusPhaseReceivedIrq(void) const;
 
 public:
-    CtrlOutEndpointViaSTM32F4(OutEndpointViaSTM32F4 &p_outEndpoint, UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &p_endpointCallout)
-      : OutEndpointViaSTM34F4Callback(p_outEndpoint), m_setupPacketBuffer {}, m_endpointCallout(p_endpointCallout) {
+    CtrlOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &p_endpointCallout)
+      : OutEndpointViaSTM34F4Callback(p_usbDevice, 0), m_setupPacketBuffer {}, m_endpointCallout(p_endpointCallout) {
           p_endpointCallout.registerHwEndpoint(*this);
           this->m_outEndpoint.registerEndpointCallback(*this);
           this->m_outEndpoint.m_usbDevice.registerEndpoint(*this);
@@ -304,8 +304,8 @@ private:
     UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> & m_endpointCallout;
     
 public:
-    BulkOutEndpointViaSTM32F4(OutEndpointViaSTM32F4 &p_outEndpoint, UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> &p_endpointCallout)
-      : OutEndpointViaSTM34F4Callback(p_outEndpoint), m_endpointCallout(p_endpointCallout) {
+    BulkOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> &p_endpointCallout, const unsigned p_endpointNumber)
+      : OutEndpointViaSTM34F4Callback(p_usbDevice, p_endpointNumber), m_endpointCallout(p_endpointCallout) {
         m_endpointCallout.registerHwEndpoint(*this);
         m_outEndpoint.registerEndpointCallback(*this);
     };

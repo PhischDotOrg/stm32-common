@@ -167,10 +167,11 @@ private:
     /*******************************************************************************
      * Private Class Attributes
      ******************************************************************************/
-    InEndpointViaSTM32F4 &  m_inEndpoint;
+    InEndpointViaSTM32F4    m_inEndpoint;
 
 public:
-    constexpr CtrlInEndpointViaSTM32F4(InEndpointViaSTM32F4 &p_inEndpoint) : m_inEndpoint(p_inEndpoint) {
+    CtrlInEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const size_t p_fifoSzInWords)
+      : m_inEndpoint(p_usbDevice, p_fifoSzInWords, 0) {
 
     }
 
@@ -178,11 +179,11 @@ public:
 
     }
 
-    void write(const uint8_t * const p_data, const size_t p_length) const {
+    void write(const uint8_t * const p_data, const size_t p_length) {
         this->m_inEndpoint.write(p_data, p_length);
     };
 
-    void writeString(const ::usb::UsbStringDescriptor &p_string, const size_t p_len) const {
+    void writeString(const ::usb::UsbStringDescriptor &p_string, const size_t p_len) {
         this->m_inEndpoint.writeString(p_string, p_len);
     };
 };
@@ -195,11 +196,12 @@ private:
     /*******************************************************************************
      * Private Class Attributes
      ******************************************************************************/
-    InEndpointViaSTM32F4 &  m_inEndpoint;
+    InEndpointViaSTM32F4    m_inEndpoint;
 
 public:
-    constexpr BulkInEndpointViaSTM32F4(InEndpointViaSTM32F4 &p_inEndpoint) : m_inEndpoint(p_inEndpoint) {
-
+    BulkInEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const size_t p_fifoSzInWords, const unsigned p_endpointNumber)
+      : m_inEndpoint(p_usbDevice, p_fifoSzInWords, p_endpointNumber) {
+        assert(p_endpointNumber != 0);
     }
 
     ~BulkInEndpointViaSTM32F4() {
@@ -214,7 +216,7 @@ public:
         this->m_inEndpoint.disable();
     };
 
-    void write(const uint8_t * const p_data, const size_t p_length) const {
+    void write(const uint8_t * const p_data, const size_t p_length) {
         this->m_inEndpoint.write(p_data, p_length);
     };
 };
