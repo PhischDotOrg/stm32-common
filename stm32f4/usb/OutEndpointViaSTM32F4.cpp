@@ -7,7 +7,7 @@
 
 #include <usb/OutEndpointViaSTM32F4.hpp>
 #include <usb/UsbDeviceViaSTM32F4.hpp>
-#include <usb/UsbOutEndpoint.hpp>
+
 
 #include <algorithm>
 
@@ -57,6 +57,8 @@ OutEndpointViaSTM32F4::~OutEndpointViaSTM32F4() {
  ******************************************************************************/
 void
 OutEndpointViaSTM32F4::disable(void) const {
+    USB_PRINTF("OutEndpointViaSTM32F4::%s(m_endpointNumber=%d)\r\n", __func__, this->m_endpointNumber);
+
     this->m_endpoint->DOEPCTL |= (USB_OTG_DOEPCTL_SNAK | USB_OTG_DOEPCTL_EPDIS);
 }
 
@@ -79,6 +81,7 @@ OutEndpointViaSTM32F4::disable(void) const {
  ******************************************************************************/
 void
 OutEndpointViaSTM32F4::enable(void) const {
+    USB_PRINTF("OutEndpointViaSTM32F4::%s(m_endpointNumber=%d)\r\n", __func__, this->m_endpointNumber);
     this->m_usbDevice.enableEndpointIrq(*this);
 
     this->m_endpoint->DOEPCTL |= (USB_OTG_DOEPCTL_CNAK | USB_OTG_DOEPCTL_EPENA);
@@ -142,6 +145,8 @@ OutEndpointViaSTM32F4::setPacketSize(const unsigned p_packetSize) const {
         }
     }
 
+    USB_PRINTF("OutEndpointViaSTM32F4::%s(m_endpointNumber=%d) packetSz=%d\r\n", __func__, this->m_endpointNumber, packetSz);
+
     this->m_endpoint->DOEPCTL &= ~USB_OTG_DOEPCTL_MPSIZ_Msk;
     this->m_endpoint->DOEPCTL |= (packetSz << USB_OTG_DOEPCTL_MPSIZ_Pos) & USB_OTG_DOEPCTL_MPSIZ_Msk;
 }
@@ -200,7 +205,7 @@ void
 OutEndpointViaSTM32F4::dataReceivedDeviceCallback(const size_t p_numBytes, const typename UsbDeviceViaSTM32F4::DataPID_e & /* p_dataPID */) const {
     size_t numWords = (p_numBytes + (sizeof(uint32_t) - 1)) / sizeof(uint32_t);
 
-    USB_PRINTF("OutEndpointViaSTM32F4::%s(p_numBytes=%d)\r\n", __func__, p_numBytes);
+    USB_PRINTF("OutEndpointViaSTM32F4::%s(m_endpointNumber=%d, p_numBytes=%d)\r\n", __func__, this->m_endpointNumber, p_numBytes);
 
     // assert(p_numBytes <= sizeof(this->m_rxBuffer));
     assert(this->m_endpointCallback != NULL);
