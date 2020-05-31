@@ -7,7 +7,7 @@
 
 #include <usb/OutEndpointViaSTM32F4.hpp>
 #include <usb/UsbDeviceViaSTM32F4.hpp>
-#include <usb/UsbCtrlOutEndpoint.hpp>
+#include <usb/UsbOutEndpoint.hpp>
 
 #include <algorithm>
 
