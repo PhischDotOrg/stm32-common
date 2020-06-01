@@ -198,12 +198,30 @@ public:
         this->m_transmitLength = 0;
     }
 
+    /**
+     * @brief Get Information on the Endpoint's Data Buffer.
+     * 
+     * Returns the address and length of the Endpoint's Data Buffer.
+     * 
+     * \see setDataBuffer
+     * 
+     * @return const DataBuffer_t& Structure that describes the Data Buffer's address and length.
+     */
     const DataBuffer_t &getDataBuffer(void) const {
         USB_PRINTF("OutEndpointViaSTM34F4Callback::%s(p_buffer=%p, p_length=%d)\r\n", __func__, this->m_dataBuffer.m_buffer, this->m_dataBuffer.m_numWords * 4);
 
         return this->m_dataBuffer;
     };
 
+    /**
+     * @brief Set the Data Buffer object
+     * 
+     * The device-independent layers use this method to set up the Endpoint's Data Buffer,
+     * depending on the state of the system (e.g. Data OUT Stage in Control Request).
+     * 
+     * @param p_buffer Address of the Data Buffer.
+     * @param p_length Size of the Data Buffer (in Bytes).
+     */
     void setDataBuffer(uint32_t * const p_buffer, size_t p_length) {
         this->m_dataBuffer.m_buffer = p_buffer;
         this->m_dataBuffer.m_numWords = p_length / sizeof(uint32_t);
@@ -239,6 +257,15 @@ private:
     /*******************************************************************************
      * Private Class Attributes
      ******************************************************************************/
+    /**
+     * @brief RAM Buffer for a _SETUP_ Packet.
+     * 
+     * RAM Buffer into which the _SETUP_ Packet is transferred by #setupDataReceivedDeviceCallback.
+     * This Buffer is shared with the Hardware-independents layers, i.e. the USB Control
+     * Pipe will receive a reference to this buffer to decode the packet.
+     * 
+     * \see handleSetupDoneIrq
+     */
     UsbSetupPacket_t            m_setupPacketBuffer;
 
     /***************************************************************************//**

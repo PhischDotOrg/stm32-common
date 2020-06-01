@@ -318,16 +318,16 @@ UsbDeviceViaSTM32F4::handleStartOfFrame(void) const {
  * 
  * 1. SETUP data packet received (\c PKTSTS == \c b0110 ).
  * 
- *    This is handled in ::usb::stm32f4::OutEndpointViaSTM32F4::setupDataReceivedDeviceCallback.
+ *    This is handled in CtrlOutEndpointViaSTM32F4::setupDataReceivedDeviceCallback.
  *    
  * 2. Setup Transaction Complete (\c PKTSTS == \c b0100 ).
  * 
- *    This is handled in ::usb::stm32f4::OutEndpointViaSTM32F4::setupCompleteDeviceCallback.
+ *    This is handled in CtrlOutEndpointViaSTM32F4::setupCompleteDeviceCallback.
  * 
  *    After the Packet has been read from the Rx FIFO, the USB hardware triggers the
  *    _SETUP Done_ Interrupt in the OUT Endpoint (Bit \c STUP in register \c DOEPINT ).
  * 
- *    \see ::usb::stm32f4::OutEndpointViaSTM32F4::handleSetupDoneIrq.
+ *    \see CtrlOutEndpointViaSTM32F4::handleSetupDoneIrq.
  * 
  * 3. OUT Data Packet received (\c PKTSTS == \c b0010 ).
  * 

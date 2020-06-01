@@ -24,7 +24,7 @@ namespace usb {
  * \param p_usbDevice Object that represents the STM32F4 USB Device Hardware Driver.
  * \param p_endpointNumber Endpoint Number without USB direction encoding.
  *
- * \see ::usb::stm32f4::UsbDeviceViaSTM32F4::registerEndpoint
+ * \see UsbDeviceViaSTM32F4::registerEndpoint
  ******************************************************************************/
 OutEndpointViaSTM32F4::OutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const unsigned p_endpointNumber)
   : m_usbDevice(p_usbDevice),
@@ -39,9 +39,9 @@ OutEndpointViaSTM32F4::OutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, c
  * @brief Destructor.
  * 
  * Destructs the object and unregisters it at the STM32F4 USB Device Hardware
- * driver referred to by ::m_usbDevice.
+ * driver referred to by #m_usbDevice.
  * 
- * \see ::usb::stm32f4::UsbDeviceViaSTM32F4::unregisterEndpoint
+ * \see UsbDeviceViaSTM32F4::unregisterEndpoint
  ******************************************************************************/
 OutEndpointViaSTM32F4::~OutEndpointViaSTM32F4() {
     this->m_usbDevice.unregisterEndpoint(this->getEndpointNumber());
@@ -158,8 +158,7 @@ OutEndpointViaSTM32F4::setPacketSize(const unsigned p_packetSize) const {
  * when a SETUP packet is received for the endpoint.
  * 
  * This callback method will read the data from the Rx FIFO and place it in
- * a RAM buffer. The RAM buffer is provided by the hardware-independend layer
- * (referred to by ::usb::UsbHwOutEndpoint::m_endpointCallback).
+ * a RAM buffer provided by #m_setupPacketBuffer.
  ******************************************************************************/
 void
 CtrlOutEndpointViaSTM32F4::setupDataReceivedDeviceCallback(const size_t p_numBytes) {
@@ -182,7 +181,7 @@ CtrlOutEndpointViaSTM32F4::setupDataReceivedDeviceCallback(const size_t p_numByt
  * when a SETUP packet has been received and is ready to be decoded.
  * 
  * The OUT endpoint's actual _SETUP Complete_ Interrupt is handled in
- * ::usb::stm32f4::OutEndpointViaSTM32F4::handleSetupDoneIrq.
+ * #handleSetupDoneIrq.
  ******************************************************************************/
 void
 CtrlOutEndpointViaSTM32F4::setupCompleteDeviceCallback(void) const {
@@ -195,11 +194,11 @@ CtrlOutEndpointViaSTM32F4::setupCompleteDeviceCallback(void) const {
 /***************************************************************************//**
  * @brief Callback to read received OUT data from the Hardware's Rx FIFO.
  * 
- * This callback method is called from ::usb::stm32f4::UsbDeviceViaSTM32F4::handleRxFIFO
+ * This callback method is called from UsbDeviceViaSTM32F4::handleRxFIFO
  * when there is OUT data in the USB Device hardware's Rx FIFO.
  * 
  * This method will forward the data to the device-independent layer in
- * ::usb::UsbOutEndpoint (via ::usb::UsbHwOutEndpoint::m_endpointCallback).
+ * UsbCtrlOutEndpoint or UsbBulkOutEndpoint (via #m_endpointCallback).
  ******************************************************************************/
 void
 OutEndpointViaSTM32F4::dataReceivedDeviceCallback(const size_t p_numBytes, const typename UsbDeviceViaSTM32F4::DataPID_e & /* p_dataPID */) const {
@@ -373,6 +372,7 @@ OutEndpointViaSTM32F4::handleTransferCompleteIrq(void) const {
  * a potential data stage, until we re-enable it. So this method also re-enables
  * the endpoint.
  * 
+ * \see UsbCtrlOutEndpoint::setupComplete
  * \see ::usb::stm32f4::OutEndpointViaSTM32F4::enable()
  ******************************************************************************/
 void
@@ -396,7 +396,7 @@ CtrlOutEndpointViaSTM32F4::handleSetupDoneIrq(void) const {
 }
 
 /***************************************************************************//**
- * @brief Set up Endpoint as Bulk OUT Endpoint.
+ * @brief Set up Endpoint as the given Endpoint type.
  * 
  * This method will modify the \c DOEPCTL register to set up the endpoint as a
  * Bulk OUT endpoint.
@@ -406,8 +406,8 @@ CtrlOutEndpointViaSTM32F4::handleSetupDoneIrq(void) const {
  * 
  * \see ::usb::stm32f4::UsbDeviceViaSTM32F4::getEnumeratedSpeed on querying the
  *   enumerated USB speed.
- * \see ::usb::UsbOutEndpoint::getDataBuffer on obtaining the upper layer's max.
- *   buffer size.
+ * \see OutEndpointViaSTM34F4Callback::getDataBuffer on obtaining the endpoints
+ *   max. buffer size.
  ******************************************************************************/
 void
 OutEndpointViaSTM32F4::setup(const UsbDeviceViaSTM32F4::EndpointType_e p_endpointType) const {

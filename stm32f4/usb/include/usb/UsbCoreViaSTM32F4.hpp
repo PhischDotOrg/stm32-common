@@ -212,8 +212,6 @@ public:
      *
      * While this would not be required, the pattern is used to discourage calls
      * that would not be needed otherwise.
-     *
-     * @param p_device UsbDeviceViaSTM32F4 be unregistered as a callback.
      * 
      * \see registerDevice
      */
@@ -481,9 +479,21 @@ template<intptr_t UsbT, typename GpioPinT = gpio::GpioPin,
 class UsbCoreViaSTM32F4FromAddressPointerT;
 
 #if defined(USB_OTG_FS_PERIPH_BASE)
+/**
+ * @brief Convenience typedef to create an Object to access the USB Full Speed Core.
+ * 
+ * This typedef uses the convenience class #UsbCoreViaSTM32F4FromAddressPointerT to
+ * create an type / object to drive the USB Full Speed Core in the STM32F4 Controller.
+ */
 typedef UsbCoreViaSTM32F4FromAddressPointerT<USB_OTG_FS_PERIPH_BASE> UsbFullSpeedCore;
 #endif
 #if defined(USB_OTG_HS_PERIPH_BASE)
+/**
+ * @brief Convenience typedef to create an Object to access the USB High Speed Core.
+ * 
+ * This typedef uses the convenience class #UsbCoreViaSTM32F4FromAddressPointerT to
+ * create an type / object to drive the USB High Speed Core in the STM32F4 Controller.
+ */
 typedef UsbCoreViaSTM32F4FromAddressPointerT<USB_OTG_HS_PERIPH_BASE> UsbHighSpeedCore;
 #endif
 
@@ -521,20 +531,53 @@ template<> struct UsbCoreRccFunction<USB_OTG_HS_PERIPH_BASE> {
 };
 #endif
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * \brief Utility class to create a UsbCoreViaSTM32F4 object from an address.
+ * 
+ * This class is used to create a ::usb::stm32f4::UsbCoreViaSTM32F4 object from
+ * the adress to the USB Hardware's Registers.
+ * 
  ******************************************************************************/
 template<intptr_t UsbT, typename GpioPinT /* = gpio::GpioPin */, typename RccT /* = devices::RccViaSTM32F4 */, typename NvicT /* = devices::NvicViaSTM32F4*/>
 class UsbCoreViaSTM32F4FromAddressPointerT : public UsbCoreViaSTM32F4 {
 private:
+    /** @brief Reference to the NVIC.  */
     NvicT &     m_nvic;
+    /** @brief Reference to the RCC. */
     RccT &      m_rcc;
+    /** @brief Reference to the D- Pin. */
     GpioPinT &  m_pinDm;
+    /** @brief Reference to the D+ Pin. */
     GpioPinT &  m_pinDp;
+    /** @brief Reference to the Vbus Pin. */
     GpioPinT &  m_pinVbus;
+    /** @brief Reference to the GND / ID Sense Pin. */
     GpioPinT &  m_pinId;
 
 public:
+    /**
+     * @brief Construct a new  UsbCoreViaSTM32F4 object from an address.
+     * 
+     * This constructor creates a new UsbCoreViaSTM32F4 from the address to the USB Hardware,
+     * i.e. the Full Speed or High Speed core.
+     * 
+     * It takes care of:
+     * - Setting up the Clocks with the RCC.
+     * - Setting up the I/O Pins.
+     * - Inititizing the USB Hardware via UsbCoreViaSTM32F4::initialize.
+     * - Setting up the Interrupts with the NVIC.
+     * 
+     * \see UsbCoreViaSTM32F4GpioHelperT::initalize
+     * \see UsbCoreViaSTM32F4::initialize
+     * 
+     * @param p_nvic Reference to the NVIC object.
+     * @param p_rcc Reference to the RCC object.
+     * @param p_pinDm GPIO Pin used for the USB D+ Line.
+     * @param p_pinDp GPIO Pin used for the USB D- Line.
+     * @param p_pinVbus GPIO Pin used for the Vbus Line.
+     * @param p_pinId GPIO Pin used for the GND / ID Sense Line.
+     * @param p_rxFifoSzInWords Size of the Rx FIFO in Words (4 Bytes).
+     */
     UsbCoreViaSTM32F4FromAddressPointerT(NvicT &p_nvic, RccT &p_rcc,
       GpioPinT &p_pinDm, GpioPinT &p_pinDp, GpioPinT &p_pinVbus, GpioPinT &p_pinId, uint32_t p_rxFifoSzInWords = 128)
         : UsbCoreViaSTM32F4(reinterpret_cast<USB_OTG_GlobalTypeDef *>(UsbT), UsbT + USB_OTG_PCGCCTL_BASE, p_rxFifoSzInWords), m_nvic(p_nvic),
@@ -546,6 +589,19 @@ public:
         m_nvic.enableIrq(*this);
     }
 
+    /**
+     * @brief Destructor.
+     * 
+     * The destructor will reverse all operations performed by the constructure, specifially:
+     * 
+     * - It disables the USB IRQs with the NVIC.
+     * - It resets the USB Hardware via UsbCoreViaSTM32F4::terminate.
+     * - It unconfigures the I/O Pins.
+     * - It disables the USB Hardware in the RCC.
+     * 
+     * \see UsbCoreViaSTM32F4GpioHelperT::terminate
+     * \see UsbCoreViaSTM32F4::terminate
+     */
     virtual ~UsbCoreViaSTM32F4FromAddressPointerT() {
         m_nvic.disableIrq(*this);
         this->terminate();

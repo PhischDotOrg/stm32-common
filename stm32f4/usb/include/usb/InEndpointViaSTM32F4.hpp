@@ -21,8 +21,7 @@ class CtrlInEndpointViaSTM32F4;
  * 
  * This class handles all IN Endpoint specific aspects of the STM32F4 USB Core.
  * 
- * It implements the ::usb::UsbHwInEndpoint interface to the device-independent
- * USB  layer.
+ * It implements the interface to the device-independent USB  layer.
  * 
  * It also exposes an Interface to ::usb::stm32f4::UsbDeviceViaSTM32F4 to handle
  * callbacks from the USB Device Class.
@@ -50,14 +49,32 @@ private:
      *  @brief Endpoint FIFO Size in Words, i.e. units of 4 Bytes.
      */
     const size_t                        m_fifoSzInWords;
+
+    /**
+     * @brief Pointer to the ST-provided structure to access the Hardware registers.
+     */
     USB_OTG_INEndpointTypeDef * const   m_endpoint;
+
+    /**
+     * @brief Pointer to the IN endpoint's Tx FIFO.
+     * 
+     * This is used by #txString and #txData to write Data into the Hardware Tx FIFO.
+     */
     volatile uint32_t * const           m_fifoAddr;
 
     /*******************************************************************************
      * Typedefs and static buffer for IRQ Handler
      ******************************************************************************/
+    /**
+     * \brief Private Typedef for the Endpoint IRQ Handlers.
+     * 
+     * \see #m_irq_handler
+     */
     typedef void (usb::stm32f4::InEndpointViaSTM32F4::*irq_handler_fn)();
 
+    /**
+     * @brief Typedef for IRQ Handler.
+     */
     typedef struct irq_handler_s {
         uint32_t m_irq;
         irq_handler_fn m_fn;
