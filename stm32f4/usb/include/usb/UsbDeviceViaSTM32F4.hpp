@@ -56,6 +56,15 @@ private:
     USB_OTG_DeviceTypeDef * const           m_usbDevice;
 
 protected:
+    /**
+     * @brief Max. number of IN endpoints supported by this Hardware.
+     * 
+     * The STM32F4 USB Hardware supports up to four IN endpoints, including
+     * the default control IN endpoint.
+     * 
+     * From a user perspective there are therefore three IN endpoints that
+     * can be used freely.
+     */
     static const size_t             m_maxInEndpoints = 4;
     static const size_t             m_maxOutEndpoints = 4;
 
