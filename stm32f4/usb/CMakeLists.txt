@@ -7,6 +7,8 @@ set(TARGET_SRC
     OutEndpointViaSTM32F4.cpp
     UsbCoreViaSTM32F4.cpp
     UsbDeviceViaSTM32F4.cpp
+    # FIXME This doesn't work for some reason.
+    # UsbIrqViaSTM32F4.cpp 
 )
 add_library(${TARGET_NAME} ${TARGET_SRC})
 target_link_libraries(${TARGET_NAME}

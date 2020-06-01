@@ -600,11 +600,20 @@ InEndpointViaSTM32F4::enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpoi
 /*******************************************************************************
  *
  ******************************************************************************/
+bool
+InEndpointViaSTM32F4::isEnabled(void) const {
+    return (this->m_endpoint->DIEPCTL & USB_OTG_DIEPCTL_USBAEP);
+}
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
 void
 InEndpointViaSTM32F4::setupEndpointType(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const {
     /* FIXME Endpoint Types != Bulk or Control are not yet supported. */
-    assert((p_endpointType == UsbDeviceViaSTM32F4::EndpointType_e::e_Bulk)
-      || ((this->m_endpointNumber == 0) && (p_endpointType == UsbDeviceViaSTM32F4::EndpointType_e::e_Control)));
+    assert(((this->m_endpointNumber == 0) && (p_endpointType == UsbDeviceViaSTM32F4::EndpointType_e::e_Control))
+      || (p_endpointType == UsbDeviceViaSTM32F4::EndpointType_e::e_Bulk)
+      || (p_endpointType == UsbDeviceViaSTM32F4::EndpointType_e::e_Interrupt));
 
     this->m_endpoint->DIEPCTL &= ~(USB_OTG_DIEPCTL_EPTYP_Msk);
     this->m_endpoint->DIEPCTL |= (p_endpointType << USB_OTG_DIEPCTL_EPTYP_Pos) & USB_OTG_DIEPCTL_EPTYP_Msk;

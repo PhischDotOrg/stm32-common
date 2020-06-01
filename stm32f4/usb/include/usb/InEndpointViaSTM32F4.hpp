@@ -15,6 +15,7 @@ namespace usb {
 class UsbDeviceViaSTM32F4;
 class BulkInEndpointViaSTM32F4;
 class CtrlInEndpointViaSTM32F4;
+class IrqInEndpointViaSTM32F4;
 
 /***************************************************************************//**
  * \brief IN Endpoint driver for STM32F4.
@@ -174,6 +175,8 @@ public:
 
     void enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const;
     void disable(void) const;
+
+    bool isEnabled(void) const;
 };
 
 /*******************************************************************************
@@ -232,6 +235,43 @@ public:
     void disable(void) const {
         this->m_inEndpoint.disable();
     };
+
+    void write(const uint8_t * const p_data, const size_t p_length) {
+        this->m_inEndpoint.write(p_data, p_length);
+    };
+};
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+class IrqInEndpointViaSTM32F4 {
+private:
+    /*******************************************************************************
+     * Private Class Attributes
+     ******************************************************************************/
+    InEndpointViaSTM32F4    m_inEndpoint;
+
+public:
+    IrqInEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const size_t p_fifoSzInWords, const unsigned p_endpointNumber)
+      : m_inEndpoint(p_usbDevice, p_fifoSzInWords, p_endpointNumber) {
+        assert(p_endpointNumber != 0);
+    }
+
+    ~IrqInEndpointViaSTM32F4() {
+
+    }
+
+    void enable(void) const {
+        this->m_inEndpoint.enable(UsbDeviceViaSTM32F4::EndpointType_e::e_Interrupt);
+    };
+
+    void disable(void) const {
+        this->m_inEndpoint.disable();
+    };
+
+    bool isEnabled(void) const {
+        return this->m_inEndpoint.isEnabled();
+    }
 
     void write(const uint8_t * const p_data, const size_t p_length) {
         this->m_inEndpoint.write(p_data, p_length);
