@@ -265,7 +265,7 @@ typename OutEndpointViaSTM32F4::irq_handler_t OutEndpointViaSTM32F4::m_irq_handl
 };
 
 /***************************************************************************//**
- * @brief OUT Endpoint Interrupt Handlers.
+ * @brief Control OUT Endpoint Interrupt Handlers.
  * 
  * Table of interrupt handlers. Is handled in order from first to last, i.e.
  * functions listed earlier are handled before the functions listed later.

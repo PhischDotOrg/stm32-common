@@ -151,33 +151,67 @@ protected:
     OutEndpointViaSTM32F4 *         m_outEndpoints[m_maxOutEndpoints];
     
 public:
+    /**
+     * @name Constructor/Destructor.
+     * 
+     */
+///@{ 
     UsbDeviceViaSTM32F4(UsbCoreViaSTM32F4 &p_usbCore, const DeviceSpeed_e p_deviceSpeed = DeviceSpeed_e::e_UsbFullSpeed);
     virtual ~UsbDeviceViaSTM32F4();
+///@}
 
+    /**
+     * @name Interface to IN Endpoint Handlers.
+     * 
+     * These methods are an interface to class InEndpointViaSTM32F4.
+     */
+///@{ 
     void registerInEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint);
     void unregisterInEndpoint(const unsigned p_endpointNumber);
 
+    void enableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
+    void disableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
+
+    void enableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
+    void disableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
+
+    void setupTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const;
+    void flushTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const;
+///@}
+
+    /**
+     * @name Interface to OUT Endpoint Handlers.
+     * 
+     * These methods are an interface to class OutEndpointViaSTM32F4.
+     */
+///@{ 
     void registerOutEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint);
     void unregisterOutEndpoint(const unsigned p_endpointNumber);
-
-    void registerCtrlEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint);
-    void unregisterCtrlEndpoint(void);
-
-    void disableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
-    void disableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
-    void enableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
-    void enableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
 
     void disableEndpointIrq(const OutEndpointViaSTM32F4 &p_endpoint) const;
     void enableEndpointIrq(const OutEndpointViaSTM32F4 &p_endpoint) const;
 
-    void setupTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const;
-    void flushTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const;
+    DeviceSpeed_e getEnumeratedSpeed(void) const;
+///@}
 
-    void start(void) const;
-    void stop(void) const;
+    /**
+     * @name Interface to the Control OUT Endpoint Handler.
+     * 
+     * These methods are an interface to class CtrlOutEndpointViaSTM32F4.
+     */
+///@{ 
+    void registerCtrlEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint);
+    void unregisterCtrlEndpoint(void);
+///@}
 
+    /**
+     * @name Interface to the USB Core Driver.
+     * 
+     * These methods implement the Interrupt Handler Interface to the UsbCoreViaSTM32F4 Class.
+     */
+///@{ 
     uint32_t handleIrq(const uint32_t p_irq) const;
+///@}
 
     /**
      * @brief Get the Base Address of the USB Core's Registers.
@@ -194,11 +228,9 @@ public:
         return m_usbCore.getBaseAddr();
     };
 
-    DeviceSpeed_e getEnumeratedSpeed(void) const;
+    void start(void) const;
+    void stop(void) const;
 
-/*******************************************************************************
- * UsbHwDevice Interface
- ******************************************************************************/
     void setAddress(const uint8_t p_address) const override;
 
 private:
@@ -211,6 +243,15 @@ private:
     void connect(void) const;
 #endif
 
+    /**
+     * @name Interrupt handlers.
+     * 
+     * These methods are interrupt handlers.
+     * 
+     * \see #m_irq_handler
+     * \see #handleIrq
+     */
+///@{ 
     void handleEnumerationDone(void) const;
     void handleUsbReset(void) const;
     // void handleStartOfFrame(void) const;
@@ -222,6 +263,7 @@ private:
     void handleEarlySuspendIrq(void) const;
 #endif
     void handleUsbSuspendIrq(void) const;
+///@}
 
     bool isSuspendableState(void) const;
 
