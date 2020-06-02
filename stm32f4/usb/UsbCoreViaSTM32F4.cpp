@@ -26,6 +26,7 @@ namespace usb {
 /***************************************************************************//**
  * @brief Initialize the USB Core.
  * 
+ * This method will intialize the Hardware by calling #reset internally.
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::initialize() const {
@@ -81,6 +82,9 @@ UsbCoreViaSTM32F4::setupTxFifo(const unsigned p_endpoint, const uint16_t p_fifoS
  * 
  * Performs a reset of the USB Core's Hardware.
  *
+ * Internally, this method uses #performReset with the \c CSRST flag to reset
+ * the Device Hardware.
+ * 
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::reset(void) const {

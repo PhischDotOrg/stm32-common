@@ -14,14 +14,20 @@
 namespace usb {
     namespace stm32f4 {
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Constructor.
+ * 
+ * Constructs a new UsbDeviceViaSTM32F4 object.
+ * 
+ * @param p_usbCore Reference to the underlying UsbCoreViaSTM32F4 object.
+ * @param p_deviceSpeed Speed at which the Device should operate.
+ * 
+ * \warning As of now, only USB Full Speed is supported.
  ******************************************************************************/
 UsbDeviceViaSTM32F4::UsbDeviceViaSTM32F4(UsbCoreViaSTM32F4 &p_usbCore, const DeviceSpeed_e p_deviceSpeed /* = DeviceSpeed_e::e_UsbFullSpeed */)
   : UsbHwDevice(p_deviceSpeed),
     m_usbCore(p_usbCore),
-    m_usbDevice(reinterpret_cast<USB_OTG_DeviceTypeDef *>(p_usbCore.getBaseAddr() + USB_OTG_DEVICE_BASE)),
-    m_deviceStatus { 0x1 }
+    m_usbDevice(reinterpret_cast<USB_OTG_DeviceTypeDef *>(p_usbCore.getBaseAddr() + USB_OTG_DEVICE_BASE))
 {
     m_usbCore.setupMode(UsbCoreViaSTM32F4::e_UsbDevice);
     m_usbCore.registerDevice(*this);
@@ -31,66 +37,149 @@ UsbDeviceViaSTM32F4::UsbDeviceViaSTM32F4(UsbCoreViaSTM32F4 &p_usbCore, const Dev
     this->initialize();
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Destructor.
  ******************************************************************************/
 UsbDeviceViaSTM32F4::~UsbDeviceViaSTM32F4() {
     m_usbCore.unregisterDevice();
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Register an IN Endpoint Handler.
+ * 
+ * Registers an IN Endpoint Handler with the UsbDeviceViaSTM32F4 object.
+ * 
+ * The method will use \c assert() to make sure \p p_endpointNumber < #m_maxInEndpoints.
+ * 
+ * The method will use \c assert() to make sure no Endpoint Handler has been registered
+ * with the same Endpoint Number before.
+ * 
+ * @param p_endpointNumber  Number of the Endpoint. Must be smaller than #m_maxInEndpoints.
+ * @param p_endpoint        Reference to the InEndpointViaSTM32F4 object.
+ * 
+ * \see #m_inEndpoints
  *
  ******************************************************************************/
 void
-UsbDeviceViaSTM32F4::registerEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint) {
+UsbDeviceViaSTM32F4::registerInEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint) {
     assert(p_endpointNumber < this->m_maxInEndpoints);
     assert(this->m_inEndpoints[p_endpointNumber] == NULL);
 
     this->m_inEndpoints[p_endpointNumber] = &p_endpoint;
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Unregister an IN Endpoint Handler.
+ * 
+ * Unregisters an IN Endpoint Handler with the UsbDeviceViaSTM32F4 object.
+ * 
+ * The method will use \c assert() to make sure \p p_endpointNumber < #m_maxInEndpoints.
+ * 
+ * The method will use \c assert() to make sure that an Endpoint Handler has been
+ * registered with the same Endpoint Number before.
+ * 
+ * @param p_endpointNumber  Number of the Endpoint. Must be smaller than #m_maxInEndpoints.
+ * 
+ * \see #m_inEndpoints
  *
  ******************************************************************************/
 void
-UsbDeviceViaSTM32F4::unregisterEndpoint(const unsigned p_endpointNumber) {
+UsbDeviceViaSTM32F4::unregisterInEndpoint(const unsigned p_endpointNumber) {
     assert(p_endpointNumber < this->m_maxInEndpoints);
     assert(this->m_inEndpoints[p_endpointNumber] != nullptr);
 
     this->m_inEndpoints[p_endpointNumber] = NULL;
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Register an OUT Endpoint Handler.
+ * 
+ * Registers an OUT Endpoint Handler with the UsbDeviceViaSTM32F4 object.
+ * 
+ * The method will use \c assert() to make sure \p p_endpointNumber < #m_maxOutEndpoints.
+ * 
+ * The method will use \c assert() to make sure no Endpoint Handler has been registered
+ * with the same Endpoint Number before.
+ * 
+ * @param p_endpointNumber  Number of the Endpoint. Must be smaller than #m_maxOutEndpoints.
+ * @param p_endpoint        Reference to the OutEndpointViaSTM32F4 object.
+ * 
+ * \see #m_outEndpoints
  *
  ******************************************************************************/
 void
-UsbDeviceViaSTM32F4::registerEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint) {
+UsbDeviceViaSTM32F4::registerOutEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint) {
     assert(p_endpointNumber < this->m_maxOutEndpoints);
     assert(this->m_outEndpoints[p_endpointNumber] == NULL);
 
     this->m_outEndpoints[p_endpointNumber] = &p_endpoint;
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Unregister an OUT Endpoint Handler.
+ * 
+ * Unregisters an OUT Endpoint Handler with the UsbDeviceViaSTM32F4 object.
+ * 
+ * The method will use \c assert() to make sure \p p_endpointNumber < #m_maxOutEndpoints.
+ * 
+ * The method will use \c assert() to make sure that an Endpoint Handler has been
+ * registered with the same Endpoint Number before.
+ * 
+ * @param p_endpointNumber  Number of the Endpoint. Must be smaller than #m_maxOutEndpoints.
+ * 
+ * \see #m_outEndpoints
  *
  ******************************************************************************/
 void
-UsbDeviceViaSTM32F4::registerEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint) {
+UsbDeviceViaSTM32F4::unregisterOutEndpoint(const unsigned p_endpointNumber) {
+    assert(p_endpointNumber < this->m_maxOutEndpoints);
+    assert(this->m_outEndpoints[p_endpointNumber] != nullptr);
+
+    this->m_outEndpoints[p_endpointNumber] = NULL;
+}
+
+/***************************************************************************//**
+ * @brief Register a Control Endpoint Handler.
+ * 
+ * Registers a Control Endpoint Handler with the UsbDeviceViaSTM32F4 object.
+ *
+ * The method will use \c assert() to make sure no Endpoint Handler has been registered
+ * with the same Endpoint Number before.
+ * 
+ * @param p_endpoint        Reference to the CtrlOutEndpointViaSTM32F4 object.
+ * 
+ * \see #m_ctrlOutEndpoint
+ *
+ ******************************************************************************/void
+UsbDeviceViaSTM32F4::registerCtrlEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint) {
     assert(this->m_ctrlOutEndpoint == NULL);
 
     this->m_ctrlOutEndpoint = &p_endpoint;
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Unregister a Control Endpoint Handler.
+ * 
+ * Unregisters a Control Endpoint Handler with the UsbDeviceViaSTM32F4 object.
+ * 
+ * The method will use \c assert() to make sure that an Endpoint Handler has been
+ * registered with the same Endpoint Number before.
+ * 
+ * \see #m_ctrlOutEndpoint
  *
- ******************************************************************************/
-void
-UsbDeviceViaSTM32F4::unregisterEndpoint(void) {
+ ******************************************************************************/void
+UsbDeviceViaSTM32F4::unregisterCtrlEndpoint(void) {
     assert(this->m_ctrlOutEndpoint != nullptr);
     this->m_ctrlOutEndpoint = nullptr;
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Set up the USB Device Speed in Hardware.
+ * 
+ * Sets the \c DSPD Bits in the \c DCFG register to set up the USB Device Speed
+ * in Hardware.
+ * 
+ * @param p_speed Selected USB Speed.
  *
  ******************************************************************************/
 void
@@ -99,8 +188,10 @@ UsbDeviceViaSTM32F4::setupDeviceSpeed(const DeviceSpeed_e p_speed) const {
     this->m_usbDevice->DCFG |= p_speed & USB_OTG_DCFG_DSPD;
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Disable all USB Device Interrupts.
+ * 
+ * This disables all Interrupts from the USB Device, including endpoint interrupts.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::disableInterrupts(void) const {
@@ -110,6 +201,7 @@ UsbDeviceViaSTM32F4::disableInterrupts(void) const {
     this->m_usbDevice->DIEPEMPMSK   = 0u;
 }
 
+#if 0
 /*******************************************************************************
  *
  ******************************************************************************/
@@ -129,9 +221,22 @@ UsbDeviceViaSTM32F4::connect(void) const {
 
     USB_PRINTF("UsbDeviceViaSTM32F4::%s() USB Device connected\r\n", __func__);
 }
+#endif
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Handle IN Endpoint IRQs.
+ * 
+ * Handles the \c IEPINT in the \c GINTSTS register.
+ * 
+ * Evaluates the \c IEPINT Bits in the \c DAINT register and calls the Interrupt
+ * handler method on the right InEndpointViaSTM32F4 object.
+ * 
+ * If multiple endpoints triggered an interrupt at the same time, then the
+ * individual endpoint handlers will be called from low number to high. In other
+ * words: Endpoint #0 is called before Endpoint #1, etc.
+ * 
+ * \see InEndpointViaSTM32F4::handleIrq 
+ * \see UsbDeviceViaSTM32F4::m_irq_handler
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::handleInEndpointIrq(void) const {
@@ -154,6 +259,11 @@ UsbDeviceViaSTM32F4::handleInEndpointIrq(void) const {
  * the interrupt. If multiple endpoints triggered an interrupt at the same time,
  * then the individual endpoint handlers will be called from low number to high.
  * In other words: Endpoint #0 is called before Endpoint #1, etc.
+ * 
+ * \see OutEndpointViaSTM32F4::handleIrq 
+ * \see CtrlOutEndpointViaSTM32F4::handleIrq 
+ * 
+ * \see UsbDeviceViaSTM32F4::m_irq_handler
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::handleOutEndpointIrq(void) const {
@@ -178,6 +288,7 @@ UsbDeviceViaSTM32F4::handleOutEndpointIrq(void) const {
     }
 }
 
+#if 0
 /*******************************************************************************
  *
  ******************************************************************************/
@@ -193,13 +304,14 @@ void
 UsbDeviceViaSTM32F4::handleEarlySuspendIrq(void) const {
     USB_PRINTF("UsbDeviceViaSTM32F4::%s()\r\n", __func__);  
 }
+#endif
 
 /***************************************************************************//**
  * \brief Handle the _USB Enumeration Done_ Interrupt.
  * 
  * Handles the \c ENUMDNEM IRQ signalled in the \c GINTSTS register.
  * 
- * The hardware sets this bit and signals this IRQ sets when the USB Speed
+ * The hardware sets this bit and signals this IRQ when the USB Speed
  * Enumeration is complete.
  ******************************************************************************/
 void
@@ -235,10 +347,14 @@ UsbDeviceViaSTM32F4::handleEnumerationDone(void) const {
 	this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_OutEndpoint);
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * \brief Handle the _USB Reset_ Interrupt.
+ * 
+ * Handles the \c USBRST IRQ signalled in the \c GINTSTS register.
+ * 
+ * The hardware sets this bit and signals this IRQ when the Host has issues a
+ * USB Reset on the Bus.
  ******************************************************************************/
-
 void
 UsbDeviceViaSTM32F4::handleUsbReset(void) const {
     USB_PRINTF("UsbDeviceViaSTM32F4::%s() USB Device reset begin.\r\n", __func__);
@@ -292,6 +408,7 @@ UsbDeviceViaSTM32F4::handleUsbReset(void) const {
     USB_PRINTF("UsbDeviceViaSTM32F4::%s() USB Device reset complete.\r\n", __func__);
 }
 
+#if 0
 /*******************************************************************************
  *
  ******************************************************************************/
@@ -299,6 +416,7 @@ void
 UsbDeviceViaSTM32F4::handleStartOfFrame(void) const {
 
 }
+#endif
 
 /***************************************************************************//**
  * @brief Rx FIFO Non-Empty IRQ Handler.
@@ -453,8 +571,15 @@ UsbDeviceViaSTM32F4::handleRxFIFO(void) const {
 	}
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Determine whether the device is in a suspendable State.
+ * 
+ * Called by UsbDeviceViaSTM32F4::handleUsbSuspendIrq to determine whether the
+ * USB Device can be suspended.
+ * 
+ * \bug Determining whether a USB Device can be suspended is not yet supported.
  *
+ * @returns \c True if device can be suspended, \c False otherwise.
  ******************************************************************************/
 bool
 UsbDeviceViaSTM32F4::isSuspendableState(void) const {
@@ -462,8 +587,12 @@ UsbDeviceViaSTM32F4::isSuspendableState(void) const {
     return false;
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Disable an IN Endpoint's IRQ.
  *
+ * Masks the given IN Endpoint's IRQ in the \c DAINTMSK register.
+ * 
+ * @param p_endpoint Reference to the InEndpointViaSTM32F4 object.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::disableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const {
@@ -475,62 +604,87 @@ UsbDeviceViaSTM32F4::disableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) 
  * 
  * This enables the IN Endpoints IRQs in the \c DAINTMSK register.
  * 
- * @param p_endpoint Number of IN Endpoint.
+ * @param p_endpoint Reference to the InEndpointViaSTM32F4 object.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::enableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const {
     this->enableEndpointIrq(p_endpoint.getEndpointNumber(), false);
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Disable the given IN Endpoints FIFO IRQ.
+ * 
+ * Masks the given IN Endpoint's Tx FIFO IRQ in the \c DIEPEMPMSK register.
+ * 
+ * @param p_endpoint Reference to the InEndpointViaSTM32F4 object.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::disableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const {
     this->m_usbDevice->DIEPEMPMSK &= ~(1 << p_endpoint.getEndpointNumber());
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Enables the given IN Endpoints FIFO IRQ.
+ * 
+ * Unmasks the given IN Endpoint's Tx FIFO IRQ in the \c DIEPEMPMSK register.
+ * 
+ * @param p_endpoint Reference to the InEndpointViaSTM32F4 object.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::enableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const {
     this->m_usbDevice->DIEPEMPMSK |= (1 << p_endpoint.getEndpointNumber());
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Disable an OUT Endpoint's IRQ.
  *
+ * Masks the given OUT Endpoint's IRQ in the \c DAINTMSK register.
+ * 
+ * @param p_endpoint Reference to the OutEndpointViaSTM32F4 object.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::disableEndpointIrq(const OutEndpointViaSTM32F4 &p_endpoint) const {
     this->disableEndpointIrq(p_endpoint.getEndpointNumber(), true);
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Enable the given OUT Endpoints IRQs.
+ * 
+ * This enables the OUT Endpoints IRQs in the \c DAINTMSK register.
+ * 
+ * @param p_endpoint Reference to the OutEndpointViaSTM32F4 object.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::enableEndpointIrq(const OutEndpointViaSTM32F4 &p_endpoint) const {
     this->enableEndpointIrq(p_endpoint.getEndpointNumber(), true);
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Disable an Endpoint's IRQ.
  *
+ * Masks the given Endpoint's IRQ in the \c DAINTMSK register.
+ * 
+ * @param p_endpointNumber Endpoint Number.
+ * @param p_isOutEndpoint \c True if the operation should affect an OUT Endpoint,
+ *   \c False if it should affect an IN Endpoint.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::disableEndpointIrq(const unsigned &p_endpointNumber, bool p_isOutEndpoint) const {
     this->m_usbDevice->DAINTMSK &= ~(1 << (p_endpointNumber + (p_isOutEndpoint ? 16 : 0)));
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Enable an Endpoint's IRQ.
  *
+ * Unmasks the given Endpoint's IRQ in the \c DAINTMSK register.
+ * 
+ * @param p_endpointNumber Endpoint Number.
+ * @param p_isOutEndpoint \c True if the operation should affect an OUT Endpoint,
+ *   \c False if it should affect an IN Endpoint.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::enableEndpointIrq(const unsigned &p_endpointNumber, bool p_isOutEndpoint) const {
     this->m_usbDevice->DAINTMSK |= 1 << (p_endpointNumber + (p_isOutEndpoint ? 16 : 0));
-
-    // USB_PRINTF("UsbDeviceViaSTM32F4::%s() -- p_endpointNumber=%d, p_isOutEndpoint=%d, DAINTMSK=0x%x\r\n",
-    //   __func__, p_endpointNumber, p_isOutEndpoint, this->m_usbDevice->DAINTMSK);
 }
 
 /*******************************************************************************
@@ -546,8 +700,16 @@ UsbDeviceViaSTM32F4::setAddress(const uint8_t p_address) const {
     USB_PRINTF("UsbDeviceViaSTM32F4::%s(): USB Device Adress = %x\r\n", __func__, p_address);
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Start the USB Device.
  *
+ * This method activates and starts operation of the USB Device.
+ * - The Device Speed is set up via #setupDeviceSpeed
+ * - The USB Core is started via UsbCoreViaSTM32F4::start
+ * - The IN Endpoint Tx FIFOs are flushed via InEndpointViaSTM32F4::flushTxFifo
+ * - The USB Hardware's Device Mode Interrupts are enabled via UsbCoreViaSTM32F4::enableIrq
+ *   - Only those Interrupts which actually have a handler in #m_irq_handler are activated.
+ * 
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::start(void) const {
@@ -563,23 +725,24 @@ UsbDeviceViaSTM32F4::start(void) const {
     for (const UsbDeviceViaSTM32F4::irq_handler_t *cur = UsbDeviceViaSTM32F4::m_irq_handler; cur->m_irq != 0; cur++) {
         this->m_usbCore.enableInterrupt(cur->m_irq);
     }
-
-#if 0
-    this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_StartOfFrame);
-    this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_Reset);
-    this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_EnumerationDone);
-    this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_SessionRequest);
-    this->m_usbCore.enableInterrupt(UsbCoreViaSTM32F4::e_OnTheGo);
-#endif
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Stop the USB Device.
  *
+ * This method de-activates and stops operation of the USB Hardware.
+ * 
+ * \bug This method should probably disable the USB Device Interrupts but it
+ *   currently doesn't.
+ * 
+ * \see UsbCoreViaSTM32F4::stop
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::stop(void) const {
     USB_PRINTF("UsbDeviceViaSTM32F4::%s()\r\n", __func__);
     
+    /* FIXME Should we disable the Device Interrupts here? */
+
     this->m_usbCore.stop();
 }
 
@@ -596,7 +759,7 @@ UsbDeviceViaSTM32F4::stop(void) const {
  *   must not be called before ::usb::stm32f4::CtrlOutEndpointViaSTM32F4::handleSetupDoneIrq as otherwise the
  *   Data OUT Pointers have not been set up.
  * 
- * \see ::usb::stm32f4::UsbDeviceViaSTM32F4::handleIrq.
+ * \see #handleIrq.
  ******************************************************************************/
 const
 typename UsbDeviceViaSTM32F4::irq_handler_t UsbDeviceViaSTM32F4::m_irq_handler[] = {
@@ -607,7 +770,7 @@ typename UsbDeviceViaSTM32F4::irq_handler_t UsbDeviceViaSTM32F4::m_irq_handler[]
     { UsbCoreViaSTM32F4::Interrupt_e::e_Reset,              &UsbDeviceViaSTM32F4::handleUsbReset },
     { UsbCoreViaSTM32F4::Interrupt_e::e_EnumerationDone,    &UsbDeviceViaSTM32F4::handleEnumerationDone },
     { UsbCoreViaSTM32F4::Interrupt_e::e_InEndpoint,         &UsbDeviceViaSTM32F4::handleInEndpointIrq },
-    { UsbCoreViaSTM32F4::Interrupt_e::e_ConnectorIdStatus,  &UsbDeviceViaSTM32F4::handleConnectorIdStatusChangeIrq },
+    // { UsbCoreViaSTM32F4::Interrupt_e::e_ConnectorIdStatus,  &UsbDeviceViaSTM32F4::handleConnectorIdStatusChangeIrq },
     // { UsbCoreViaSTM32F4::Interrupt_e::e_EarlySuspend,       &UsbDeviceViaSTM32F4::handleEarlySuspendIrq },
     { UsbCoreViaSTM32F4::Interrupt_e::e_None,               NULL }
 };
@@ -615,9 +778,15 @@ typename UsbDeviceViaSTM32F4::irq_handler_t UsbDeviceViaSTM32F4::m_irq_handler[]
 /***************************************************************************//**
  * @brief USB Device Interrupt Handler.
  * 
+ * This method is called by UsbCoreViaSTM32F4::handleIrq to serve the USB Device
+ * mode interrupts.
  * 
- * @param p_irq 
- * @return uint32_t 
+ * It walks the registered interrupt handlers in #m_irq_handler and calls them
+ * if the respective interrupt is active.
+ * 
+ * @param p_irq Active Interrupts, i.e. contents of the \c GINTSTS Register.
+ * @return \c uint32_t Bitmap of served interrupts. Can be used by the caller to
+ *   clear the served interrupts in the hardware register.
  ******************************************************************************/
 uint32_t
 UsbDeviceViaSTM32F4::handleIrq(const uint32_t p_irq) const {
@@ -660,7 +829,10 @@ UsbDeviceViaSTM32F4::handleUsbSuspendIrq(void) const {
     }
 }
 
-/*******************************************************************************
+/***************************************************************************//**
+ * @brief Initializes the USB Device.
+ * 
+ * Initializes the USB Device Mode Hardware, e.g. after a Reset.
  *
  ******************************************************************************/
 void
@@ -683,8 +855,16 @@ UsbDeviceViaSTM32F4::initialize(void) const {
 
     // this->disconnect();
 }
-/*******************************************************************************
- *
+
+/***************************************************************************//**
+ * @brief Set up the Tx FIFOs for all Endpoints.
+ * 
+ * This method is called during Hardware initialization to set up the Tx FIFOs
+ * for all Endpoints.
+ * 
+ * There is a 1:1 mapping between IN Endpoint Number and Tx FIFO number, i.e.
+ * IN Endpoint Zero will use the first FIFO, IN Endpoint One the second FIFO
+ * etc.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::setupTxFifos(void) const {
@@ -698,16 +878,25 @@ UsbDeviceViaSTM32F4::setupTxFifos(void) const {
     }
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Set up Tx FIFO for an IN Endpoint.
+ * 
+ * This method sets up the given IN Endpoint's Tx FIFO.
+ * 
+ * @param p_endpoint Reference to IN Endpoint.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::setupTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const {
     this->m_usbCore.setupTxFifo(p_endpoint.getEndpointNumber(), p_endpoint.getFifoSzInWords());
 }
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Flush the Tx FIFO of an IN Endpoint.
+ * 
+ * This method flushes up the given IN Endpoint's Tx FIFO by calling
+ * UsbCoreViaSTM32F4::flushTxFifo internally.
+ * 
+ * @param p_endpoint Reference to IN Endpoint.
  ******************************************************************************/
 void
 UsbDeviceViaSTM32F4::flushTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const {

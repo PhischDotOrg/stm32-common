@@ -28,7 +28,7 @@ private:
     /**
      * \brief Private Typedef for the Endpoint IRQ Handlers.
      * 
-     * \see ::usb::stm32f4::OutEndpointViaSTM32F4::m_irq_handler
+     * \see #m_irq_handler
      */
     typedef void (usb::stm32f4::OutEndpointViaSTM32F4::*irq_handler_fn)() const;
 
@@ -51,7 +51,7 @@ private:
     /**
      * @brief Private Data Type to construct the Table of IRQ Handlers.
      * 
-     * \see ::usb::stm32f4::OutEndpointViaSTM32F4::m_irq_handler
+     * \see #m_irq_handler
      */
     typedef struct irq_handler_s {
         Interrupt_t     m_irq;
@@ -284,11 +284,11 @@ public:
       : OutEndpointViaSTM34F4Callback(p_usbDevice, 0), m_setupPacketBuffer {}, m_endpointCallout(p_endpointCallout) {
           p_endpointCallout.registerHwEndpoint(*this);
           this->m_outEndpoint.registerEndpointCallback(*this);
-          this->m_outEndpoint.m_usbDevice.registerEndpoint(*this);
+          this->m_outEndpoint.m_usbDevice.registerCtrlEndpoint(*this);
     };
 
     ~CtrlOutEndpointViaSTM32F4() {
-        this->m_outEndpoint.m_usbDevice.unregisterEndpoint();
+        this->m_outEndpoint.m_usbDevice.unregisterCtrlEndpoint();
         this->m_outEndpoint.unregisterEndpointCallback();
         this->m_endpointCallout.unregisterHwEndpoint();
     }

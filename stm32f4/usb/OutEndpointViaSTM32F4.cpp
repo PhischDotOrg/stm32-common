@@ -24,7 +24,7 @@ namespace usb {
  * \param p_usbDevice Object that represents the STM32F4 USB Device Hardware Driver.
  * \param p_endpointNumber Endpoint Number without USB direction encoding.
  *
- * \see UsbDeviceViaSTM32F4::registerEndpoint
+ * \see UsbDeviceViaSTM32F4::registerOutEndpoint
  ******************************************************************************/
 OutEndpointViaSTM32F4::OutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const unsigned p_endpointNumber)
   : m_usbDevice(p_usbDevice),
@@ -32,7 +32,7 @@ OutEndpointViaSTM32F4::OutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, c
     m_endpoint(reinterpret_cast<USB_OTG_OUTEndpointTypeDef *>(p_usbDevice.getBaseAddr() + USB_OTG_OUT_ENDPOINT_BASE + (p_endpointNumber * USB_OTG_EP_REG_SIZE))),
     m_fifoAddr(reinterpret_cast<uint32_t *>(p_usbDevice.getBaseAddr() + USB_OTG_FIFO_BASE + (p_endpointNumber * USB_OTG_FIFO_SIZE)))
 {
-    this->m_usbDevice.registerEndpoint(this->getEndpointNumber(), *this);
+    this->m_usbDevice.registerOutEndpoint(this->getEndpointNumber(), *this);
 }
 
 /***************************************************************************//**
@@ -44,7 +44,7 @@ OutEndpointViaSTM32F4::OutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, c
  * \see UsbDeviceViaSTM32F4::unregisterEndpoint
  ******************************************************************************/
 OutEndpointViaSTM32F4::~OutEndpointViaSTM32F4() {
-    this->m_usbDevice.unregisterEndpoint(this->getEndpointNumber());
+    this->m_usbDevice.unregisterOutEndpoint(this->getEndpointNumber());
 }
 
 /***************************************************************************//**

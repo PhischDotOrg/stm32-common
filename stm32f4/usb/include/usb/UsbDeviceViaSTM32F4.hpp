@@ -19,11 +19,26 @@ class InEndpointViaSTM32F4;
 class CtrlOutEndpointViaSTM32F4;
 class OutEndpointViaSTM32F4;
 
-/*******************************************************************************
- *
+/***************************************************************************//**
+ * @brief Driver for the STM32F4 USB On-the-Go (OTG) Core in USB Device Mode.
+ * 
+ * Class that encapsulates the operation of the STM32F4's USB On-the-Go (OTG)
+ * Core in USB Device Mode. 
  ******************************************************************************/
 class UsbDeviceViaSTM32F4 : public UsbHwDevice {
 public:
+    /**
+     * @brief Typedef for USB Packet ID (PID).
+     * 
+     * Type for the USB Packet ID of a received packet.
+     * 
+     * \warning Please note that the values are according to the definition of
+     *   the \c DPID Bits in the \c GRXSTSP register -- not according to the USB
+     *   standard.
+     * 
+     * \see UsbDeviceViaSTM32F4::handleRxFIFO
+     * \see OutEndpointViaSTM32F4::dataReceivedDeviceCallback
+     */
     typedef enum DataPID_e {
         e_Data0 = 0x0,
         e_Data1 = 0x2,
@@ -31,6 +46,17 @@ public:
         e_MData = 0x3
     } DataPID_t;
 
+    /**
+     * @brief Typedef for USB Endpoint Type.
+     * 
+     * Type to classify an endpoint's type.
+     * 
+     * Maps the \c EPTYP Bits in Register \c DIEPCTL (for IN Endpoints) as well
+     * as the \c EPTYP Bits in the \c DOEPCTL Register to a C++ type.
+     * 
+     * \see OutEndpointViaSTM32F4::setup
+     * \see InEndpointViaSTM32F4::setupEndpointType
+     */
     typedef enum EndpointType_e {
         e_Control       = EP_TYPE_CTRL,
         e_Isochronous   = EP_TYPE_ISOC,
@@ -42,17 +68,31 @@ private:
     /*******************************************************************************
      * Private Variables
      ******************************************************************************/
+    /** @brief Reference to the underlying UsbCoreViaSTM32F4 object. */
     UsbCoreViaSTM32F4 &  m_usbCore;
 
+    /**
+     * \brief Private Typedef for the USB Device IRQ Handlers.
+     * 
+     * \see #m_irq_handler
+     */
     typedef void (usb::stm32f4::UsbDeviceViaSTM32F4::*irq_handler_fn)() const;
 
+    /**
+     * @brief Private Data Type to construct the Table of IRQ Handlers.
+     * 
+     * \see #m_irq_handler
+     */
     typedef struct irq_handler_s {
+        /** @brief Type of Interrupt. */
         UsbCoreViaSTM32F4::Interrupt_e  m_irq;
+        /** @brief Reference to IRQ handler member function. */
         irq_handler_fn                  m_fn;
     } irq_handler_t;
 
     static const irq_handler_t m_irq_handler[];
 
+    /** @brief Reference to the USB Core's Device-mode Registers. */
     USB_OTG_DeviceTypeDef * const           m_usbDevice;
 
 protected:
@@ -66,37 +106,62 @@ protected:
      * can be used freely.
      */
     static const size_t             m_maxInEndpoints = 4;
+
+    /**
+     * @brief Max. number of OUT endpoints supported by this Hardware.
+     * 
+     * The STM32F4 USB Hardware supports up to four OUT endpoints, including
+     * the default control OUT endpoint.
+     * 
+     * From a user perspective there are therefore three OUT endpoints that
+     * can be used freely.
+     */
     static const size_t             m_maxOutEndpoints = 4;
 
+    /**
+     * @brief References to the IN Endpoint Handlers.
+     * 
+     * Pointers to InEndpointViaSTM32F4 objects for the IN Endpoints. The offset
+     * within the array corresponds to the endpoint's number.
+     * 
+     * \see registerInEndpoint
+     * \see unregisterEndpoint
+     */
     InEndpointViaSTM32F4 *          m_inEndpoints[m_maxInEndpoints];
+
+    /**
+     * @brief Reference to the Control OUT Endpoint Handler.
+     * 
+     * The Control OUT Endpoint, i.e. OUT Endpoint Zero, is of a different type
+     * because it can handle SETUP packets.
+     * 
+     * \see handleRxFIFO
+     */
     CtrlOutEndpointViaSTM32F4 *     m_ctrlOutEndpoint;
+
+    /**
+     * @brief References to the OUT Endpoint Handlers.
+     * 
+     * Pointers to InEndpointViaSTM32F4 objects for the OUT Endpoints. The offset
+     * within the array corresponds to the endpoint's number.
+     * 
+     * \see registerOutEndpoint
+     * \see unregisterEndpoint
+     */
     OutEndpointViaSTM32F4 *         m_outEndpoints[m_maxOutEndpoints];
-    union UsbDeviceStatus_u {
-        uint16_t        m_status;
-        struct {
-            uint16_t    m_selfPowered   : 1;
-            uint16_t    m_remoteWakeup  : 1;
-            uint16_t    m_reserved      : 14;
-        } m_bitfield;
-    } __attribute__((packed));
-
-    typedef union UsbDeviceStatus_u UsbDeviceStatus_t;
-
-    UsbDeviceStatus_t               m_deviceStatus;
     
 public:
-    UsbDeviceViaSTM32F4(UsbCoreViaSTM32F4 &p_usbCore, const DeviceSpeed_e p_speed = DeviceSpeed_e::e_UsbFullSpeed);
+    UsbDeviceViaSTM32F4(UsbCoreViaSTM32F4 &p_usbCore, const DeviceSpeed_e p_deviceSpeed = DeviceSpeed_e::e_UsbFullSpeed);
     virtual ~UsbDeviceViaSTM32F4();
 
-    void registerEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint);
-    void unregisterEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint);
+    void registerInEndpoint(const unsigned p_endpointNumber, InEndpointViaSTM32F4 &p_endpoint);
+    void unregisterInEndpoint(const unsigned p_endpointNumber);
 
-    void registerEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint);
-    void unregisterEndpoint(const unsigned p_endpointNumber);
+    void registerOutEndpoint(const unsigned p_endpointNumber, OutEndpointViaSTM32F4 &p_endpoint);
+    void unregisterOutEndpoint(const unsigned p_endpointNumber);
 
-    /* FIXME Rename to (un)registerCtrlEndpoint */
-    void registerEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint);
-    void unregisterEndpoint(void);
+    void registerCtrlEndpoint(CtrlOutEndpointViaSTM32F4 &p_endpoint);
+    void unregisterCtrlEndpoint(void);
 
     void disableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
     void disableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
@@ -106,19 +171,26 @@ public:
     void disableEndpointIrq(const OutEndpointViaSTM32F4 &p_endpoint) const;
     void enableEndpointIrq(const OutEndpointViaSTM32F4 &p_endpoint) const;
 
-    void getStatus(const uint8_t p_len) const;
-
     void setupTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const;
     void flushTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const;
-
-    void initialize(void) const;
 
     void start(void) const;
     void stop(void) const;
 
     uint32_t handleIrq(const uint32_t p_irq) const;
-    
-    intptr_t getBaseAddr(void) const {
+
+    /**
+     * @brief Get the Base Address of the USB Core's Registers.
+     * 
+     * Used by the Endpoint Handler classes to figure out the Base Address of the Endpoint-specific registers.
+     * 
+     * \see InEndpointViaSTM32F4::InEndpointViaSTM32F4
+     * \see OutEndpointViaSTM32F4::OutEndpointViaSTM32F4
+     *
+     * @return constexpr intptr_t Base Address of the USB Core Registers.
+     * 
+     */
+    constexpr intptr_t getBaseAddr(void) const {
         return m_usbCore.getBaseAddr();
     };
 
@@ -127,28 +199,28 @@ public:
 /*******************************************************************************
  * UsbHwDevice Interface
  ******************************************************************************/
-    void setAddress(const uint8_t p_address) const;
-   
-#if defined(USB_DEBUG)
-    void debugPrint(void) const;
-#endif /* defined(USB_DEBUG) */
+    void setAddress(const uint8_t p_address) const override;
 
 private:
     void setupDeviceSpeed(const DeviceSpeed_e p_speed) const;
     
     void disableInterrupts(void) const;
 
+#if 0
     void disconnect(void) const;
     void connect(void) const;
+#endif
 
     void handleEnumerationDone(void) const;
     void handleUsbReset(void) const;
-    void handleStartOfFrame(void) const;
+    // void handleStartOfFrame(void) const;
     void handleRxFIFO(void) const;
     void handleInEndpointIrq(void) const;
     void handleOutEndpointIrq(void) const;
+#if 0
     void handleConnectorIdStatusChangeIrq(void) const;
     void handleEarlySuspendIrq(void) const;
+#endif
     void handleUsbSuspendIrq(void) const;
 
     bool isSuspendableState(void) const;
@@ -156,12 +228,9 @@ private:
     void disableEndpointIrq(const unsigned &p_endpointNumber, bool p_isOutEndpoint) const;
     void enableEndpointIrq(const unsigned &p_endpointNumber, bool p_isOutEndpoint) const;
 
-    virtual void setupTxFifos(void) const;
+    void setupTxFifos(void) const;
 
-    void    getDeviceDescriptor(const uint8_t p_descriptorId, const size_t p_len) const;
-    void    getDeviceQualifierDescriptor(const uint8_t p_descriptorId, const size_t p_len) const;
-    void    getStringDescriptor(const uint8_t p_descriptorId, const size_t p_len) const;
-    void    getConfigurationDescriptor(const uint8_t p_descriptorId, const size_t p_len) const;
+    void initialize(void) const;
 };
 
 /*******************************************************************************

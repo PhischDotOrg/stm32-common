@@ -26,7 +26,7 @@ InEndpointViaSTM32F4::InEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, con
     m_endpoint(reinterpret_cast<USB_OTG_INEndpointTypeDef *>(p_usbDevice.getBaseAddr() + USB_OTG_IN_ENDPOINT_BASE + (p_endpointNumber * USB_OTG_EP_REG_SIZE))),
     m_fifoAddr(reinterpret_cast<uint32_t *>(p_usbDevice.getBaseAddr() + USB_OTG_FIFO_BASE + (p_endpointNumber * USB_OTG_FIFO_SIZE)))
 {
-    this->m_usbDevice.registerEndpoint(this->getEndpointNumber(), *this);
+    this->m_usbDevice.registerInEndpoint(this->getEndpointNumber(), *this);
 
     this->reset();
 
@@ -38,7 +38,7 @@ InEndpointViaSTM32F4::InEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, con
  *
  ******************************************************************************/
 InEndpointViaSTM32F4::~InEndpointViaSTM32F4() {
-    this->m_usbDevice.unregisterEndpoint(this->getEndpointNumber());
+    this->m_usbDevice.unregisterInEndpoint(this->getEndpointNumber());
 }
 
 /*******************************************************************************
