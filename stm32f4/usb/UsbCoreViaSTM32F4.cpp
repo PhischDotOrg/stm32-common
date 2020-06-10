@@ -120,8 +120,10 @@ UsbCoreViaSTM32F4::performReset(const uint32_t p_reset) const {
     /* FIXME Use an enum to define the allowed types of resets */
     this->m_usbCore->GRSTCTL |= p_reset;
 
+#if !defined(HOSTBUILD)
     while (this->m_usbCore->GRSTCTL & p_reset);
     while (!(this->m_usbCore->GRSTCTL & USB_OTG_GRSTCTL_AHBIDL));
+#endif
 
     // this->m_usbCore->GAHBCFG |= (USB_OTG_GAHBCFG_PTXFELVL | USB_OTG_GAHBCFG_TXFELVL);
 }

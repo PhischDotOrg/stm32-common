@@ -18,3 +18,11 @@ target_include_directories(${TARGET_NAME} PRIVATE
 target_include_directories(${TARGET_NAME} PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
+
+#*******************************************************************************
+# Testcases
+#*******************************************************************************
+if (UNITTEST)
+    MESSAGE(STATUS "Building ${TARGET_NAME} Testcases")
+    add_subdirectory(testcases)
+endif(UNITTEST)

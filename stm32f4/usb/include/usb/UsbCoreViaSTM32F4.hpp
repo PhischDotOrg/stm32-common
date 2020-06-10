@@ -78,6 +78,7 @@ public:
  * \bug Currently, the #UsbCoreViaSTM32F4 class only supports USB Device Mode.
  ******************************************************************************/
 class UsbCoreViaSTM32F4 {
+    friend class UsbCoreViaSTM32F4Test;
 public:
 /*******************************************************************************
  * Public Type definitions
