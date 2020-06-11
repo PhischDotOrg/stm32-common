@@ -59,6 +59,12 @@ void
 UsbCoreViaSTM32F4::setupTxFifo(const unsigned p_endpoint, const uint16_t p_fifoSzInWords) const {
     uint16_t offset;
 
+     /*
+      * Size in GRXFSIZ and DIEPTXFx registers are in units of words, but it seems that offset
+      * needs to be given in units of bytes.
+      */
+    unsigned offsetFactor = sizeof(uint32_t);
+
     /* FIXME It would be nice if the FIFO Size could be checked; ideally at compile time. */
 
     /* TODO Host mode not (yet) supported */
@@ -66,12 +72,12 @@ UsbCoreViaSTM32F4::setupTxFifo(const unsigned p_endpoint, const uint16_t p_fifoS
 
     if (p_endpoint == 0) {
         /* Calculate EP0 FIFO Offset based on Global Rx FIFO Length (which is configured in words) */
-        this->m_usbCore->DIEPTXF0_HNPTXFSIZ = (p_fifoSzInWords << 16) | (((this->m_usbCore->GRXFSIZ) * sizeof(uint8_t)) & 0x0000FFFF);
+        this->m_usbCore->DIEPTXF0_HNPTXFSIZ = (p_fifoSzInWords << 16) | (((this->m_usbCore->GRXFSIZ) * offsetFactor) & 0x0000FFFF);
     } else {
         if (p_endpoint == 1) {
-            offset = (this->m_usbCore->DIEPTXF0_HNPTXFSIZ & 0x0000ffff) + (((this->m_usbCore->DIEPTXF0_HNPTXFSIZ >> 16) * sizeof(uint8_t)) & 0x0000FFFF);
+            offset = (this->m_usbCore->DIEPTXF0_HNPTXFSIZ & 0x0000ffff) + (((this->m_usbCore->DIEPTXF0_HNPTXFSIZ >> 16) * offsetFactor) & 0x0000FFFF);
         } else {
-            offset = (this->m_usbCore->DIEPTXF[p_endpoint - 2] & 0x0000ffff) + (((this->m_usbCore->DIEPTXF[p_endpoint - 2] >> 16) * sizeof(uint8_t)) & 0x0000FFFF);
+            offset = (this->m_usbCore->DIEPTXF[p_endpoint - 2] & 0x0000ffff) + (((this->m_usbCore->DIEPTXF[p_endpoint - 2] >> 16) * offsetFactor) & 0x0000FFFF);
         }
         this->m_usbCore->DIEPTXF[p_endpoint - 1] = (p_fifoSzInWords << 16) | (offset & 0x0000FFFF);
     }

@@ -77,6 +77,8 @@ InEndpointViaSTM32F4::setPacketSize(const unsigned p_packetSize) const {
 
     this->m_endpoint->DIEPCTL &= ~USB_OTG_DIEPCTL_MPSIZ_Msk;
     this->m_endpoint->DIEPCTL |= (packetSz << USB_OTG_DIEPCTL_MPSIZ_Pos) & USB_OTG_DIEPCTL_MPSIZ_Msk;
+
+    USB_PRINTF("InEndpointViaSTM32F4::%s(m_endpointNumber=%d) DIEPCTL=0x%x\r\n", __func__, this->m_endpointNumber, this->m_endpoint->DIEPCTL);
 }
 
 /*******************************************************************************
@@ -216,7 +218,7 @@ InEndpointViaSTM32F4::startTx(void) {
     this->m_usbDevice.enableEndpointFifoIrq(*this);
 
     /* Trigger USB Hardware to start transmission */
-    this->m_endpoint->DIEPCTL |= (USB_OTG_DIEPCTL_CNAK | USB_OTG_DIEPCTL_EPENA);
+    this->m_endpoint->DIEPCTL |= (USB_OTG_DIEPCTL_CNAK | USB_OTG_DIEPCTL_EPENA /* | USB_OTG_DIEPCTL_SD0PID_SEVNFRM */);
 
     /* FIXME If we're filling the Tx FIFO before setting EPENA, then things won't work. */
     this->fillTxFifo();
@@ -392,9 +394,15 @@ InEndpointViaSTM32F4::txData(void) {
 
     // USB_PRINTF("InEndpointViaSTM32F4::%s(Line %d): m_fifoAddr=%p DIEPTSIZ=0x%x m_txLength=%d freeWordsInTxFifo=%d m_offs=%d\r\n", __func__, __LINE__, this->m_fifoAddr, this->m_endpoint->DIEPTSIZ, this->m_txBuffer.m_txLength, (this->m_endpoint->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV), this->m_txBuffer.m_offs);
 
-    while (this->m_txBuffer.m_offs < this->m_txBuffer.m_txLength) {
-        while ((this->m_endpoint->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV_Msk) == 0); /* Wait until there is space in Tx FIFO. */
+    uint32_t freeWordsInFifo = this->m_endpoint->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV_Msk;
+    if (this->m_endpointNumber)
+        USB_PRINTF("InEndpointViaSTM32F4::%s(m_endpointNumber=%i) freeWordsInFifo=%d\r\n", __func__, this->m_endpointNumber, freeWordsInFifo);
 
+    if ((freeWordsInFifo * 4) < this->m_txBuffer.m_txLength) {
+        return;
+    }
+
+    while (this->m_txBuffer.m_offs < this->m_txBuffer.m_txLength) {
         /*
          * In case m_offs + 4 would exceed the m_len of m_data, then copy the remaining
          * data into a temporary buffer byte-wise and fill the Tx FIFO from the temporary
