@@ -86,8 +86,8 @@ public:
         e_ForceTo32Bit = 0xffffffff,
     } Function_t;
 
-    int write(uint16_t p_value, uint16_t p_output, uint16_t p_mask) const;
-    int read(uint16_t &p_vector) const;
+    void write(uint16_t p_value, uint16_t p_output, uint16_t p_mask) const;
+    void read(uint16_t &p_vector) const;
 
     int enable(const uint8_t p_pin, const Mode_e p_mode, const Termination_e p_termination, const Function_e p_function) const;
     int disable(const uint8_t p_pin) const;

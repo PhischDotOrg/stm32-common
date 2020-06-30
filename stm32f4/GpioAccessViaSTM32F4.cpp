@@ -32,7 +32,7 @@ GpioAccessViaSTM32F4::~GpioAccessViaSTM32F4() {
 /*******************************************************************************
  *
  ******************************************************************************/
-int
+void
 GpioAccessViaSTM32F4::write(uint16_t p_value, uint16_t p_output, uint16_t p_mask) const {
     this->m_gpio->OTYPER &= ~(p_output & p_mask);
     this->m_gpio->OTYPER |= (~p_output & p_mask);
@@ -57,17 +57,14 @@ GpioAccessViaSTM32F4::write(uint16_t p_value, uint16_t p_output, uint16_t p_mask
     this->m_gpio->BSRRH = (~p_value & p_mask);
     this->m_gpio->BSRRL = (p_value & p_mask);
 #endif
-    return (0);
 }
 
 /*******************************************************************************
  *
  ******************************************************************************/
-int
+void
 GpioAccessViaSTM32F4::read(uint16_t &p_vector) const {
     p_vector = this->m_gpio->IDR;
-
-    return (0);
 }
 
 /*******************************************************************************
