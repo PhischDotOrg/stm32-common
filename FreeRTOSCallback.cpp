@@ -9,10 +9,16 @@ extern uart::UartDevice g_uart;
 extern "C" {
 #endif /* defined(__cplusplus) */
 
+#if !defined(HOSTBUILD)
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
 #include <semphr.h>
+#else
+    void taskDISABLE_INTERRUPTS(void);
+
+    typedef unsigned xTaskHandle;
+#endif /* defined(HOSTBUILD) */
 
 void
 vAssertCalled(const char * /* p_file */, unsigned int /* p_line */) {
