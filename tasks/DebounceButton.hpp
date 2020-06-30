@@ -22,7 +22,7 @@ private:
     virtual int executePeriod(void) {
         typename PinT::mode_t   pinState;
         uint32_t                tmpRegister = m_register;
-        bool                    buttonState, edgeDetected = false;
+        bool                    buttonState;
         int                     rc = 0;
 
         m_pin.get(pinState);
@@ -34,25 +34,24 @@ private:
             /* prevRegister |= 0; */
         }
 
-        if ((tmpRegister == 0xffffffff) && (m_register == 0x7fffffff)) {
-            buttonState = true;
-            edgeDetected = true;
-        }
+        /*
+         * This will evaluate to true if either:
+         * (A) tmpRegister == 0x00000000 && m_register == 0x80000000
+         * (B) tmpRegister == 0xffffffff && m_register == 0x7fffffff
+         * 
+         * In case (A), we're seeing a rising edge; in case (B) we're seeing a falling edge.
+         */
+        if ((tmpRegister ^ m_register) == 0x80000000) {
+            buttonState = tmpRegister != 0; // false if (A), true if (B) 
 
-        if ((tmpRegister == 0) && (m_register == 0x80000000)) {
-            buttonState = false;
-            edgeDetected = true;
-        }
-
-        m_register = tmpRegister;
-
-        if (edgeDetected) {
             if (xQueueSend(this->m_buttonHandlerQueue, &buttonState, 0) != pdTRUE) {
                 PHISCH_LOG("DebounceButtonT::%s(): Failed to post Button State to queue.\r\n", __func__);
                 
                 rc = -1;
             }
         }
+
+        m_register = tmpRegister;
 
         return (rc);
     }
