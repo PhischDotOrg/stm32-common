@@ -19,10 +19,12 @@ private:
     const PinT  &   m_led;
     bool            m_status;
 
-    void executePeriod(void) override {
-        this->m_led.set(m_status ? PinT::On : PinT::Off);
+    int executePeriod(void) override {
+        int rc = this->m_led.set(m_status ? PinT::On : PinT::Off);
 
         m_status = !m_status;
+
+        return (rc);
     }
 
 public:

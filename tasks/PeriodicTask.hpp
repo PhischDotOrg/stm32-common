@@ -31,19 +31,23 @@ public:
 
     };
 
-    virtual void executePeriod(void) = 0;
+    virtual int executePeriod(void) = 0;
 
 public:
     virtual void run(void) override {
         PHISCH_LOG("Task '%s' ticking at %lu ms\r\n", this->m_name, this->m_period * portTICK_PERIOD_MS);
+        int rc;
 
         do {
-            executePeriod();
+            rc = executePeriod();
 
 #if !defined(HOSTBUILD)
             vTaskDelay(m_period);
 #endif /* defined(HOSTBUILD) */
-        } while (1);
+        } while (rc == 0);
+
+        /* Should never happen. */
+        assert(false);
     };
 };
 
