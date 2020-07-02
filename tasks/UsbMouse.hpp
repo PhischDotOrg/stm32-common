@@ -1,0 +1,127 @@
+/*-
+ * $Copyright$
+-*/
+
+#ifndef __USB_MOUSE_HPP_E09747F0_2BC0_4B9D_8F6B_3A162AFF62E1
+#define __USB_MOUSE_HPP_E09747F0_2BC0_4B9D_8F6B_3A162AFF62E1
+
+#include <tasks/Task.hpp>
+
+#include <gpio/GpioPin.hpp>
+#include <usb/UsbApplication.hpp>
+
+#include <phisch/log.h>
+
+namespace tasks {
+
+/***************************************************************************//**
+ * @brief USB Mouse Button Handler.
+ * 
+ * This Task reacts on events from a Queue and translates them to Button press /
+ * release in the USB Mouse Application.
+ *******************************************************************************/
+class UsbMouseButtonHandler : public Task {
+private:
+    usb::UsbMouseApplication &  m_usbMouseApplication;
+    const gpio::GpioPin &       m_led;
+    QueueHandle_t               m_buttonHandlerQueue;
+    SemaphoreHandle_t           m_usbMutex;
+
+    void run(void) override {
+        bool buttonState;
+
+        while(xQueueReceive(this->m_buttonHandlerQueue, &buttonState, portMAX_DELAY) == pdTRUE) {
+            m_led.set(buttonState ? gpio::GpioPin::On : gpio::GpioPin::Off);
+
+            m_usbMouseApplication.setButton(usb::UsbMouseApplication::Button_e::e_LeftButton, buttonState);
+
+            xSemaphoreTake(m_usbMutex, portMAX_DELAY);
+            m_usbMouseApplication.updateHost();
+            xSemaphoreGive(m_usbMutex);
+        }
+        
+        PHISCH_LOG("UsbMouseButtonHandler::%s(): Failed to receive Button State from queue.\r\n", __func__);
+        m_led.set(gpio::GpioPin::HiZ);
+        assert(false);
+    };
+
+public:
+    UsbMouseButtonHandler(const char * const p_name, const unsigned p_priority, usb::UsbMouseApplication &p_usbMouseApplication, const gpio::GpioPin &p_led)
+      : Task(p_name, p_priority), m_usbMouseApplication(p_usbMouseApplication), m_led(p_led) {
+
+    }
+
+    virtual ~UsbMouseButtonHandler() {
+
+    };
+
+    void setRxQueue(const QueueHandle_t p_buttonHandlerQueue) {
+        this->m_buttonHandlerQueue = p_buttonHandlerQueue;
+    }
+
+    void
+    setUsbMutex(SemaphoreHandle_t p_usbMutex) {
+        m_usbMutex = p_usbMutex;
+    }
+};
+
+/***************************************************************************//**
+ * @brief USB Mouse Mover.
+ * 
+ * This Task updates the x- and y-Position periodically.
+ *******************************************************************************/
+class UsbMouseMover : public PeriodicTask {
+private:
+    usb::UsbMouseApplication &  m_usbMouseApplication;
+    const gpio::GpioPin &       m_led;
+    int                         m_xOffset;
+    int                         m_yOffset;
+    int                         m_direction;
+    SemaphoreHandle_t           m_usbMutex;
+
+    int executePeriod(void) override {
+        m_direction *= -1;
+
+        m_led.set(m_direction > 0 ? gpio::GpioPin::On : gpio::GpioPin::Off);
+
+        m_usbMouseApplication.setXAxis(m_direction * m_xOffset);
+        m_usbMouseApplication.setYAxis(m_direction * m_yOffset);
+
+        xSemaphoreTake(m_usbMutex, portMAX_DELAY);
+        m_usbMouseApplication.updateHost();
+        xSemaphoreGive(m_usbMutex);
+      
+        return (0);
+    }
+
+public:
+    UsbMouseMover(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs,
+      usb::UsbMouseApplication &p_usbMouseApplication, const int p_xOffset, const int p_yOffset, const gpio::GpioPin &p_led)
+        : PeriodicTask(p_name, p_priority, p_periodMs), m_usbMouseApplication(p_usbMouseApplication), m_led(p_led),
+            m_xOffset(p_xOffset), m_yOffset(p_yOffset), m_direction(1) {
+
+    }
+
+    ~UsbMouseMover() {
+
+    }
+
+    void
+    setXOffset(int p_xOffset) {
+        m_xOffset = p_xOffset;
+    }
+
+    void
+    setYOffset(int p_yOffset) {
+        m_yOffset = p_yOffset;
+    }
+
+    void
+    setUsbMutex(SemaphoreHandle_t p_usbMutex) {
+        m_usbMutex = p_usbMutex;
+    }
+};
+
+} /* namespace tasks */
+
+#endif /* __USB_MOUSE_HPP_E09747F0_2BC0_4B9D_8F6B_3A162AFF62E1 */
