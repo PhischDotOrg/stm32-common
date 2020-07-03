@@ -1,6 +1,10 @@
 # stm32f4-common
 This repository contains code for STM32F4-based boards that I'm using in some of my projects.
 
+It is intended to be used as a git [submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) by a top-level project.
+
+See [https://github.com/PhischDotOrg/stm32f4-minimal](https://github.com/PhischDotOrg/stm32f4-minimal) for an example.
+
 # How to check out
 This project makes use of git's [submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) feature. This repository is therefore more of a front-end for other code parts. In order to obtain all the needed code, please check out with the `--recursive` flag.
 
@@ -11,6 +15,7 @@ $ git clone git@github.com:PhischDotOrg/stm32f4-common.git --recursive
 ```
 
 # How to build
+These instructions apply to all top-level projects that use this repository as a sub-module.
 
 ## Pre-requisites
 In order to build the code, you need these packages installed on your computer:
@@ -47,11 +52,6 @@ The CMake build files include a `flash` target which uses OpenOCD to flash the b
 ```
 $ make flash
 ```
-# How to use (in your own application)
-
-If you need a different application than simply looping back received packets, you can
-- Derive and extend the class `UsbInterface` to implement your own Control Requests.
-- Derive and extend the class `UsbBulkOutApplication` to implement your own handler for Bulk OUT requests.
 
 # Build Types
 The `CMakeLists.txt` file uses the [CMAKE_BUILD_TYPE](https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html) variable as follows:
