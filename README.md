@@ -28,9 +28,9 @@ In order to build the code, you need these packages installed on your computer:
   - If Doxygen is found, the `make doxygen` target will allow you to create the Doxygen documentation.
 
 ## Building in Visual Studio Code
-The easiest way to build this project is to load the [Visual Studio Code](https://code.visualstudio.com) Workspace:
+The easiest way to build this project is to load the top-level project as a Folder or Workspace in [Visual Studio Code](https://code.visualstudio.com) 
 
-[https://github.com/PhischDotOrg/stm32f4-usbdevice/blob/master/stm32f4-usbdevice.code-workspace](https://github.com/PhischDotOrg/stm32f4-usbdevice/blob/master/stm32f4-usbdevice.code-workspace)
+This is especially true if the top-level has included [https://github.com/PhischDotOrg/stm32f4-vscode](https://github.com/PhischDotOrg/stm32f4-vscode) as a sub-module in `.vscode`.
 
 The Workspace should set up the CMake Kits to offer _Generic STM32F4_ and _Generic STM32F4 (Windows)_. Please chose the one that is suitable for you.
 
