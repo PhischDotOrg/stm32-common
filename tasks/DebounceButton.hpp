@@ -12,13 +12,14 @@
 
 namespace tasks {
 
-template<typename PinT>
+template<typename PinT, bool ActiveLow = false>
 class DebounceButtonT : public PeriodicTask {
 private:
     const PinT &            m_pin;
     uint32_t                m_register;
     QueueHandle_t           m_buttonHandlerQueue;
 
+    
     virtual int executePeriod(void) {
         typename PinT::mode_t   pinState;
         uint32_t                tmpRegister = m_register;
@@ -28,7 +29,7 @@ private:
         m_pin.get(pinState);
 
         tmpRegister <<= 1;
-        if (pinState == PinT::On) {
+        if (ActiveLow ? (pinState == PinT::Off) : (pinState == PinT::On)) {
             tmpRegister |= 1;
         } else { /* PinT:Off as HiZ is never returned. */
             /* prevRegister |= 0; */
