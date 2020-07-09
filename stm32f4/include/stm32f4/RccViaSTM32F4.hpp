@@ -460,7 +460,7 @@ public:
             && (p_obj.m_pllCfg.m_pllN >= 40) && (p_obj.m_pllCfg.m_pllN <= 432)
             && (p_obj.m_pllCfg.m_pllM >= 8) && (p_obj.m_pllCfg.m_pllM <= 63)
             && (p_obj.getPllVcoSpeedInHz() >= 100 * 1000 * 1000) && (p_obj.getPllVcoSpeedInHz() <= 432 * 1000 * 1000)
-            && ((p_obj.m_hseSpeedInHz >= 1 * 1000 * 1000) && (p_obj.m_hseSpeedInHz <= 50 * 1000 * 1000))
+            && ((p_obj.m_hseSpeedInHz == 0) || ((p_obj.m_hseSpeedInHz >= 1 * 1000 * 1000) && (p_obj.m_hseSpeedInHz <= 50 * 1000 * 1000)))
             && (p_obj.getSysclkSpeedInHz() > 0) && (p_obj.getSysclkSpeedInHz() <= 100 * 1000 * 1000)
             && (p_obj.getAhbSpeedInHz() > 0) && (p_obj.getAhbSpeedInHz() >= p_obj.getSysclkSpeedInHz())
             && (p_obj.getApb1SpeedInHz() > 0) && (p_obj.getApb1SpeedInHz() <= 50 * 1000 * 1000)
