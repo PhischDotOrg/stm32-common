@@ -9,8 +9,6 @@
 
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 
-struct USB_OTG_OUTEndpointTypeDef;
-
 namespace usb {
 
     namespace stm32f4 {

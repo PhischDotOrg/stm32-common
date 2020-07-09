@@ -20,7 +20,6 @@ namespace usb {
 class InEndpointViaSTM32F4;
 class CtrlOutEndpointViaSTM32F4;
 class OutEndpointViaSTM32F4;
-struct USB_OTG_DeviceTypeDef;
 
 /***************************************************************************//**
  * @brief Driver for the STM32F4 USB On-the-Go (OTG) Core in USB Device Mode.
