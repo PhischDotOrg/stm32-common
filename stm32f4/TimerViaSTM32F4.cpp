@@ -6,6 +6,7 @@
 #define _TIMER_STM32F4_HPP_227fb640_e182_4eca_9f47_b665bea6ea0b
 
 #include <timer/TimerViaSTM32F4.hpp>
+#include <assert.h>
 
 namespace timer {
     

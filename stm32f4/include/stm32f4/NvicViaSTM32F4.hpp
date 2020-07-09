@@ -20,7 +20,9 @@ extern "C" {
 #include <dma/DmaStreamViaSTM32F4.hpp>
 #include <spi/SpiAccessViaSTM32F4.hpp>
 #include <timer/TimerViaSTM32F4.hpp>
+#if (HAVE_USB_OTG)
 #include <usb/UsbCoreViaSTM32F4.hpp>
+#endif
 
 namespace devices {
 
@@ -143,36 +145,43 @@ private:
  ******************************************************************************/
 template<typename T> struct NvicViaSTM32F4_IrqHelper;
 
+#if defined(ADC1_BASE)
 template<> struct NvicViaSTM32F4_IrqHelper<devices::AdcViaSTM32F4_Adc1> {
     static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::ADC_IRQn;
 };
-
+#endif
+#if defined(SPI1_BASE)
 template<> struct NvicViaSTM32F4_IrqHelper<spi::SpiAccessViaSTM32F4_Spi1> {
     static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::SPI1_IRQn;
 };
-
+#endif
+#if defined(SPI2_BASE)
 template<> struct NvicViaSTM32F4_IrqHelper<spi::SpiAccessViaSTM32F4_Spi2> {
     static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::SPI2_IRQn;
 };
-
+#endif
+#if defined(TIM2_BASE)
 template<> struct NvicViaSTM32F4_IrqHelper<timer::TimerViaSTM32F4_Tim2> {
     static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::TIM2_IRQn;
 };
-
+#endif
+#if defined(TIM3_BASE)
 template<> struct NvicViaSTM32F4_IrqHelper<timer::TimerViaSTM32F4_Tim3> {
     static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::TIM3_IRQn;
 };
-
-#if defined(USB_OTG_FS_PERIPH_BASE)
+#endif
+#if defined(HAVE_USB_OTG)
+    #if defined(USB_OTG_FS_PERIPH_BASE)
 template<> struct NvicViaSTM32F4_IrqHelper<usb::stm32f4::UsbFullSpeedCore> {
     static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::OTG_FS_IRQn;
 };
-#endif /* defined(USB_OTG_FS_PERIPH_BASE) */
-#if defined(USB_OTG_HS_PERIPH_BASE)
+    #endif /* USB_OTG_FS_PERIPH_BASE */
+    #if defined(USB_OTG_HS_PERIPH_BASE)
 template<> struct NvicViaSTM32F4_IrqHelper<usb::stm32f4::UsbHighSpeedCore> {
     static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::OTG_HS_IRQn;
 };
-#endif /* defined(USB_OTG_HS_PERIPH_BASE) */
+    #endif /* HAVE_USB_OTG */
+#endif /* HAVE_USB_OTG */
 
 /*******************************************************************************
  *

@@ -17,7 +17,7 @@ extern "C" {
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
 
-#include <stm32f4/RccViaSTM32F4.hpp>
+#include <stm32f4/RccViaSTM32.hpp>
 #include <gpio/GpioPin.hpp>
 
 namespace uart {
@@ -59,7 +59,12 @@ public:
     } UartStopBits_t;
 
     typedef enum UartBaudRate_e {
+        e_BaudRate_9600     = 9600,
+        e_BaudRate_19200    = 19200,
+        e_BaudRate_38400    = 38400,
+        e_BaudRate_57600    = 57600,
         e_BaudRate_115200   = 115200,
+        e_BaudRate_230400   = 230400,
     } UartBaudRate_t;
 
     UartAccessViaSTM32F4(USART_TypeDef * const p_uart);
@@ -93,37 +98,37 @@ template<intptr_t> struct UartAccessViaSTM32F4Helper;
 #if defined(USART1_BASE)
 template<> struct UartAccessViaSTM32F4Helper<USART1_BASE> {
     static const gpio::GpioAccessViaSTM32F4::Function_e m_gpioFunction = gpio::GpioAccessViaSTM32F4::e_Uart1;
-    static const devices::RccViaSTM32F4::FunctionAPB2_t m_rcc = devices::RccViaSTM32F4::e_Usart1;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Usart1;
 };
 #endif
 #if defined(USART2_BASE)
 template<> struct UartAccessViaSTM32F4Helper<USART2_BASE> {
     static const gpio::GpioAccessViaSTM32F4::Function_e m_gpioFunction = gpio::GpioAccessViaSTM32F4::e_Uart2;
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Usart2;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Usart2;
 };
 #endif
 #if defined(USART3_BASE)
 template<> struct UartAccessViaSTM32F4Helper<USART3_BASE> {
     static const gpio::GpioAccessViaSTM32F4::Function_e m_gpioFunction = gpio::GpioAccessViaSTM32F4::e_Uart3;
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Usart3;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Usart3;
 };
 #endif
 #if defined(UART4_BASE)
 template<> struct UartAccessViaSTM32F4Helper<UART4_BASE> {
     static const gpio::GpioAccessViaSTM32F4::Function_e m_gpioFunction = gpio::GpioAccessViaSTM32F4::e_Uart4;
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Uart4;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Uart4;
 };
 #endif
 #if defined(UART5_BASE)
 template<> struct UartAccessViaSTM32F4Helper<UART5_BASE> {
     static const gpio::GpioAccessViaSTM32F4::Function_e m_gpioFunction = gpio::GpioAccessViaSTM32F4::e_Uart5;
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Uart5;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Uart5;
 };
 #endif
 #if defined(USART6_BASE)
 template<> struct UartAccessViaSTM32F4Helper<USART6_BASE> {
     static const gpio::GpioAccessViaSTM32F4::Function_e m_gpioFunction = gpio::GpioAccessViaSTM32F4::e_Uart6;
-    static const devices::RccViaSTM32F4::FunctionAPB2_t m_rcc = devices::RccViaSTM32F4::e_Usart6;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Usart6;
 };
 #endif
 
@@ -141,7 +146,6 @@ public:
         m_rx.enable(gpio::GpioAccessViaSTM32F4::e_Alternate, gpio::GpioAccessViaSTM32F4::e_PullUp, UartAccessViaSTM32F4Helper<UartT>::m_gpioFunction);
         m_tx.enable(gpio::GpioAccessViaSTM32F4::e_Alternate, gpio::GpioAccessViaSTM32F4::e_PullUp, UartAccessViaSTM32F4Helper<UartT>::m_gpioFunction);
         this->initialize();
-        this->setBaudRate(e_BaudRate_115200);
     }
 
     ~UartAccessViaSTM32F4PinT(void) {

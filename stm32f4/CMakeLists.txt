@@ -4,14 +4,13 @@
 set(TARGET_NAME stm32f4)
 set(TARGET_SRC
     # AdcViaSTM32F4.cpp
-    DmaChannelViaSTM32F4.cpp
-    DmaEngineViaSTM32F4.cpp
-    DmaStreamViaSTM32F4.cpp
+    # DmaChannelViaSTM32F4.cpp
+    # DmaEngineViaSTM32F4.cpp
+    # DmaStreamViaSTM32F4.cpp
     FlashViaSTM32F4.cpp
     GpioAccessViaSTM32F4.cpp
     NvicViaSTM32F4.cpp
     PwrViaSTM32F4.cpp
-    RccViaSTM32F4.cpp
     ScbViaSTM32F4.cpp
     # SpiAccessViaSTM32F4.cpp
     TimerChannelViaSTM32F4.cpp

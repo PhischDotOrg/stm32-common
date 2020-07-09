@@ -22,7 +22,7 @@ extern "C" {
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
 
-#include <stm32f4/RccViaSTM32F4.hpp>
+#include <stm32f4/RccViaSTM32.hpp>
 
 namespace gpio {
 
@@ -60,6 +60,7 @@ public:
     
     typedef enum Function_e {
         e_Gpio = 0,
+        e_Mco = 0,
         e_Tim1 = 1,
         e_Tim2 = 1,
         e_Tim3 = 2,
@@ -106,47 +107,57 @@ private:
  ******************************************************************************/
 template<intptr_t> struct GpioAccessViaSTM32F4RccFunction;
 
+#if defined(GPIOA_BASE)
 template<> struct GpioAccessViaSTM32F4RccFunction<GPIOA_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_GpioA;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_GpioA;
 };
+#endif
 
+#if defined(GPIOB_BASE)
 template<> struct GpioAccessViaSTM32F4RccFunction<GPIOB_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_GpioB;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_GpioB;
 };
+#endif
 
+#if defined(GPIOC_BASE)
 template<> struct GpioAccessViaSTM32F4RccFunction<GPIOC_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_GpioC;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_GpioC;
 };
+#endif
 
+#if defined(GPIOD_BASE)
 template<> struct GpioAccessViaSTM32F4RccFunction<GPIOD_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_GpioD;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_GpioD;
 };
+#endif
 
+#if defined(GPIOE_BASE)
 template<> struct GpioAccessViaSTM32F4RccFunction<GPIOE_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_GpioE;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_GpioE;
 };
+#endif
 
 #if defined(GPIOF_BASE)
 template<> struct GpioAccessViaSTM32F4RccFunction<GPIOF_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_GpioF;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_GpioF;
 };
 #endif
 
 #if defined(GPIOG_BASE)
 template<> struct GpioAccessViaSTM32F4RccFunction<GPIOG_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_GpioG;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_GpioG;
 };
 #endif
 
 #if defined(GPIOH_BASE)
 template<> struct GpioAccessViaSTM32F4RccFunction<GPIOH_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_GpioH;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_GpioH;
 };
 #endif
 
 #if defined(GPIOI_BASE)
 template<> struct GpioAccessViaSTM32F4RccFunction<GPIOI_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_GpioI;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_GpioI;
 };
 #endif
 
@@ -155,6 +166,7 @@ template<> struct GpioAccessViaSTM32F4RccFunction<GPIOI_BASE> {
  ******************************************************************************/
 template<intptr_t GpioT, typename RccT = devices::RccViaSTM32F4>
 class GpioAccessViaSTM32F4T : public GpioAccessViaSTM32F4 {
+
 public:
     GpioAccessViaSTM32F4T(RccT &p_rcc) : GpioAccessViaSTM32F4(reinterpret_cast<GPIO_TypeDef *>(GpioT)), m_rcc(p_rcc) {
         m_rcc.enable(GpioAccessViaSTM32F4RccFunction<GpioT>::m_type);

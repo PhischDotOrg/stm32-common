@@ -5,22 +5,9 @@
 #ifndef _RCC_STM32F4_HPP_89fcdf0c_4b73_427d_92e2_93986e806bb5
 #define _RCC_STM32F4_HPP_89fcdf0c_4b73_427d_92e2_93986e806bb5
 
-#include <cstdint>
-
-#if defined(__cplusplus)
-extern "C" {
-#endif /* defined(__cplusplus) */
-
-#include <stm32f4xx.h>
-
-extern uint32_t SystemCoreClock;
-
-#if defined(__cplusplus)
-} /* extern "C" */
-#endif /* defined(__cplusplus) */
-
 #include <assert.h>
 
+#include "RccViaSTM32.hpp"
 #include "FlashViaSTM32F4.hpp"
 #include "PwrViaSTM32F4.hpp"
 
@@ -29,95 +16,10 @@ namespace devices {
 /*******************************************************************************
  * 
  ******************************************************************************/
-class RccViaSTM32F4 {
+class Stm32F407xx {
+private:
+        Stm32F407xx(void);
 public:
-    typedef enum {
-        e_SysclkHSI = 0,
-        e_SysclkHSE = 1,
-        e_SysclkPLL = 2,
-        e_SysclkInvalid = 3,
-    } SysclkSource_t;
-
-    typedef enum {
-        e_PllSourceHSI = 0,
-        e_PllSourceHSE = 1,
-    } PllSource_t;
-    
-    typedef enum {
-        e_PllP_Div2 = 0,
-        e_PllP_Div4 = 1,
-        e_PllP_Div6 = 2,
-        e_PllP_Div8 = 3,
-    } PllP_t;
-
-    typedef enum {
-        e_AHBPrescaler_Div2     = 0,
-        e_AHBPrescaler_Div4     = 1,
-        e_AHBPrescaler_Div8     = 2,
-        e_AHBPrescaler_Div16    = 3,
-        e_AHBPrescaler_Div64    = 4,
-        e_AHBPrescaler_Div128   = 5,
-        e_AHBPrescaler_Div256   = 6,
-        e_AHBPrescaler_Div512   = 7,
-        e_AHBPrescaler_None     = 8,
-    } AHBPrescaler_t;
-    
-    typedef enum {
-        e_APBPrescaler_Div2     = 0,
-        e_APBPrescaler_Div4     = 1,
-        e_APBPrescaler_Div8     = 2,
-        e_APBPrescaler_Div16    = 3,
-        e_APBPrescaler_None     = 4,
-    } APBPrescaler_t;
-
-#if !defined  (HSI_VALUE)
-  #define HSI_VALUE    ((uint32_t)16000000) /*!< Value of the Internal oscillator in Hz*/
-#endif /* HSI_VALUE */
-#if !defined  (HSE_VALUE) 
-  #define HSE_VALUE    ((uint32_t)25000000) /*!< Default value of the External oscillator in Hz */
-#endif /* HSE_VALUE */
-    
-    class PllConfiguration {
-    friend class RccViaSTM32F4;
-    private:
-        unsigned        m_pllN;
-        unsigned        m_pllM;
-        PllP_t          m_pllP;
-        unsigned        m_pllQ;
-        APBPrescaler_t  m_apb1Prescaler;
-        APBPrescaler_t  m_apb2Prescaler;
-        AHBPrescaler_t  m_ahbPrescaler;
-        PllSource_t     m_pllSource;
-        SysclkSource_t  m_sysclkSource;
-        unsigned        m_hsiSpeedInHz;
-        unsigned        m_hseSpeedInHz;
-
-    public:
-        PllConfiguration(
-            unsigned        p_pllN, unsigned p_pllM,
-            PllP_t          p_pllP,
-            unsigned        p_pllQ,
-            APBPrescaler_t  p_apb1Prescaler = e_APBPrescaler_Div4,
-            APBPrescaler_t  p_apb2Prescaler = e_APBPrescaler_Div2,
-            AHBPrescaler_t  p_ahbPrescaler = e_AHBPrescaler_None,
-            PllSource_t     p_pllSource = e_PllSourceHSI,
-            SysclkSource_t  p_sysclkSource = e_SysclkPLL,
-            unsigned        p_hsiSpeedInHz = HSI_VALUE,
-            unsigned        p_hseSpeedInHz = HSE_VALUE
-        ) :
-            m_pllN(p_pllN), m_pllM(p_pllM),
-            m_pllP(p_pllP),
-            m_pllQ(p_pllQ),
-            m_apb1Prescaler(p_apb1Prescaler),
-            m_apb2Prescaler(p_apb2Prescaler),
-            m_ahbPrescaler(p_ahbPrescaler),
-            m_pllSource(p_pllSource),
-            m_sysclkSource(p_sysclkSource),
-            m_hsiSpeedInHz(p_hsiSpeedInHz),
-            m_hseSpeedInHz(p_hseSpeedInHz)
-        { };
-    };
-
     typedef enum FunctionAPB1_e {
         e_Tim2      = RCC_APB1ENR_TIM2EN,
         e_Tim3      = RCC_APB1ENR_TIM3EN,
@@ -257,66 +159,466 @@ public:
 #endif
     } FunctionAHB3_t;
 
-    void enable(const FunctionAPB1_t p_function) const;
-    void disable(const FunctionAPB1_t p_function) const;
+    typedef enum {
+        e_SysclkHSI = 0,
+        e_SysclkHSE = 1,
+        e_SysclkPLL = 2,
+        e_SysclkInvalid = 3,
+    } SysclkSource_t;
 
-    void enable(const FunctionAPB2_t p_function) const;
-    void disable(const FunctionAPB2_t p_function) const;
+    typedef enum {
+        e_PllSourceHSI = 0,
+        e_PllSourceHSE = 1,
+    } PllSource_t;
 
-    void enable(const FunctionAHB1_t p_function) const;
-    void disable(const FunctionAHB1_t p_function) const;
+    typedef enum {
+        e_PllP_Div2 = 0,
+        e_PllP_Div4 = 1,
+        e_PllP_Div6 = 2,
+        e_PllP_Div8 = 3,
+    } PllP_t;
 
-    void enable(const FunctionAHB2_t p_function) const;
-    void disable(const FunctionAHB2_t p_function) const;
+    typedef enum {
+        e_PllQ_Div2     = 2,
+        e_PllQ_Div3     = 3,
+        e_PllQ_Div4     = 4,
+        e_PllQ_Div5     = 5,
+        e_PllQ_Div6     = 6,
+        e_PllQ_Div7     = 7,
+        e_PllQ_Div8     = 8,
+        e_PllQ_Div9     = 9,
+        e_PllQ_Div10    = 10,
+        e_PllQ_Div11    = 11,
+        e_PllQ_Div12    = 12,
+        e_PllQ_Div13    = 13,
+        e_PllQ_Div14    = 14,
+        e_PllQ_Div15    = 15,
+        e_PllQ_Disabled
+    } PllQ_t;
+
+    typedef enum {
+        e_AHBPrescaler_Div2     = 0,
+        e_AHBPrescaler_Div4     = 8,
+        e_AHBPrescaler_Div8     = 9,
+        e_AHBPrescaler_Div16    = 10,
+        e_AHBPrescaler_Div64    = 11,
+        e_AHBPrescaler_Div128   = 12,
+        e_AHBPrescaler_Div256   = 13,
+        e_AHBPrescaler_Div512   = 14,
+        e_AHBPrescaler_None     = 15
+    } AHBPrescaler_t;
+
+    typedef enum {
+        e_APBPrescaler_None     = 0,
+        e_APBPrescaler_Div2     = 4,
+        e_APBPrescaler_Div4     = 5,
+        e_APBPrescaler_Div8     = 6,
+        e_APBPrescaler_Div16    = 7,
+    } APBPrescaler_t;
+};
+
+/*******************************************************************************
+ *
+ ******************************************************************************/
+template<typename Stm32FxxCpuT = Stm32F407xx>
+struct PllConfigurationValuesT {
+/*******************************************************************************
+ * Types 
+ ******************************************************************************/
+    typedef Stm32FxxCpuT Stm32FxxCpu_t;
+
+    typedef typename Stm32FxxCpuT::PllSource_t      PllSource_t;
+    typedef typename Stm32FxxCpuT::SysclkSource_t   SysclkSource_t;
+
+    typedef typename Stm32FxxCpuT::AHBPrescaler_t   AHBPrescaler_t;
+    typedef typename Stm32FxxCpuT::APBPrescaler_t   APBPrescaler_t;
+
+    typedef typename Stm32FxxCpuT::PllP_t           PllP_t;
+    typedef typename Stm32FxxCpuT::PllQ_t           PllQ_t;
+
+/*******************************************************************************
+ * Values
+ ******************************************************************************/
+    const PllSource_t       m_pllSource;
+
+    const unsigned          m_hseSpeedInHz;
+
+    const unsigned          m_pllM;
+
+    const unsigned          m_pllN;
+    const PllP_t            m_pllP;
+    const PllQ_t            m_pllQ;
+
+    const SysclkSource_t    m_sysclkSource;
+    const AHBPrescaler_t    m_ahbPrescaler;
+    const APBPrescaler_t    m_apb1Prescaler;
+    const APBPrescaler_t    m_apb2Prescaler;
+};
+
+typedef struct PllConfigurationValuesT<> PllConfigurationValues;
+
+template<typename PllConfigurationValuesT /* = PllConfigurationValuesT<> */ >
+class PllConfigurationT {
+public:
+    typedef typename PllConfigurationValuesT::Stm32FxxCpu_t     Stm32FxxCpu_t;
+
+    typedef typename PllConfigurationValuesT::PllSource_t       PllSource_t;
+    typedef typename PllConfigurationValuesT::SysclkSource_t    SysclkSource_t;
+
+    typedef typename PllConfigurationValuesT::AHBPrescaler_t    AHBPrescaler_t;
+    typedef typename PllConfigurationValuesT::APBPrescaler_t    APBPrescaler_t;
+
+    typedef typename PllConfigurationValuesT::PllP_t            PllP_t;
+    typedef typename PllConfigurationValuesT::PllQ_t            PllQ_t;
+
+private:
+    const PllConfigurationValuesT & m_pllCfg;
+    const unsigned                  m_hseSpeedInHz;
+    static const unsigned           m_hsiSpeedInHz = 16 * 1000 * 1000;
+    const unsigned                  m_sysclkSpeedInHz;
+    const uint32_t                  m_pllCfgReg;
+    const bool                      m_enableHSE;
+    const bool                      m_enableHSI;
+    const bool                      m_enablePLL;
+
+    constexpr unsigned getHSESpeedInHz(void) const {
+        return m_pllCfg.m_hseSpeedInHz;
+    }
+
+    constexpr unsigned getHSISpeedInHz(void) const {
+        static_assert(m_hsiSpeedInHz == 16 * 1000 * 1000);
+
+        return m_hsiSpeedInHz;
+    }
+
+    constexpr unsigned getPllInputSpeedInHz(const PllConfigurationValuesT &p_pllCfg) const {
+        return (
+            (p_pllCfg.m_pllSource == PllSource_t::e_PllSourceHSI) ? getHSISpeedInHz()
+              : (p_pllCfg.m_pllSource == PllSource_t::e_PllSourceHSE) ? getHSESpeedInHz()
+                : 0
+        );
+    }
+
+    constexpr unsigned getPllSpeedInHz(void) const {
+        unsigned vco = getPllVcoSpeedInHz();
+
+        unsigned pllp = 2 << m_pllCfg.m_pllP;
+
+        return (vco + (pllp / 2)) / pllp;
+    }
+
+    constexpr unsigned getPllVcoSpeedInHz(void) const {
+        const unsigned input = getPllInputSpeedInHz(this->m_pllCfg);
+
+        const unsigned plln = m_pllCfg.m_pllN;
+        const unsigned pllm = m_pllCfg.m_pllM;
+
+        const unsigned vco = ((input * plln) + (pllm / 2)) / pllm;
+
+        return vco;
+    }
+
+    constexpr unsigned getAPBPrescalerValue(const APBPrescaler_t p_prescaler) const {
+        const unsigned value = (
+            APBPrescaler_t::e_APBPrescaler_None   == p_prescaler ? 1
+          : APBPrescaler_t::e_APBPrescaler_Div2   == p_prescaler ? 2
+          : APBPrescaler_t::e_APBPrescaler_Div4   == p_prescaler ? 4
+          : APBPrescaler_t::e_APBPrescaler_Div8   == p_prescaler ? 8
+          : APBPrescaler_t::e_APBPrescaler_Div16  == p_prescaler ? 16
+          : 0
+        );
+
+        return value;        
+    }
+    
+    static constexpr unsigned getAHBPrescalerValue(const AHBPrescaler_t p_prescaler) {
+        const unsigned value = (
+            AHBPrescaler_t::e_AHBPrescaler_None   == p_prescaler ? 1
+          : AHBPrescaler_t::e_AHBPrescaler_Div2   == p_prescaler ? 2
+          : AHBPrescaler_t::e_AHBPrescaler_Div4   == p_prescaler ? 4
+          : AHBPrescaler_t::e_AHBPrescaler_Div8   == p_prescaler ? 8
+          : AHBPrescaler_t::e_AHBPrescaler_Div16  == p_prescaler ? 16
+          : AHBPrescaler_t::e_AHBPrescaler_Div64  == p_prescaler ? 64
+          : AHBPrescaler_t::e_AHBPrescaler_Div128 == p_prescaler ? 128
+          : AHBPrescaler_t::e_AHBPrescaler_Div256 == p_prescaler ? 256
+          : AHBPrescaler_t::e_AHBPrescaler_Div512 == p_prescaler ? 512
+          : 0
+        );
+
+        return value;        
+    }
+
+protected:
+    constexpr unsigned getSysclkSpeedInHz(void) const {
+        const SysclkSource_t sysclkSrc = getSysclkSource();
+
+        const unsigned speed =
+             sysclkSrc == SysclkSource_t::e_SysclkHSI ? getHSISpeedInHz()
+              : sysclkSrc == SysclkSource_t::e_SysclkHSE ? getHSESpeedInHz()
+                : sysclkSrc == SysclkSource_t::e_SysclkPLL ? getPllSpeedInHz()
+                  : 0;
+
+        return speed;
+    }
+
+    constexpr unsigned getAhbSpeedInHz(void) const {
+        const unsigned prescaler = getAHBPrescalerValue(getAHBPrescaler());
+
+        const unsigned ahbSpeedInHz = (getSysclkSpeedInHz() + (prescaler / 2)) / prescaler;
+
+        return ahbSpeedInHz;
+    }
+
+    constexpr unsigned getApb1SpeedInHz(void) const {
+        const unsigned prescaler = getAPBPrescalerValue(getAPB1Prescaler());
+
+        return (getSysclkSpeedInHz() + (prescaler / 2)) / prescaler;
+    }
+
+    constexpr unsigned getApb2SpeedInHz(void) const {
+        unsigned prescaler = getAPBPrescalerValue(getAPB2Prescaler());
+
+        return (getSysclkSpeedInHz() + (prescaler / 2)) / prescaler;    
+    }
+
+    constexpr bool enableHSE(void) const {
+        return (m_pllCfg.m_pllSource == PllSource_t::e_PllSourceHSE) || (m_pllCfg.m_sysclkSource == SysclkSource_t::e_SysclkHSE);
+    }
+
+    constexpr bool enablePLL(void) const {
+        return (m_pllCfg.m_sysclkSource == SysclkSource_t::e_SysclkPLL);
+    }
+
+    constexpr bool enableHSI(void) const {
+        return (m_pllCfg.m_pllSource == PllSource_t::e_PllSourceHSI) || (m_pllCfg.m_sysclkSource == SysclkSource_t::e_SysclkHSI);
+    }
+
+    constexpr uint32_t getPllCfgReg(void) const {
+        const uint32_t pllCfgReg = (
+                ((m_pllCfg.m_pllQ << RCC_PLLCFGR_PLLQ_Pos) & RCC_PLLCFGR_PLLQ_Msk)
+              | ((m_pllCfg.m_pllP << RCC_PLLCFGR_PLLP_Pos) & RCC_PLLCFGR_PLLP_Msk)
+              | ((m_pllCfg.m_pllN <<  RCC_PLLCFGR_PLLN_Pos) & RCC_PLLCFGR_PLLN_Msk)
+              | ((m_pllCfg.m_pllM <<  RCC_PLLCFGR_PLLM_Pos) & RCC_PLLCFGR_PLLM_Msk)
+              | ((m_pllCfg.m_pllSource == PllSource_t::e_PllSourceHSE) ? RCC_PLLCFGR_PLLSRC_HSE : RCC_PLLCFGR_PLLSRC_HSI)
+        );
+
+        return pllCfgReg;
+    }
+
+    constexpr AHBPrescaler_t getAHBPrescaler(void) const {
+        return m_pllCfg.m_ahbPrescaler;
+    }
+
+    constexpr APBPrescaler_t getAPB1Prescaler(void) const {
+        return m_pllCfg.m_apb1Prescaler;
+    }
+
+    constexpr APBPrescaler_t getAPB2Prescaler(void) const {
+        return m_pllCfg.m_apb2Prescaler;
+    }
+
+    constexpr SysclkSource_t getSysclkSource(void) const {
+        return m_pllCfg.m_sysclkSource;
+    }
+
+public:
+    constexpr PllConfigurationT(const PllConfigurationValuesT &p_pllCfg)
+      : m_pllCfg(p_pllCfg),
+        m_hseSpeedInHz(getHSESpeedInHz()),
+        m_sysclkSpeedInHz(getSysclkSpeedInHz()),
+        m_pllCfgReg(getPllCfgReg()),
+        m_enableHSE(enableHSE()),
+        m_enableHSI(enableHSI()),
+        m_enablePLL(enablePLL())
+    {
+    }
+
+    static constexpr bool isValid(const PllConfigurationT &p_obj) {
+        const bool isValid = true
+            && (p_obj.getPllInputSpeedInHz(p_obj.m_pllCfg) >= 4 * 1000 * 1000)
+            && (p_obj.getPllInputSpeedInHz(p_obj.m_pllCfg) <= 48 * 1000 * 1000)
+            && (p_obj.m_pllCfg.m_pllN > 1) && (p_obj.m_pllCfg.m_pllN < 433)
+            && (p_obj.m_pllCfg.m_pllM > 1) && (p_obj.m_pllCfg.m_pllM < 64)
+            && (p_obj.getPllVcoSpeedInHz() >= 100 * 1000 * 1000)
+            && (p_obj.getPllVcoSpeedInHz() <= 432 * 1000 * 1000)
+            && ((p_obj.m_hseSpeedInHz >= 4 * 1000 * 1000) && (p_obj.m_hseSpeedInHz <= 48 * 1000 * 1000))
+            && (p_obj.getSysclkSpeedInHz() > 0)
+            && (p_obj.getSysclkSpeedInHz() <= 168 * 1000 * 1000)
+            && (p_obj.getAhbSpeedInHz() > 0)
+            && (p_obj.getAhbSpeedInHz() >= p_obj.getSysclkSpeedInHz())
+            && true;
+
+        return isValid;
+    }
+};
+
+/*******************************************************************************
+ * 
+ ******************************************************************************/
+template<typename PllConfigurationT>
+class RccViaSTM32xxT : public RccViaSTM32Interface<PllConfigurationT> {
+public:
+    typedef class RccViaSTM32Interface<PllConfigurationT> Parent_t;
+
+    typedef typename Parent_t::Stm32FxxCpu_t Stm32FxxCpu_t;
+
+    typedef typename Stm32FxxCpu_t::FunctionAHB1_e   FunctionAHB1_t;
+    typedef typename Stm32FxxCpu_t::FunctionAHB2_e   FunctionAHB2_t;
+    typedef typename Stm32FxxCpu_t::FunctionAHB3_e   FunctionAHB3_t;
+
+    typedef typename Stm32FxxCpu_t::FunctionAPB1_e  FunctionAPB1_t;
+
+    typedef typename Stm32FxxCpu_t::FunctionAPB2_e   FunctionAPB2_t;
+
+    typedef typename Stm32FxxCpu_t::AHBPrescaler_t   AHBPrescaler_t;
+    typedef typename Stm32FxxCpu_t::APBPrescaler_t   APBPrescaler_t;
+
+    typedef typename Stm32FxxCpu_t::SysclkSource_t  SysclkSource_t;
+    typedef typename Stm32FxxCpu_t::PllSource_t     PllSource_t;
+
+public:
+    constexpr RccViaSTM32xxT(RCC_TypeDef * const p_rcc, const PllConfigurationT &p_pllCfg, FlashViaSTM32F4 &p_flash, PwrViaSTM32F4 &p_pwr)
+      : RccViaSTM32Interface<PllConfigurationT>(p_rcc, p_pllCfg, p_flash, p_pwr) {
+        this->setupSafeMode();
+
+        this->enableHSE(p_pllCfg.enableHSE());
+        this->enablePLL(p_pllCfg.enablePLL());
+
+        /*
+        * Set up dividers for AHB, APB1 (low-speed peripheral) and APB2 (high
+        * speed peripheral) busses.
+        */
+        this->m_rcc->CFGR &= ~(RCC_CFGR_HPRE_Msk | RCC_CFGR_PPRE1_Msk | RCC_CFGR_PPRE2_Msk);
+        if (this->m_pllCfg.getAHBPrescaler() != AHBPrescaler_t::e_AHBPrescaler_None) {
+            this->m_rcc->CFGR |= (this->m_pllCfg.getAHBPrescaler() << RCC_CFGR_HPRE_Pos) & RCC_CFGR_HPRE_Msk;
+        }
+        
+        if (this->m_pllCfg.getAPB1Prescaler() != APBPrescaler_t::e_APBPrescaler_None) {
+            this->m_rcc->CFGR |= (this->m_pllCfg.getAPB1Prescaler() << RCC_CFGR_PPRE1_Pos) & RCC_CFGR_PPRE1_Msk;
+        }
+
+        if (this->m_pllCfg.getAPB2Prescaler() != APBPrescaler_t::e_APBPrescaler_None) {
+            this->m_rcc->CFGR |= (this->m_pllCfg.getAPB2Prescaler() << RCC_CFGR_PPRE2_Pos) & RCC_CFGR_PPRE2_Msk;
+        }
+
+        /* Finally, switch the clock source to whatever was requested */
+        this->m_rcc->CFGR |= (this->m_pllCfg.getSysclkSource() << RCC_CFGR_SW_Pos) & RCC_CFGR_SW_Msk;
+        while ((this->m_rcc->CFGR & RCC_CFGR_SWS) != ((this->m_pllCfg.getSysclkSource() << RCC_CFGR_SWS_Pos) & RCC_CFGR_SWS_Msk));
+
+        this->setupFlash();
+
+        this->setupPower();
+
+        /* Turn off HSI, if not required */
+        this->enableHSI(this->m_pllCfg.enableHSI());
+    }
+
+    ~RccViaSTM32xxT(void) {};
+
+    typedef enum {
+        e_MCOPre_None   = 0,
+        e_MCOPre_2      = 4,
+        e_MCOPre_3      = 5,
+        e_MCOPre_4      = 6,
+        e_MCOPre_5      = 7,
+        e_MCOInvalid
+    } MCOPrescaler_t;
+
+    typedef enum class MCO1Output_e : uint8_t {
+        e_HSI    = 0,
+        e_LSE    = 1,
+        e_HSE    = 2,
+        e_PLL    = 3,
+        e_None
+    } MCO1Output_t;
+
+    typedef enum class MCO2Output_e {
+        e_Sysclk = 0,
+        e_PllI2S = 1,
+        e_HSE    = 2,
+        e_PLL    = 3,
+        e_None
+    } MCO2Output_t;
+
+    template<typename MCOPinT, typename GpioAccessT>
+    void setMCO(const MCOPinT &p_mcoPin, const MCO1Output_t p_output, const MCOPrescaler_t p_prescaler) {
+        this->m_rcc->CFGR &= ~RCC_CFGR_MCO1PRE_Msk;
+        this->m_rcc->CFGR |= (p_prescaler << RCC_CFGR_MCO1PRE_Pos) & RCC_CFGR_MCO1PRE_Msk;
+
+        this->m_rcc->CFGR &= ~RCC_CFGR_MCO1_Msk;
+        this->m_rcc->CFGR |= (static_cast<unsigned>(p_output) << RCC_CFGR_MCO1_Pos) & RCC_CFGR_MCO1_Msk;
+
+        if (p_output != MCO1Output_t::e_None) {
+            p_mcoPin.enable(GpioAccessT::e_Alternate, GpioAccessT::e_None, GpioAccessT::e_Mco);
+        } else {
+            p_mcoPin.enable(GpioAccessT::e_Input, GpioAccessT::e_None, GpioAccessT::e_Gpio);
+        }
+    }
+
+    template<typename MCOPinT, typename GpioAccessT>
+    void setMCO(const MCOPinT &p_mcoPin, const MCO2Output_t p_output, const MCOPrescaler_t p_prescaler) {
+        this->m_rcc->CFGR &= ~RCC_CFGR_MCO2PRE_Msk;
+        this->m_rcc->CFGR |= (p_prescaler << RCC_CFGR_MCO2PRE_Pos) & RCC_CFGR_MCO2PRE_Msk;
+
+        this->m_rcc->CFGR &= ~RCC_CFGR_MCO2_Msk;
+        this->m_rcc->CFGR |= (static_cast<unsigned>(p_output) << RCC_CFGR_MCO2_Pos) & RCC_CFGR_MCO2_Msk;
+
+        if (p_output != MCO2Output_t::e_None) {
+            p_mcoPin.enable(GpioAccessT::e_Alternate, GpioAccessT::e_None, GpioAccessT::e_Mco);
+        } else {
+            p_mcoPin.enable(GpioAccessT::e_Input, GpioAccessT::e_None, GpioAccessT::e_Gpio);
+        }
+    }
+
+    void enable(const FunctionAPB1_t p_function) const {
+        this->m_rcc->APB1ENR |= p_function;
+    }
+
+    void disable(const FunctionAPB1_t p_function) const {
+        this->m_rcc->APB1ENR &= ~p_function;
+    }
+
+    void enable(const FunctionAPB2_t p_function) const {
+        this->m_rcc->APB2ENR |= p_function;
+    }
+   
+    void disable(const FunctionAPB2_t p_function) const {
+        this->m_rcc->APB2ENR &= ~p_function;
+    }
+
+    void enable(const FunctionAHB1_t p_function) const {
+        this->m_rcc->AHB1ENR |= p_function;
+    }
+
+    void disable(const FunctionAHB1_t p_function) const {
+        this->m_rcc->AHB1ENR &= ~p_function;
+    }
+
+    void enable(const FunctionAHB2_t p_function) const {
+        this->m_rcc->AHB2ENR |= p_function;
+    }
+
+    void disable(const FunctionAHB2_t p_function) const {
+        this->m_rcc->AHB2ENR &= ~p_function;
+    }
 
     void enable(const FunctionAHB3_t p_function) const;
     void disable(const FunctionAHB3_t p_function) const;
-    
-    unsigned getClockSpeed(const FunctionAPB1_t p_function) const;
-    unsigned getClockSpeed(const FunctionAPB2_t p_function) const;
 
-    unsigned getAhbSpeedInHz(void) const;
-    unsigned getApb1SpeedInHz(void) const;
-    unsigned getApb2SpeedInHz(void) const;
+    unsigned getClockSpeed(const FunctionAPB1_t /* p_function */) const {
+        return this->m_pllCfg.getApb1SpeedInHz();
+    }
 
-    unsigned getSysclkSpeedInHz(void) const;
-
-    RccViaSTM32F4(RCC_TypeDef * const p_rcc, PllConfiguration &p_pllCfg, FlashViaSTM32F4 &p_flash, PwrViaSTM32F4 &p_pwr);
-    ~RccViaSTM32F4(void);
-
-private:
-    RCC_TypeDef * const m_rcc;
-    PllConfiguration &  m_pllCfg;
-    FlashViaSTM32F4 &   m_flash;
-    PwrViaSTM32F4 &     m_pwr;
-    
-    void setupSafeMode(void) const;
-    void enableHSE(const bool p_enable) const;
-    void enableHSI(const bool p_enable) const;
-    void enablePLL(const bool p_enable) const;
-
-    SysclkSource_t getSysclkSource(void) const;
-
-    unsigned getHSISpeedInHz(void) const;
-    unsigned getHSESpeedInHz(void) const;
-
-    PllSource_t getPllSource(void) const;
-    unsigned getPllInputSpeedInHz(void) const;
-    unsigned getPllVcoSpeedInHz(void) const;
-    unsigned getPllSpeedInHz(void) const;
-
-    AHBPrescaler_t getAHBPrescaler(void) const;
-    unsigned getAHBPrescalerValue(const AHBPrescaler_t p_prescaler) const;
-
-    APBPrescaler_t getAPB1Prescaler(void) const;
-    APBPrescaler_t getAPB2Prescaler(void) const;
-    
-    unsigned getAPBPrescalerValue(const APBPrescaler_t p_prescaler) const;
-    
-    void setupFlash(void) const;
-    void setupPower(void) const;
+    unsigned getClockSpeed(const FunctionAPB2_t /* p_function */) const {
+        return this->m_pllCfg.getApb2SpeedInHz();
+    }
 }; /* class RccViaSTM32F4 */
 
-} /* namespace RccViaSTM32F4 */
+/*******************************************************************************
+ * 
+ ******************************************************************************/
+typedef RccViaSTM32xxT< const PllConfigurationInterfaceT< const struct PllConfigurationValuesT< Stm32F407xx> > > RccViaSTM32F4;
+
+} /* namespace devices */
 
 #endif /* _RCC_STM32F4_HPP_89fcdf0c_4b73_427d_92e2_93986e806bb5 */

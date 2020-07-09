@@ -6,7 +6,7 @@
 #define _ADC_STM32F4_HPP_248e23c1_47e3_4402_b5f2_f2422fee70e5
 
 #include <dma/DmaChannel.hpp>
-#include <stm32f4/RccViaSTM32F4.hpp>
+#include <stm32f4/RccViaSTM32.hpp>
 #include <timer/TimerChannelViaSTM32F4.hpp>
 
 #if defined(__cplusplus)
@@ -132,9 +132,11 @@ protected:
  ******************************************************************************/
 template<intptr_t TimerT, timer::TimerViaSTM32F4::TimerChannel_t> struct AdcViaSTM32F4TriggerT;
 
+#if defined(TIM4_BASE)
 template<> struct AdcViaSTM32F4TriggerT<TIM4_BASE, timer::TimerViaSTM32F4::e_TimerViaSTM32F4_Channel4> {
     static const AdcViaSTM32F4Types::AdcViaSTM32F4Trigger_t m_trigger = AdcViaSTM32F4Types::e_AdcTrigger_Timer4_CC4;
 };
+#endif
 
 /*******************************************************************************
  * 

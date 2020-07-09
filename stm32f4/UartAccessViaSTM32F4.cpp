@@ -62,7 +62,7 @@ UartAccessViaSTM32F4::setFlowControl(const UartFlowControl_t p_flowControl) cons
 void
 UartAccessViaSTM32F4::setup(const UartWordLength_t p_bits, const UartParity_t p_parity, const UartStopBits_t p_stopBits) const {
     this->m_uart->CR1 &= ~(USART_CR1_M | USART_CR1_PCE | USART_CR1_PS);
-    this->m_uart->CR1 |= p_bits << 12;
+    this->m_uart->CR1 |= p_bits << USART_CR1_M_Pos; /* FIXME 7 Bit Operation won't work with this */
 
     switch (p_parity) {
     case e_Parity_None:
@@ -76,7 +76,7 @@ UartAccessViaSTM32F4::setup(const UartWordLength_t p_bits, const UartParity_t p_
     }
     
     this->m_uart->CR2 &= ~(USART_CR2_STOP);
-    this->m_uart->CR2 |= p_stopBits << 12;
+    this->m_uart->CR2 |= p_stopBits << USART_CR2_STOP_Pos;
 }
 
 /*******************************************************************************
@@ -147,6 +147,18 @@ UartAccessViaSTM32F4::putf(void *p_this, const char p_char) {
 /*******************************************************************************
  *
  ******************************************************************************/
+#if defined(USART_ISR_TXE)
+void
+UartAccessViaSTM32F4::putf(const char p_char) const {
+    while (!(this->m_uart->ISR & USART_ISR_TXE));
+
+    this->m_uart->TDR = p_char;
+
+    while (!(this->m_uart->ISR & USART_ISR_TC));
+}
+#endif
+
+#if defined(USART_SR_TXE)
 void
 UartAccessViaSTM32F4::putf(const char p_char) const {
     while (!(this->m_uart->SR & USART_SR_TXE));
@@ -155,5 +167,6 @@ UartAccessViaSTM32F4::putf(const char p_char) const {
 
     while (!(this->m_uart->SR & USART_SR_TC));
 }
+#endif
 
 } /* namespace uart */

@@ -5,7 +5,7 @@
 #ifndef _USBCORE_HPP_bd4e7744_c603_4e62_9377_165a9988ac70
 #define	_USBCORE_HPP_bd4e7744_c603_4e62_9377_165a9988ac70
 
-#include <stm32f4/RccViaSTM32F4.hpp>
+#include <stm32f4/RccViaSTM32.hpp>
 
 #include <gpio/GpioAccessViaSTM32F4.hpp>
 #include <gpio/GpioPin.hpp>
@@ -523,12 +523,12 @@ template<intptr_t> struct UsbCoreRccFunction;
 
 #if defined(USB_OTG_FS_PERIPH_BASE)
 template<> struct UsbCoreRccFunction<USB_OTG_FS_PERIPH_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB2_t m_type = devices::RccViaSTM32F4::e_OtgFs;
+    static const devices::RccViaSTM32F4::FunctionAHB2_t m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_OtgFs;
 };
 #endif
 #if defined(USB_OTG_HS_PERIPH_BASE)
 template<> struct UsbCoreRccFunction<USB_OTG_HS_PERIPH_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::e_OtgHs;
+    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_OtgHs;
 };
 #endif
 

@@ -9,7 +9,7 @@
 #include <stddef.h>
 
 #include <dma/DmaTypesViaSTM32F4.hpp>
-#include <stm32f4/RccViaSTM32F4.hpp>
+#include <stm32f4/RccViaSTM32.hpp>
 
 namespace dma {
 
@@ -53,15 +53,18 @@ private:
  ******************************************************************************/
 template<intptr_t> struct DmaEngineViaSTM32F4DmaFunction;
 
+#if defined(DMA1_BASE)
 template<> struct DmaEngineViaSTM32F4DmaFunction<DMA1_BASE> {
     static const DmaEngineViaSTM32F4::Dma_t m_dmaType = DmaEngineViaSTM32F4::e_Dma1;
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_rccType = devices::RccViaSTM32F4::e_Dma1;
+    static const auto m_rccType = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Dma1;
 };
-
+#endif
+#if defined(DMA2_BASE)
 template<> struct DmaEngineViaSTM32F4DmaFunction<DMA2_BASE> {
     static const DmaEngineViaSTM32F4::Dma_t m_dmaType = DmaEngineViaSTM32F4::e_Dma2;
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_rccType = devices::RccViaSTM32F4::e_Dma2;
+    static const auto m_rccType = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Dma2;
 };
+#endif
 
 /*******************************************************************************
  *

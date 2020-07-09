@@ -35,6 +35,7 @@ set_property(GLOBAL PROPERTY ARCH_NAME ${ARCH_NAME})
 ###############################################################################
 list(APPEND STM32F4_SUPPORTED_BOARDS "STM32F4_Discovery")
 list(APPEND STM32F4_SUPPORTED_BOARDS "STM32F4_Nucleo_F411RE")
+list(APPEND STM32F4_SUPPORTED_BOARDS "STM32F4_Nucleo_L432KC")
 list(APPEND STM32F4_SUPPORTED_BOARDS "")
 
 if(NOT DEFINED STM32F4_BOARD)

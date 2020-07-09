@@ -7,7 +7,7 @@
 
 #include <gpio/GpioAccessViaSTM32F4.hpp>
 #include <stm32f4/ScbViaSTM32F4.hpp>
-#include <stm32f4/RccViaSTM32F4.hpp>
+#include <stm32f4/RccViaSTM32.hpp>
 
 #include "stm32f4xx.h"
 

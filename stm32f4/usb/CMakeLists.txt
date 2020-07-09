@@ -1,5 +1,5 @@
 ###############################################################################
-# USB Library
+# USB On-the-Go Driver Library
 ###############################################################################
 set(TARGET_NAME usb-stm32f4)
 set(TARGET_SRC
@@ -10,16 +10,24 @@ set(TARGET_SRC
     # FIXME This doesn't work for some reason.
     # UsbIrqViaSTM32F4.cpp 
 )
-add_library(${TARGET_NAME} ${TARGET_SRC})
-target_link_libraries(${TARGET_NAME}
-    stm32f4
-    usb
-)
-target_include_directories(${TARGET_NAME} PRIVATE
-)
-target_include_directories(${TARGET_NAME} PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
+
+if(HAVE_USB_OTG)
+    add_library(${TARGET_NAME} ${TARGET_SRC})
+    target_link_libraries(${TARGET_NAME}
+        stm32f4
+        usb
+    )
+    target_include_directories(${TARGET_NAME} PRIVATE
+    )
+    target_include_directories(${TARGET_NAME} PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+else()
+    add_library(${TARGET_NAME} INTERFACE)
+    target_include_directories(${TARGET_NAME} INTERFACE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    )
+endif()
 
 #*******************************************************************************
 # Testcases

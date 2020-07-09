@@ -23,7 +23,7 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
-#include <stm32f4/RccViaSTM32F4.hpp>
+#include <stm32f4/RccViaSTM32.hpp>
 #include <gpio/GpioAccessViaSTM32F4.hpp>
 #include <gpio/GpioPin.hpp>
 
@@ -92,94 +92,82 @@ template<intptr_t> struct TimerViaSTM32F4FunctionHelper;
 
 #if defined(TIM1_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM1_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB2_t m_rcc = devices::RccViaSTM32F4::e_Tim1;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim1;
     static const gpio::GpioAccessViaSTM32F4::Function_t m_gpio = gpio::GpioAccessViaSTM32F4::e_Tim1;
 };
 #endif
-
 #if defined(TIM2_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM2_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Tim2;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim2;
     static const gpio::GpioAccessViaSTM32F4::Function_t m_gpio = gpio::GpioAccessViaSTM32F4::e_Tim2;
 };
 #endif
 
 #if defined(TIM3_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM3_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Tim3;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim3;
     static const gpio::GpioAccessViaSTM32F4::Function_t m_gpio = gpio::GpioAccessViaSTM32F4::e_Tim3;
 };
 #endif
-
 #if defined(TIM4_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM4_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Tim4;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim4;
     static const gpio::GpioAccessViaSTM32F4::Function_t m_gpio = gpio::GpioAccessViaSTM32F4::e_Tim4;
 };
 #endif
-
 #if defined(TIM5_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM5_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Tim5;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim5;
     static const gpio::GpioAccessViaSTM32F4::Function_t m_gpio = gpio::GpioAccessViaSTM32F4::e_Tim5;
 };
 #endif
-
 #if defined(TIM6_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM6_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Tim6;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim6;
 };
 #endif
-
 #if defined(TIM7_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM7_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Tim7;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim7;
 };
 #endif
-
 #if defined(TIM8_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM8_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB2_t m_rcc = devices::RccViaSTM32F4::e_Tim8;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim8;
     static const gpio::GpioAccessViaSTM32F4::Function_t m_gpio = gpio::GpioAccessViaSTM32F4::e_Tim8;
 };
 #endif
-
 #if defined(TIM9_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM9_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB2_t m_rcc = devices::RccViaSTM32F4::e_Tim9;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim9;
     static const gpio::GpioAccessViaSTM32F4::Function_t m_gpio = gpio::GpioAccessViaSTM32F4::e_Tim9;
 };
 #endif
-
 #if defined(TIM10_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM10_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB2_t m_rcc = devices::RccViaSTM32F4::e_Tim10;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim10;
     static const gpio::GpioAccessViaSTM32F4::Function_t m_gpio = gpio::GpioAccessViaSTM32F4::e_Tim10;
 };
 #endif
-
 #if defined(TIM11_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM11_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB2_t m_rcc = devices::RccViaSTM32F4::e_Tim11;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim11;
     static const gpio::GpioAccessViaSTM32F4::Function_t m_gpio = gpio::GpioAccessViaSTM32F4::e_Tim11;
 };
 #endif
-
 #if defined(TIM12_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM12_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Tim12;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim12;
 };
 #endif
-
 #if defined(TIM13_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM13_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Tim13;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim13;
 };
 #endif
-
 #if defined(TIM14_BASE)
 template<> struct TimerViaSTM32F4FunctionHelper<TIM14_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_rcc = devices::RccViaSTM32F4::e_Tim14;
+    static const auto m_rcc = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Tim14;
 };
 #endif
 

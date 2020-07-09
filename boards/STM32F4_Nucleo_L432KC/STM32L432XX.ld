@@ -1,44 +1,13 @@
-/*
-*****************************************************************************
-**
-
-**  File        : LinkerScript.ld
-**
-**  Abstract    : Linker script for STM32F407VGTx Device with
-**                1024KByte FLASH, 128KByte RAM
-**
-**                Set heap size, stack size and stack location according
-**                to application requirements.
-**
-**                Set memory bank area and size if external memory is used.
-**
-**  Target      : STMicroelectronics STM32
-**
-**
-**  Distribution: The file is distributed as is, without any warranty
-**                of any kind.
-**
-**  (c)Copyright Ac6.
-**  You may use this file as-is or modify it according to the needs of your
-**  project. Distribution of this file (unmodified or modified) is not
-**  permitted. Ac6 permit registered System Workbench for MCU users the
-**  rights to distribute the assembled, compiled & linked contents of this
-**  file as part of an application binary file, provided that it is built
-**  using the System Workbench for MCU toolchain.
-**
-*****************************************************************************
-*/
-
 /* Entry Point */
 ENTRY(Reset_Handler)
 
 EXTERN (initStackSz stackSz)
 
 PROVIDE(initStackSz = 0x80);
-PROVIDE(freeRtosStackSz = 0x4000);
+PROVIDE(freeRtosStackSz = 0x2000);
 
 /* Highest address of the user mode stack */
-estack = 0x2001FFFF;    /* end of RAM */
+estack = 0x10004000;    /* end of RAM */
 bstack = estack - freeRtosStackSz;
 
 ucHeap = bstack;
@@ -71,11 +40,10 @@ MEMORY
 {
   ISR (r)       : ORIGIN = 0x08000000, LENGTH = 512
   FIXEDDATA (r) : ORIGIN = 0x08000400, LENGTH = 512
-  FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 1023K
-  RAM (xrw)     : ORIGIN = 0x20000000, LENGTH = 128K
-  CCMRAM (rw)   : ORIGIN = 0x10000000, LENGTH = 64K
+  FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 255K
+  SRAM1 (rw)    : ORIGIN = 0x20000000, LENGTH = 48K
+  SRAM2 (rw)    : ORIGIN = 0x10000000, LENGTH = 16K
 }
-
 /* Define output sections */
 SECTIONS
 {
@@ -112,10 +80,6 @@ SECTIONS
     KEEP(*(.ctors));                      /* C++ constructors */
     _ctors_end_ = .;
 
-/*
-    KEEP (*(.init))
-    KEEP (*(.fini))
- */
     . = ALIGN(4);
     etext = .;         /* define a global symbols at end of code */
   } >FLASH
@@ -128,36 +92,6 @@ SECTIONS
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
   } >FLASH
-
-/* PhS, June 2nd 2015: Not sure what this is required for, so comment out for now
-  .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH
-  .ARM : {
-    __exidx_start = .;
-    *(.ARM.exidx*)
-    __exidx_end = .;
-  } >FLASH
-
-  .preinit_array     :
-  {
-    PROVIDE_HIDDEN (__preinit_array_start = .);
-    KEEP (*(.preinit_array*))
-    PROVIDE_HIDDEN (__preinit_array_end = .);
-  } >FLASH
-  .init_array :
-  {
-    PROVIDE_HIDDEN (__init_array_start = .);
-    KEEP (*(SORT(.init_array.*)))
-    KEEP (*(.init_array*))
-    PROVIDE_HIDDEN (__init_array_end = .);
-  } >FLASH
-  .fini_array :
-  {
-    PROVIDE_HIDDEN (__fini_array_start = .);
-    KEEP (*(SORT(.fini_array.*)))
-    KEEP (*(.fini_array*))
-    PROVIDE_HIDDEN (__fini_array_end = .);
-  } >FLASH
-PhS, June 2nd 2015: Not sure what this is required for, so comment out for now */
 
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
@@ -172,7 +106,7 @@ PhS, June 2nd 2015: Not sure what this is required for, so comment out for now *
 
     . = ALIGN(4);
     edata = .;         /* define a global symbol at data end */
-  } >RAM AT> FLASH
+  } >SRAM1 AT> FLASH
 
   /* Uninitialized data section */
   . = ALIGN(4);
@@ -188,7 +122,7 @@ PhS, June 2nd 2015: Not sure what this is required for, so comment out for now *
     . = ALIGN(4);
     ebss = .;          /* define a global symbol at bss end */
     __bss_end__ = ebss;
-  } >RAM
+  } >SRAM1
 
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack :
@@ -199,7 +133,7 @@ PhS, June 2nd 2015: Not sure what this is required for, so comment out for now *
     . = . + freeRtosStackSz;
     . = . + initStackSz;
     . = ALIGN(4);
-  } >RAM
+  } >SRAM2
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

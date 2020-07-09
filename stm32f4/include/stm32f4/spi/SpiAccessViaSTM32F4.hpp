@@ -9,7 +9,7 @@
 #include <dma/DmaChannel.hpp>
 #include <dma/DmaTypesViaSTM32F4.hpp>
 #include <gpio/GpioPin.hpp>
-#include <stm32f4/RccViaSTM32F4.hpp>
+#include <stm32f4/RccViaSTM32.hpp>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -22,7 +22,6 @@ extern "C" {
 typedef void * SemaphoreHandle_t;
 #endif /* defined(HOSTBUILD) */
 
-#undef USE_STDPERIPH_DRIVER
 #include "stm32f4xx.h"
 
 #if defined(__cplusplus)
@@ -189,9 +188,15 @@ public:
  ******************************************************************************/
 template<intptr_t SpiT, typename DmaChannelT = dma::DmaChannel, typename RccT = devices::RccViaSTM32F4> class SpiAccessViaSTM32F4Fixed;
 
+#if defined(SPI1_BASE)
 typedef SpiAccessViaSTM32F4Fixed<SPI1_BASE> SpiAccessViaSTM32F4_Spi1;
+#endif
+#if defined(SPI2_BASE)
 typedef SpiAccessViaSTM32F4Fixed<SPI2_BASE> SpiAccessViaSTM32F4_Spi2;
+#endif
+#if defined(SPI3_BASE)
 typedef SpiAccessViaSTM32F4Fixed<SPI3_BASE> SpiAccessViaSTM32F4_Spi3;
+#endif
 
 /*******************************************************************************
  * Helper Template to resolve the SPI Address to the corresponding GPIO
@@ -199,17 +204,21 @@ typedef SpiAccessViaSTM32F4Fixed<SPI3_BASE> SpiAccessViaSTM32F4_Spi3;
  ******************************************************************************/
 template<intptr_t> struct SpiAccessViaSTM32F4GpioFunction;
 
+#if defined(SPI1_BASE)
 template<> struct SpiAccessViaSTM32F4GpioFunction<SPI1_BASE> {
     static const gpio::GpioAccessViaSTM32F4::Function_e m_type = gpio::GpioAccessViaSTM32F4::e_Spi1;
 };
-
+#endif
+#if defined(SPI2_BASE)
 template<> struct SpiAccessViaSTM32F4GpioFunction<SPI2_BASE> {
     static const gpio::GpioAccessViaSTM32F4::Function_e m_type = gpio::GpioAccessViaSTM32F4::e_Spi2;
 };
-
+#endif
+#if defined(SPI3_BASE)
 template<> struct SpiAccessViaSTM32F4GpioFunction<SPI3_BASE> {
     static const gpio::GpioAccessViaSTM32F4::Function_e m_type = gpio::GpioAccessViaSTM32F4::e_Spi3;
 };
+#endif
 
 /*******************************************************************************
  * Helper Template to resolve the SPI Address to the corresponding GPIO
@@ -217,17 +226,21 @@ template<> struct SpiAccessViaSTM32F4GpioFunction<SPI3_BASE> {
  ******************************************************************************/
 template<intptr_t> struct SpiAccessViaSTM32F4RccFunction;
 
+#if defined(SPI1_BASE)
 template<> struct SpiAccessViaSTM32F4RccFunction<SPI1_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB2_t m_type = devices::RccViaSTM32F4::e_Spi1;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Spi1;
 };
-
+#endif
+#if defined(SPI2_BASE)
 template<> struct SpiAccessViaSTM32F4RccFunction<SPI2_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_type = devices::RccViaSTM32F4::e_Spi2;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Spi2;
 };
-
+#endif
+#if defined(SPI3_BASE)
 template<> struct SpiAccessViaSTM32F4RccFunction<SPI3_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAPB1_t m_type = devices::RccViaSTM32F4::e_Spi3;
+    static const auto m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_Spi3;
 };
+#endif
 
 /*******************************************************************************
  *

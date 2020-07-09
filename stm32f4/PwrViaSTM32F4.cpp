@@ -38,7 +38,14 @@ PwrViaSTM32F4::~PwrViaSTM32F4() {
  ******************************************************************************/
 void
 PwrViaSTM32F4::setupVoltageScaling(unsigned /* p_systemSpeed */) const {
+#if defined(PWR_CR_VOS)
     m_pwr->CR |= PWR_CR_VOS;
+#elif defined(PWR_CR1_VOS)
+    m_pwr->CR1 |= PWR_CR1_VOS;
+#else
+    #error Unhandled else case here!
+#endif
+
 }
 
 } /* namespace device */
