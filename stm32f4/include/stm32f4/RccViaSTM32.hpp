@@ -206,7 +206,8 @@ public:
     #include "RccViaSTM32L4.hpp"
 #endif /* defined(STM32L432xx) */
 
-#if defined(STM32F407xx)
+#if defined(STM32F407xx) \
+ || defined(STM32F411xE)
     #include "RccViaSTM32F4.hpp"
 #endif /* defined(STM32F407xx) */
 
