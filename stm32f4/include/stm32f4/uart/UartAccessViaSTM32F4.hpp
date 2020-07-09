@@ -146,6 +146,15 @@ public:
         m_rx.enable(gpio::GpioAccessViaSTM32F4::e_Alternate, gpio::GpioAccessViaSTM32F4::e_PullUp, UartAccessViaSTM32F4Helper<UartT>::m_gpioFunction);
         m_tx.enable(gpio::GpioAccessViaSTM32F4::e_Alternate, gpio::GpioAccessViaSTM32F4::e_PullUp, UartAccessViaSTM32F4Helper<UartT>::m_gpioFunction);
         this->initialize();
+        /*
+         * Set Baud Rate to some default value here.
+         *
+         * Some code may need to use the UART before setBaudRate() is called from an application.
+         * 
+         * This is the case for the Init Code in the USB Stack, if the setBaudRate() would otherwise
+         * be called in the firmware's main() function.
+         */
+        this->setBaudRate(e_BaudRate_9600);
     }
 
     ~UartAccessViaSTM32F4PinT(void) {
