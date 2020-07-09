@@ -23,7 +23,7 @@ namespace tasks {
 class UsbMouseButtonHandler : public Task {
 private:
     usb::UsbMouseApplication &  m_usbMouseApplication;
-    const gpio::GpioPin &       m_led;
+    const gpio::GpioPin *       m_led;
     QueueHandle_t               m_buttonHandlerQueue;
     SemaphoreHandle_t           m_usbMutex;
 
@@ -31,7 +31,11 @@ private:
         bool buttonState;
 
         while(xQueueReceive(this->m_buttonHandlerQueue, &buttonState, portMAX_DELAY) == pdTRUE) {
-            m_led.set(buttonState ? gpio::GpioPin::On : gpio::GpioPin::Off);
+            if (m_led != nullptr) {
+                m_led->set(buttonState ? gpio::GpioPin::On : gpio::GpioPin::Off);
+            } else {
+                PHISCH_LOG("UsbMouseButtonHandler::%s(): Button State = 0x%x\r\n", __func__, buttonState);
+            }
 
             m_usbMouseApplication.setButton(usb::UsbMouseApplication::Button_e::e_LeftButton, buttonState);
 
@@ -41,12 +45,19 @@ private:
         }
         
         PHISCH_LOG("UsbMouseButtonHandler::%s(): Failed to receive Button State from queue.\r\n", __func__);
-        m_led.set(gpio::GpioPin::HiZ);
+        if (m_led != nullptr) {
+            m_led->set(gpio::GpioPin::HiZ);
+        }
         assert(false);
     };
 
 public:
-    UsbMouseButtonHandler(const char * const p_name, const unsigned p_priority, usb::UsbMouseApplication &p_usbMouseApplication, const gpio::GpioPin &p_led)
+    UsbMouseButtonHandler(const char * const p_name, const unsigned p_priority, usb::UsbMouseApplication &p_usbMouseApplication)
+      : Task(p_name, p_priority), m_usbMouseApplication(p_usbMouseApplication), m_led(nullptr) {
+
+    }
+
+    UsbMouseButtonHandler(const char * const p_name, const unsigned p_priority, usb::UsbMouseApplication &p_usbMouseApplication, const gpio::GpioPin * const p_led)
       : Task(p_name, p_priority), m_usbMouseApplication(p_usbMouseApplication), m_led(p_led) {
 
     }
