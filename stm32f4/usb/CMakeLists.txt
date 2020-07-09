@@ -11,7 +11,9 @@ set(TARGET_SRC
     # UsbIrqViaSTM32F4.cpp 
 )
 
-if(HAVE_USB_OTG)
+if(${STM32F4_HAVE_USB_OTG})
+    message(STATUS "STM32F4 CPU ${STM32F4_CPU_TYPE} supports USB On-the-Go (OTG) Macro")
+
     add_library(${TARGET_NAME} ${TARGET_SRC})
     target_link_libraries(${TARGET_NAME}
         stm32f4
