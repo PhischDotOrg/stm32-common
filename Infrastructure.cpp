@@ -15,7 +15,7 @@ extern "C" {
 #endif /* defined (__cplusplus) */
 void
 halt(const char * const p_file, const unsigned p_line) {
-    g_uart.printf("%s(): %s : %d\r\n", __func__, p_file, p_line);
+    PHISCH_LOG("%s(): %s : %d\r\n", __func__, p_file, p_line);
 
     while (1) { };
 }
