@@ -109,6 +109,7 @@ endif()
 # Include Search Paths for project
 ###############################################################################
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/compat/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 ###############################################################################
 # Actually build the target binary
@@ -118,9 +119,9 @@ set(TARGET_BIN ${TARGET_NAME}.bin)
 if(NOT("${STM32F4_BOARD}" STREQUAL ""))
     set(TARGET_SRC
         ${TARGET_SRC}
-        FreeRTOSCallback.cpp
         CompatStdCpp.cpp
-        # $<TARGET_OBJECTS:startup>
+        FreeRTOSCallback.cpp
+        Infrastructure.cpp
     )
 else()
     add_library(tasks
