@@ -6,6 +6,7 @@
 #include "stm32f4xx.h"      /* for SysTick_Type */
 #include "FreeRTOSConfig.h" /* for SystemCoreClock */
 #include "phisch/log.h"
+#include "version.h"
 
 /*******************************************************************************
  *
@@ -13,6 +14,32 @@
 #if defined(__cplusplus)
 extern "C" {
 #endif /* defined (__cplusplus) */
+
+void
+PrintStartupMessage(unsigned p_sysclk, unsigned p_ahb, unsigned p_apb1, unsigned p_apb2) {
+    g_uart.printf("Copyright (c) 2013-2020 Philip Schulz <phs@phisch.org>\r\n");
+    g_uart.printf("All rights reserved.\r\n");
+    g_uart.printf("\r\n");
+    g_uart.printf("Project Name: %s\r\n", gProjectName);
+    g_uart.printf("SW Version: %s\r\n", gSwVersionId);
+    g_uart.printf("SW Build Timestamp: %s\r\n", gSwBuildTime);
+    g_uart.printf("\r\n");
+    g_uart.printf("Fixed Data: [0x0%x - 0x0%x]\t(%d Bytes total, %d Bytes used)\r\n",
+      &gFixedDataBegin, &gFixedDataEnd, &gFixedDataEnd - &gFixedDataBegin, &gFixedDataUsed- &gFixedDataBegin);
+    g_uart.printf("      Code: [0x0%x - 0x0%x]\t(%d Bytes)\r\n", &stext, &etext, &etext - &stext);
+    g_uart.printf("      Data: [0x%x - 0x%x]\t(%d Bytes)\r\n", &sdata, &edata, &edata - &sdata);
+    g_uart.printf("       BSS: [0x%x - 0x%x]\t(%d Bytes)\r\n", &sbss, &ebss, &ebss - &sbss);
+    g_uart.printf(" Total RAM: [0x%x - 0x%x]\t(%d Bytes)\r\n", &sdata, &ebss, &ebss - &sdata);
+    g_uart.printf("     Stack: [0x%x - 0x%x]\t(%d Bytes)\r\n", &bstack, &estack, &estack - &bstack);
+    g_uart.printf("\r\n");
+
+    g_uart.printf("CPU running @ %d kHz\r\n", p_sysclk);
+    g_uart.printf("        AHB @ %d kHz\r\n", p_ahb);
+    g_uart.printf("       APB1 @ %d kHz\r\n", p_apb1);
+    g_uart.printf("       APB2 @ %d kHz\r\n", p_apb2);
+    g_uart.printf("\r\n");
+}
+
 void
 halt(const char * const p_file, const unsigned p_line) {
     PHISCH_LOG("%s(): %s : %d\r\n", __func__, p_file, p_line);

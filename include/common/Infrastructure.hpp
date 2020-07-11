@@ -9,6 +9,8 @@
 extern "C" {
 #endif  /* defined(__cplusplus) */
 
+void PrintStartupMessage(unsigned p_sysclk, unsigned p_ahb, unsigned p_apb1, unsigned p_apb2);
+
 extern char stext, etext;
 extern char sdata, edata;
 extern char sbss, ebss;
