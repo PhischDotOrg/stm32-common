@@ -11,6 +11,7 @@ extern const char gFixedDataBegin;
 extern const char gFixedDataUsed;
 extern const char gFixedDataEnd;
 
+extern const char gProjectName[];
 extern const char gSwVersionId[];
 extern const char gSwBuildTime[];
 

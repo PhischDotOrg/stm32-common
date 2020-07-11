@@ -12,13 +12,15 @@
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-#if defined(HOSTBUILD)
-    const char gSwVersionId[] = BUILD_ID;
-    const char gSwBuildTime[] = BUILD_TIME;
+#if !defined(HOSTBUILD)
+    #define FIXED_DATA_SECTION __attribute__((section(".fixeddata")))
 #else
-    const char gSwVersionId[]  __attribute__((section(".fixeddata"))) = BUILD_ID;
-    const char gSwBuildTime[]  __attribute__((section(".fixeddata"))) = BUILD_TIME;
+    #define FIXED_DATA_SECTION
 #endif
+
+const char gProjectName[] FIXED_DATA_SECTION = PROJECT_NAME;
+const char gSwVersionId[] FIXED_DATA_SECTION = BUILD_ID;
+const char gSwBuildTime[] FIXED_DATA_SECTION = BUILD_TIME;
 
 #if defined(__cplusplus)
 } /* extern "C" */
