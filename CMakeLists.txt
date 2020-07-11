@@ -1,13 +1,12 @@
 #-
 # $Copyright$
 #
-project(${PROJECT_NAME})
 
 ###############################################################################
 # Print some generic information on the Project.
 ###############################################################################
 set(PROJECT_ROOT "${CMAKE_SOURCE_DIR}")
-message(STATUS "Project Name: ${PROJECT_NAME}")
+message(STATUS "Project Name: ${CMAKE_PROJECT_NAME}")
 message(STATUS "Project Root: ${PROJECT_ROOT}")
 message(STATUS "Target System Type: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "Target System Processor: ${CMAKE_SYSTEM_PROCESSOR}")
