@@ -68,6 +68,7 @@ add_custom_command(OUTPUT ${COVERAGE_INFO}
       --directory ${CMAKE_CURRENT_BINARY_DIR}
       --base-directory ${CMAKE_CURRENT_BINARY_DIR}
 	  --capture
+	  --rc lcov_branch_coverage=1
 	  -o ${COVERAGE_INFO}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Collecting Coverage Info"
@@ -77,7 +78,7 @@ add_custom_command(OUTPUT ${COVERAGE_INFO}
 set(COVERAGE_REPORT_DIR "${CMAKE_CURREN_BINARY_DIR}/coverage")
 
 add_custom_target(coverage
-  COMMAND ${GENHTML_BIN} ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_INFO} -o ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_REPORT_DIR}
+  COMMAND ${GENHTML_BIN} ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_INFO} -o ${CMAKE_CURRENT_BINARY_DIR}/${COVERAGE_REPORT_DIR} --branch-coverage
   DEPENDS ${COVERAGE_INFO}
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Generating Coverage Report"
