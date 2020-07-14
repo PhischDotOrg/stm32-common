@@ -13,12 +13,6 @@ namespace tasks {
 
 class PeriodicTask : public Task {
 private:
-#if defined(HOSTBUILD)
-    typedef unsigned TickType_t;
-
-    #define portTICK_PERIOD_MS 1
-#endif /* defined(HOSTBUILD) */
-
     const TickType_t    m_period;
 
 public:

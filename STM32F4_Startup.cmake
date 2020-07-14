@@ -18,6 +18,6 @@ if (CMAKE_CROSSCOMPILING)
     )
 else()
     add_library(${TARGET_NAME} 
-        empty.c
+        UnitTestDummyStartUp.cpp
     )
 endif()

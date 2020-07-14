@@ -102,7 +102,7 @@ else()
     add_definitions("-DHOSTBUILD")
 
     add_definitions("-DGPIO_ENV=STM32F4")
-#    add_definitions("-DUART_ENV=${CMAKE_SYSTEM_NAME}")
+    #    add_definitions("-DUART_ENV=${CMAKE_SYSTEM_NAME}")
 endif()
 
 ###############################################################################
@@ -116,18 +116,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 ###############################################################################
 set(TARGET_ELF ${TARGET_NAME}.elf)
 set(TARGET_BIN ${TARGET_NAME}.bin)
-if(NOT("${STM32F4_BOARD}" STREQUAL ""))
-    set(TARGET_SRC
-        ${TARGET_SRC}
-        CompatStdCpp.cpp
-        FreeRTOSCallback.cpp
-        Infrastructure.cpp
-    )
-else()
-    add_library(tasks
-        empty.c
-    )
-endif()
+set(TARGET_SRC
+    ${TARGET_SRC}
+    CompatStdCpp.cpp
+    FreeRTOSCallback.cpp
+    Infrastructure.cpp
+)
 add_executable(${TARGET_ELF}
     ${TARGET_SRC}
 )

@@ -29,6 +29,10 @@ else()
     target_include_directories(${TARGET_NAME} INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
+    target_link_libraries(${TARGET_NAME} INTERFACE
+        stm32f4
+        usb
+    )
 endif()
 
 #*******************************************************************************
