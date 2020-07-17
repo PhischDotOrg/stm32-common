@@ -13,7 +13,7 @@ set(TARGET_SRC
     PwrViaSTM32F4.cpp
     ScbViaSTM32F4.cpp
     # SpiAccessViaSTM32F4.cpp
-    TimerChannelViaSTM32F4.cpp
+    # TimerChannelViaSTM32F4.cpp
     TimerViaSTM32F4.cpp
     UartAccessViaSTM32F4.cpp
 )

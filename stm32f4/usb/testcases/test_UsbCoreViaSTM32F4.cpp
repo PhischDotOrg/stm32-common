@@ -93,8 +93,8 @@ TEST_F(UsbCoreViaSTM32F4Test, CreateAndDelete) {
  *
  ******************************************************************************/
 TEST_F(UsbCoreViaSTM32F4Test, InvalidRxFifoSize) {
-    EXPECT_THROW(new UsbCoreViaSTM32F4(nullptr, 0, 15), std::runtime_error);
-    EXPECT_THROW(new UsbCoreViaSTM32F4(nullptr, 0, 257), std::runtime_error);
+    EXPECT_EXIT(UsbCoreViaSTM32F4(nullptr, 0, 15), ::testing::KilledBySignal(SIGABRT), "Assertion failed");
+    EXPECT_EXIT(UsbCoreViaSTM32F4(nullptr, 0, 257), ::testing::KilledBySignal(SIGABRT), "Assertion failed");
 }
 
 /*******************************************************************************
