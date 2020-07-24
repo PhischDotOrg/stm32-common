@@ -6,6 +6,7 @@
 #define _PERIODIC_TASK_HPP_C4A4891A_F2B3_413B_A08F_D0C34AC00BD3
 
 #include <tasks/Task.hpp>
+#include <cassert>
 #include <cstdint>
 #include <phisch/log.h>
 

@@ -12,15 +12,14 @@
 
 namespace tasks {
 
-template<typename UartT = uart::UartDevice, typename PinT = gpio::Pin>
+template<typename PinT = gpio::DigitalOutPin>
 class HeartbeatT : public PeriodicTask {
 private:
-    const UartT &   m_uart;
     const PinT  &   m_led;
     bool            m_status;
 
     int executePeriod(void) override {
-        this->m_led.set(m_status ? PinT::On : PinT::Off);
+        this->m_led.set(m_status);
 
         m_status = !m_status;
 
@@ -28,8 +27,8 @@ private:
     }
 
 public:
-    HeartbeatT(const char * const p_name, UartT &p_uart, PinT &p_led, const unsigned p_priority, const unsigned p_periodMs = 1000)
-      : PeriodicTask(p_name, p_priority, p_periodMs), m_uart(p_uart), m_led(p_led) {
+    HeartbeatT(const char * const p_name, PinT &p_led, const unsigned p_priority, const unsigned p_periodMs = 1000)
+      : PeriodicTask(p_name, p_priority, p_periodMs), m_led(p_led) {
 
     };
 

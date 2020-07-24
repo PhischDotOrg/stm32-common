@@ -22,35 +22,35 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
     endif()
 endif()
 
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
-    set(ARCH_NAME "${CMAKE_SYSTEM_PROCESSOR}")
-else()
-    set(ARCH_NAME "${CMAKE_SYSTEM_NAME}")
-endif()
-set_property(GLOBAL PROPERTY ARCH_NAME ${ARCH_NAME})
-
 ###############################################################################
-# STM32F4 Supported Boards
+# STM32 Supported Boards
+#
+# A board is supported if there is a directory with the board's name which
+# contains a file "stm32-board.cmake".
 ###############################################################################
-list(APPEND STM32F4_SUPPORTED_BOARDS "STM32F4_Discovery")
-list(APPEND STM32F4_SUPPORTED_BOARDS "STM32F4_Nucleo_F411RE")
-list(APPEND STM32F4_SUPPORTED_BOARDS "STM32F4_Nucleo_L432KC")
-list(APPEND STM32F4_SUPPORTED_BOARDS "")
+file(GLOB STM32_SUPPORTED_BOARDS
+  LIST_DIRECTORIES TRUE
+  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/boards
+  "boards/STM32*"
+)
 
-if(NOT DEFINED STM32F4_BOARD)
-    set(STM32F4_BOARD "" CACHE STRING "STM32F4 Board Type. Must be set to one of ${STM32F4_SUPPORTED_BOARDS}")
+if(NOT DEFINED STM32_BOARD)
+    set(STM32_BOARD "" CACHE STRING "STM32 Board Type. Must be set to one of ${STM32_SUPPORTED_BOARDS}")
 endif()
 
-if(NOT ("${STM32F4_BOARD}" IN_LIST STM32F4_SUPPORTED_BOARDS))
-    message(FATAL_ERROR "STM32F4_BOARD is set to \"${STM32F4_BOARD}\" which is "
-      "not in the list of supported Boards. Please configure STM32F4 Board "
-      "(Cache Variable \"STM32F4_BOARD\") to one of [${STM32F4_SUPPORTED_BOARDS}]")
-endif()
+if(NOT("${STM32_BOARD}" STREQUAL ""))
+    set(BOARD_CMAKE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/boards/${STM32_BOARD}/stm32-board.cmake")
+    if (NOT EXISTS ${BOARD_CMAKE_FILE})
+      message(FATAL_ERROR "STM32_BOARD is set to \"${STM32_BOARD}\" but file "
+        "\'${BOARD_CMAKE_FILE}\' does not exist!")
+    else()
+        message(STATUS "STM32 Board: ${STM32_BOARD}")
+        # Configure Board-specific Options
+        include(${BOARD_CMAKE_FILE})
 
-
-if(NOT("${STM32F4_BOARD}" STREQUAL ""))
-    # Configure Board-specific Options
-    include(boards/${STM32F4_BOARD}/stm32f4-board.cmake)
+        add_definitions(-D${STM32_CPU_FAMILY})
+        add_definitions(-D${STM32_CPU_TYPE})
+    endif()
 endif()
 
 ###############################################################################
@@ -90,18 +90,17 @@ endif()
 ###############################################################################
 # Set up the environment for the Phisch.Org libraries
 ###############################################################################
-if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
-    if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "STM32F4")
-        add_definitions("-DGPIO_ENV=${CMAKE_SYSTEM_PROCESSOR}")
-        add_definitions("-DUART_ENV=${CMAKE_SYSTEM_PROCESSOR}")
+add_definitions("-DGPIO_ENV=STM32")
 
-        add_definitions("-DCORTEX_M4")
-        add_definitions("-DUSE_FULL_ASSERT")
-    endif()
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
+    add_definitions("-DHAVE_STM32")
+    add_definitions("-DSTM32_CPU_FAMILY=${STM32_CPU_FAMILY}")
+    add_definitions("-D${STM32_CPU_FAMILY}")
+
+    add_definitions("-DUART_ENV=STM32")
 else()
     add_definitions("-DHOSTBUILD")
 
-    add_definitions("-DGPIO_ENV=STM32F4")
     #    add_definitions("-DUART_ENV=${CMAKE_SYSTEM_NAME}")
 endif()
 
@@ -130,7 +129,7 @@ target_link_libraries(${TARGET_ELF}
     compatc
     FreeRTOS
     startup
-    stm32f4
+    stm32
     tasks
     uart
 )
@@ -140,33 +139,33 @@ target_link_libraries(${TARGET_ELF}
 ###############################################################################
 add_subdirectory(contrib)
 add_subdirectory(lib)
-add_subdirectory(stm32f4)
-if(NOT("${STM32F4_BOARD}" STREQUAL ""))
+add_subdirectory(stm32)
+if(NOT("${STM32_BOARD}" STREQUAL ""))
     add_subdirectory(tasks)
 endif()
 
 ###############################################################################
 # Include Build Version Support
 ###############################################################################
-include(STM32F4_Archives.cmake)
-include(STM32F4_BuildVersion.cmake)
-include(STM32F4_OpenOCD.cmake)
-include(STM32F4_Startup.cmake)
+include(STM32_Archives.cmake)
+include(STM32_BuildVersion.cmake)
+include(STM32_OpenOCD.cmake)
+include(STM32_Startup.cmake)
 
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
     target_link_options(${TARGET_ELF} PRIVATE
-        -T ${CMAKE_CURRENT_SOURCE_DIR}/${STM32F4_LDSCRIPT}
+        -T ${CMAKE_CURRENT_SOURCE_DIR}/${STM32_LDSCRIPT}
     )
 endif()
 
-include(STM32F4_Doxygen.cmake)
+include(Doxygen.cmake)
 
 ###############################################################################
 # If we're on an embedded system, include a CMake File that defines how the
 # flashable binary image is built
 ###############################################################################
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
-    set(GDBINIT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/gdbinit-${CMAKE_SYSTEM_PROCESSOR}.tpl)
+    set(GDBINIT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/gdbinit-stm32.tpl)
 else()
     find_package(Threads REQUIRED)
     target_link_libraries(${TARGET_ELF}

@@ -7,6 +7,7 @@
 #include "FreeRTOSConfig.h" /* for SystemCoreClock */
 #include "phisch/log.h"
 #include "version.h"
+#include <cassert>
 
 /*******************************************************************************
  *
@@ -17,31 +18,42 @@ extern "C" {
 
 void
 PrintStartupMessage(unsigned p_sysclk, unsigned p_ahb, unsigned p_apb1, unsigned p_apb2) {
-    g_uart.printf("Copyright (c) 2013-2020 Philip Schulz <phs@phisch.org>\r\n");
-    g_uart.printf("All rights reserved.\r\n");
-    g_uart.printf("\r\n");
-    g_uart.printf("Project Name: %s\r\n", gProjectName);
-    g_uart.printf("SW Version: %s\r\n", gSwVersionId);
-    g_uart.printf("SW Build Timestamp: %s\r\n", gSwBuildTime);
-    g_uart.printf("\r\n");
-    g_uart.printf("Fixed Data: [0x0%x - 0x0%x]\t(%d Bytes total, %d Bytes used)\r\n",
-      &gFixedDataBegin, &gFixedDataEnd, &gFixedDataEnd - &gFixedDataBegin, &gFixedDataUsed- &gFixedDataBegin);
-    g_uart.printf("      Code: [0x0%x - 0x0%x]\t(%d Bytes)\r\n", &stext, &etext, &etext - &stext);
-    g_uart.printf("      Data: [0x%x - 0x%x]\t(%d Bytes)\r\n", &sdata, &edata, &edata - &sdata);
-    g_uart.printf("       BSS: [0x%x - 0x%x]\t(%d Bytes)\r\n", &sbss, &ebss, &ebss - &sbss);
-    g_uart.printf(" Total RAM: [0x%x - 0x%x]\t(%d Bytes)\r\n", &sdata, &ebss, &ebss - &sdata);
-    g_uart.printf("     Stack: [0x%x - 0x%x]\t(%d Bytes)\r\n", &bstack, &estack, &estack - &bstack);
-    g_uart.printf("\r\n");
+#if defined(NO_LOGGING)
+    (void) p_sysclk;
+    (void) p_ahb;
+    (void) p_apb1;
+    (void) p_apb2;
+#endif
 
-    g_uart.printf("CPU running @ %d kHz\r\n", p_sysclk);
-    g_uart.printf("        AHB @ %d kHz\r\n", p_ahb);
-    g_uart.printf("       APB1 @ %d kHz\r\n", p_apb1);
-    g_uart.printf("       APB2 @ %d kHz\r\n", p_apb2);
-    g_uart.printf("\r\n");
+    PHISCH_LOG("Copyright (c) 2013-2020 Philip Schulz <phs@phisch.org>\r\n");
+    PHISCH_LOG("All rights reserved.\r\n");
+    PHISCH_LOG("\r\n");
+    PHISCH_LOG("Project Name: %s\r\n", gProjectName);
+    PHISCH_LOG("SW Version: %s\r\n", gSwVersionId);
+    PHISCH_LOG("SW Build Timestamp: %s\r\n", gSwBuildTime);
+    PHISCH_LOG("\r\n");
+    PHISCH_LOG("Fixed Data: [0x0%x - 0x0%x]\t(%d Bytes total, %d Bytes used)\r\n",
+      &gFixedDataBegin, &gFixedDataEnd, &gFixedDataEnd - &gFixedDataBegin, &gFixedDataUsed- &gFixedDataBegin);
+    PHISCH_LOG("      Code: [0x0%x - 0x0%x]\t(%d Bytes)\r\n", &stext, &etext, &etext - &stext);
+    PHISCH_LOG("      Data: [0x%x - 0x%x]\t(%d Bytes)\r\n", &sdata, &edata, &edata - &sdata);
+    PHISCH_LOG("       BSS: [0x%x - 0x%x]\t(%d Bytes)\r\n", &sbss, &ebss, &ebss - &sbss);
+    PHISCH_LOG(" Total RAM: [0x%x - 0x%x]\t(%d Bytes)\r\n", &sdata, &ebss, &ebss - &sdata);
+    PHISCH_LOG("     Stack: [0x%x - 0x%x]\t(%d Bytes)\r\n", &bstack, &estack, &estack - &bstack);
+    PHISCH_LOG("\r\n");
+
+    PHISCH_LOG("CPU running @ %d kHz\r\n", p_sysclk);
+    PHISCH_LOG("        AHB @ %d kHz\r\n", p_ahb);
+    PHISCH_LOG("       APB1 @ %d kHz\r\n", p_apb1);
+    PHISCH_LOG("       APB2 @ %d kHz\r\n", p_apb2);
+    PHISCH_LOG("\r\n");
 }
 
 void
 halt(const char * const p_file, const unsigned p_line) {
+#if defined(NO_LOGGING)
+    (void) p_file;
+    (void) p_line;
+#endif
     PHISCH_LOG("%s(): %s : %d\r\n", __func__, p_file, p_line);
 
     while (1) { };

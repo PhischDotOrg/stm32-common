@@ -25,14 +25,13 @@ ENTRY(Reset_Handler)
 MEMORY
 {
   ISR (r)       : ORIGIN = 0x08000000, LENGTH = 512
-  FIXEDDATA (r) : ORIGIN = 0x08000400, LENGTH = 512
-  FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 1023K
+  FIXEDDATA (r) : ORIGIN = 0x08000200, LENGTH = 512
+  FLASH (rx)    : ORIGIN = 0x08000400, LENGTH = 63K
   STACK (rw)    : ORIGIN = 0x20000000, LENGTH = 4K
   /* Make sure the length of this section matches the definition of configTOTAL_HEAP_SIZE in FreeRTOSConfig.h */
   HEAP (rw)     : ORIGIN = 0x20001000, LENGTH = 4K
-  RAM (rw)      : ORIGIN = 0x20002000, LENGTH = 120K
-  /* Core Coupled is intended for fast Code Execution from RAM. This area is not DMA'able */
-  CCMRAM (rx)   : ORIGIN = 0x10000000, LENGTH = 64K
+  /* RAM (rw)      : ORIGIN = ORIGIN(HEAP) + LENGTH(HEAP), LENGTH = 20K - LENGTH(STACK) - LENGTH(HEAP) */
+  RAM (rw)      : ORIGIN = 0x20002000, LENGTH = 12K
 }
 
 /* Define output sections */

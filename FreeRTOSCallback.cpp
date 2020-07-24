@@ -1,9 +1,7 @@
 /*-
  * $Copyright$
 -*/
-
-#include <uart/UartDevice.hpp>
-extern uart::UartDevice g_uart;
+#include <phisch/log.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -31,7 +29,7 @@ vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *pcTaskName) {
     (void) pcTaskName;
     (void) pxTask;
 
-    g_uart.printf("STACK OVERFLOW in Task '%s'\r\n", pcTaskName);
+    PHISCH_LOG("STACK OVERFLOW in Task '%s'\r\n", pcTaskName);
     
     /* Run time stack overflow checking is performed if
     configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
