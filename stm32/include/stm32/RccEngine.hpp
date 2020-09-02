@@ -15,9 +15,9 @@ template<typename EngineT> struct BusTypeT {
     static constexpr std::nullptr_t m_busType = nullptr;
 };
 
-#define MAP_RCC_ENGINE(Engine)										\
-template<> struct BusTypeT< EngineT< (Engine ## _BASE) > > {	\
-    static constexpr auto m_busType = Rcc::e_##Engine;			\
+#define MAP_RCC_ENGINE(Engine)                                  \
+template<> struct BusTypeT< EngineT< (Engine ## _BASE) > > {    \
+    static constexpr auto m_busType = Rcc::e_##Engine;          \
 }
 
 /*****************************************************************************/

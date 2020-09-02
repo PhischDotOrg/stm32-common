@@ -77,7 +77,7 @@ defined in linker script */
   .weak  Reset_Handler
   .type  Reset_Handler, %function
 Reset_Handler:  
-  ldr   sp, = eInitStack /* set stack pointer */
+  ldr   sp, = estack /* set stack pointer */
 
   /*
    * Enable FPU.
@@ -137,20 +137,6 @@ LoopFillZerobss:
   cmp  r2, r3
   bcc  FillZerobss
 
-/* Call the clock system intitialization function.*/
-/*
- * This function call was in the initial Start-up assembly code from STM / Mbed,
- * but they removed the C-definition of the function.
- *
- * I think the functionality should be in the RCC- and SCB-Classes. System starts
- * up fine even without this call.
- *
-  bl  SystemInit
-*/
-/* Call static constructors */
-/* Commented out by PhS on Oct 17th, 2017
-    bl __libc_init_array
- */
 /*
  * Call static constructors.
  * Code sample obtained on Oct 6th, 2013 via

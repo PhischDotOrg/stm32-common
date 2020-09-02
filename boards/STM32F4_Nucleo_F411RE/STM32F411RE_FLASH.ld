@@ -1,52 +1,10 @@
-/*
-*****************************************************************************
-**
-**  File        : stm32_flash.ld
-**
-**  Abstract    : Linker script for STM32F411RE Device with
-**                512KByte FLASH, 128KByte RAM
-**
-**                Set heap size, stack size and stack location according
-**                to application requirements.
-**
-**                Set memory bank area and size if external memory is used.
-**
-**  Target      : STMicroelectronics STM32
-**
-**  Environment : Atollic TrueSTUDIO(R)
-**
-**  Distribution: The file is distributed �as is,� without any warranty
-**                of any kind.
-**
-**  (c)Copyright Atollic AB.
-**  You may use this file as-is or modify it according to the needs of your
-**  project. This file may only be built (assembled or compiled and linked)
-**  using the Atollic TrueSTUDIO(R) product. The use of this file together
-**  with other tools than Atollic TrueSTUDIO(R) is not permitted.
-**
-*****************************************************************************
-*/
-
 /* Entry Point */
 ENTRY(Reset_Handler)
-
-EXTERN (initStackSz stackSz)
-
-PROVIDE(initStackSz = 0x80);
-PROVIDE(freeRtosStackSz = 0x4000);
-
-estack = 0x2001FFFF;    /* end of RAM */
-bstack = estack - freeRtosStackSz;
-
-ucHeap = bstack;
-
-eInitStack = ucHeap;
-bInitStack = eInitStack - initStackSz;
 
 /*
  * During startup, the main stack is placed in the region [bstack:estack].
  * The top-of-stack pointer is located through the estack symbol by the startup
- * assembly code in file 'startup_stm32f411xe.s'.
+ * assembly code in CPU-specific 'startup_stm32*.s' file.
  *
  * The FreeRTOS Scheduler re-claims the main stack. It uses the NVIC offset
  * register to locate the address of the 'estack' symbol and uses the value stored
@@ -57,19 +15,22 @@ bInitStack = eInitStack - initStackSz;
  *
  * FreeRTOS manages the stacks of the running tasks. It does so by using a heap
  * implementation. The implementation locates the heap through the ucHeap symbol
- * in combination with the 'configTOTAL_HEAP_SIZE' config option. In our case
- * this is set to a size of 16kB.
+ * in combination with the 'configTOTAL_HEAP_SIZE' config option. In our case,
+ * the ucHeap Symbol is placed in the region 'HEAP'.
  *
- * Hence, the stacks of the tasks are located in the region [0x2001c000-0x20001FFFF].
+ * Hence, the stacks of the tasks are located in the region 'HEAP' defined below.
  */
 
 /* Specify the memory areas */
 MEMORY
 {
-  ISR (r)		      : ORIGIN = 0x08000000, LENGTH = 512
-  FIXEDDATA (r)   : ORIGIN = 0x08000400, LENGTH = 512
-  FLASH (rx)      : ORIGIN = 0x08001000, LENGTH = 511K
-  RAM (xrw)       : ORIGIN = 0x20000000, LENGTH = 128K
+  ISR (r)       : ORIGIN = 0x08000000, LENGTH = 512
+  FIXEDDATA (r) : ORIGIN = 0x08000400, LENGTH = 512
+  FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 511K
+  STACK (rw)    : ORIGIN = 0x20000000, LENGTH = 4K
+  /* Make sure the length of this section matches the definition of configTOTAL_HEAP_SIZE in FreeRTOSConfig.h */
+  HEAP (rw)     : ORIGIN = 0x20001000, LENGTH = 4K
+  RAM (rw)      : ORIGIN = 0x20002000, LENGTH = 120K
 }
 
 /* Define output sections */
@@ -108,13 +69,8 @@ SECTIONS
     KEEP(*(.ctors));                      /* C++ constructors */
     _ctors_end_ = .;
 
-/*
     . = ALIGN(4);
-    KEEP (*(.init))
-    KEEP (*(.fini))
- */
-    . = ALIGN(4);
-    etext = .;        /* define a global symbols at end of code */
+    etext = .;         /* define a global symbols at end of code */
   } >FLASH
 
   /* Constant data goes into FLASH */
@@ -125,36 +81,6 @@ SECTIONS
     *(.rodata*)        /* .rodata* sections (constants, strings, etc.) */
     . = ALIGN(4);
   } >FLASH
-
-/* PhS, June 2nd 2015: Not sure what this is required for, so comment out for now
-  .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH
-  .ARM : {
-    __exidx_start = .;
-    *(.ARM.exidx*)
-    __exidx_end = .;
-  } >FLASH
-
-  .preinit_array     :
-  {
-    PROVIDE_HIDDEN (__preinit_array_start = .);
-    KEEP (*(.preinit_array*))
-    PROVIDE_HIDDEN (__preinit_array_end = .);
-  } >FLASH
-  .init_array :
-  {
-    PROVIDE_HIDDEN (__init_array_start = .);
-    KEEP (*(SORT(.init_array.*)))
-    KEEP (*(.init_array*))
-    PROVIDE_HIDDEN (__init_array_end = .);
-  } >FLASH
-  .fini_array :
-  {
-    PROVIDE_HIDDEN (__fini_array_start = .);
-    KEEP (*(SORT(.fini_array.*)))
-    KEEP (*(.fini_array*))
-    PROVIDE_HIDDEN (__fini_array_end = .);
-  } >FLASH
-PhS, June 2nd 2015: Not sure what this is required for, so comment out for now */
 
   /* used by the startup to initialize data */
   _sidata = LOADADDR(.data);
@@ -187,16 +113,30 @@ PhS, June 2nd 2015: Not sure what this is required for, so comment out for now *
     __bss_end__ = ebss;
   } >RAM
 
-  /* User_heap_stack section, used to check that there is enough RAM left */
-  ._user_heap_stack :
+  .stack :
   {
+    . = ORIGIN(STACK);
     . = ALIGN(4);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = . + freeRtosStackSz;
-    . = . + initStackSz;
+    /* Bottom of Stack */
+    bstack = .;
+    
+    . = ORIGIN(STACK) + LENGTH(STACK);
     . = ALIGN(4);
-  } >RAM
+    /* Top of Stack */
+    estack = .;
+  } >STACK
+
+  .heap :
+  {
+    . = ORIGIN(HEAP);
+    . = ALIGN(4);
+
+    /* FreeRTOS Heap */
+    ucHeap = .;
+
+    . = ORIGIN(HEAP) + LENGTH(HEAP);
+    . = ALIGN(4);
+  } >HEAP
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

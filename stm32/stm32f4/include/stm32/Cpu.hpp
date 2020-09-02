@@ -20,11 +20,12 @@
 
 namespace stm32 {
     namespace f4 {
+#if defined(STM32F407xx)
         namespace f407 {
             struct Cpu {
                 using Flash     = ::stm32::f4::Flash;
                 using Nvic      = ::devices::NvicViaSTM32F4T<devices::ScbViaSTM32F4>;
-                using PllCfg    = ::stm32::f4::PllCfgT<::stm32::f4::f407::PllCfgValidCheck>;
+                using PllCfg    = ::stm32::f4::PllCfgT<8, ::stm32::f4::f407::PllCfgValidCheck>;
                 using Pwr       = ::stm32::f4::Pwr;
                 using Rcc       = RccT<PllCfg, Flash, Pwr>;
                 using Scb       = ::devices::ScbViaSTM32F4;
@@ -52,30 +53,93 @@ namespace stm32 {
                 }; /* struct Uart */
             }; /* struct Cpu */
         } /* namespace f407 */
+#endif /* defined(STM32F407xx) */
+#if defined(STM32F411xE)
+        namespace f411 {
+            struct Cpu {
+                using Flash     = ::stm32::f4::Flash;
+                using Nvic      = ::devices::NvicViaSTM32F4T<devices::ScbViaSTM32F4>;
+                using PllCfg    = ::stm32::f4::PllCfgT<16, ::stm32::f4::f411::PllCfgValidCheck>;
+                using Pwr       = ::stm32::f4::Pwr;
+                using Rcc       = RccT<PllCfg, Flash, Pwr>;
+                using Scb       = ::devices::ScbViaSTM32F4;
+
+                struct Gpio {
+                    using Engine = ::stm32::GpioEngineT<stm32::f4::GpioPinConfiguration>;
+
+                    using A     = ::stm32::GpioT<Rcc, GPIOA_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using B     = ::stm32::GpioT<Rcc, GPIOB_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using C     = ::stm32::GpioT<Rcc, GPIOC_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using D     = ::stm32::GpioT<Rcc, GPIOD_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using E     = ::stm32::GpioT<Rcc, GPIOE_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using H     = ::stm32::GpioT<Rcc, GPIOH_BASE, ::stm32::f4::GpioPinConfiguration>;
+                }; /* struct gpio */
+
+                struct Uart {
+                    template<typename PinT> using Usart1 = ::stm32::UartT<Rcc, USART1_BASE, stm32::BrrPolicyWithOversampling, PinT>;
+                    template<typename PinT> using Usart2 = ::stm32::UartT<Rcc, USART2_BASE, stm32::BrrPolicyWithOversampling, PinT>;
+                    template<typename PinT> using Usart6 = ::stm32::UartT<Rcc, USART6_BASE, stm32::BrrPolicyWithOversampling, PinT>;
+                }; /* struct Uart */
+            }; /* struct Cpu */
+        } /* namespace f411 */
+#endif /* defined(STM32F411xE) */
     } /* namespace f4 */
 
+#if defined(STM32F407xx)
     using Cpu = f4::f407::Cpu;
+#endif
+#if defined(STM32F411xE)
+    using Cpu = f4::f411::Cpu;
+#endif
 
     using Gpio = Cpu::Gpio;
     using GpioEngine = Cpu::Gpio::Engine;
     using Rcc = Cpu::Rcc;
     using Uart = Cpu::Uart;
 
+#if defined(GPIOA_BASE)
     MAP_RCC_ENGINE(GPIOA);
+#endif
+#if defined(GPIOB_BASE)
     MAP_RCC_ENGINE(GPIOB);
+#endif
+#if defined(GPIOC_BASE)
     MAP_RCC_ENGINE(GPIOC);
+#endif
+#if defined(GPIOD_BASE)
     MAP_RCC_ENGINE(GPIOD);
+#endif
+#if defined(GPIOE_BASE)
     MAP_RCC_ENGINE(GPIOE);
+#endif
+#if defined(GPIOF_BASE)
     MAP_RCC_ENGINE(GPIOF);
+#endif
+#if defined(GPIOG_BASE)
     MAP_RCC_ENGINE(GPIOG);
+#endif
+#if defined(GPIOH_BASE)
     MAP_RCC_ENGINE(GPIOH);
+#endif
 
+#if defined(USART1_BASE)
     MAP_RCC_ENGINE(USART1);
+#endif
+#if defined(USART2_BASE)
     MAP_RCC_ENGINE(USART2);
+#endif
+#if defined(USART3_BASE)
     MAP_RCC_ENGINE(USART3);
+#endif
+#if defined(UART4_BASE)
     MAP_RCC_ENGINE(UART4);
+#endif
+#if defined(UART5_BASE)
     MAP_RCC_ENGINE(UART5);
+#endif
+#if defined(USART6_BASE)
     MAP_RCC_ENGINE(USART6);
+#endif
 } /* namespace stm32 */
 
 #endif /* _STM32_CPU_HPP_F936BB8E_9326_416B_BD61_9F6F683DFF3D */
