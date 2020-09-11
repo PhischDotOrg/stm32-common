@@ -1,24 +1,10 @@
 /* Entry Point */
 ENTRY(Reset_Handler)
 
-EXTERN (initStackSz stackSz)
-
-PROVIDE(initStackSz = 0x80);
-PROVIDE(freeRtosStackSz = 0x2000);
-
-/* Highest address of the user mode stack */
-estack = 0x10004000;    /* end of RAM */
-bstack = estack - freeRtosStackSz;
-
-ucHeap = bstack;
-
-eInitStack = ucHeap;
-bInitStack = eInitStack - initStackSz;
-
 /*
  * During startup, the main stack is placed in the region [bstack:estack].
  * The top-of-stack pointer is located through the estack symbol by the startup
- * assembly code in file 'startup_stm32f407xx.s'.
+ * assembly code in CPU-specific 'startup_stm32*.s' file.
  *
  * The FreeRTOS Scheduler re-claims the main stack. It uses the NVIC offset
  * register to locate the address of the 'estack' symbol and uses the value stored
@@ -29,10 +15,10 @@ bInitStack = eInitStack - initStackSz;
  *
  * FreeRTOS manages the stacks of the running tasks. It does so by using a heap
  * implementation. The implementation locates the heap through the ucHeap symbol
- * in combination with the 'configTOTAL_HEAP_SIZE' config option. In our case
- * this is set to a size of 16kB.
+ * in combination with the 'configTOTAL_HEAP_SIZE' config option. In our case,
+ * the ucHeap Symbol is placed in the region 'HEAP'.
  *
- * Hence, the stacks of the tasks are located in the region [0x2001c000-0x20001FFFF].
+ * Hence, the stacks of the tasks are located in the region 'HEAP' defined below.
  */
 
 /* Specify the memory areas */
@@ -41,9 +27,14 @@ MEMORY
   ISR (r)       : ORIGIN = 0x08000000, LENGTH = 512
   FIXEDDATA (r) : ORIGIN = 0x08000400, LENGTH = 512
   FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 255K
-  SRAM1 (rw)    : ORIGIN = 0x20000000, LENGTH = 48K
+  STACK (rw)    : ORIGIN = 0x20000000, LENGTH = 4K
+  /* Make sure the length of this section matches the definition of configTOTAL_HEAP_SIZE in FreeRTOSConfig.h */
+  HEAP (rw)     : ORIGIN = 0x20001000, LENGTH = 4K
+  RAM (rw)      : ORIGIN = 0x20002000, LENGTH = 40K
+  /* Currently not used */
   SRAM2 (rw)    : ORIGIN = 0x10000000, LENGTH = 16K
 }
+
 /* Define output sections */
 SECTIONS
 {
@@ -106,7 +97,7 @@ SECTIONS
 
     . = ALIGN(4);
     edata = .;         /* define a global symbol at data end */
-  } >SRAM1 AT> FLASH
+  } >RAM AT> FLASH
 
   /* Uninitialized data section */
   . = ALIGN(4);
@@ -122,18 +113,32 @@ SECTIONS
     . = ALIGN(4);
     ebss = .;          /* define a global symbol at bss end */
     __bss_end__ = ebss;
-  } >SRAM1
+  } >RAM
 
-  /* User_heap_stack section, used to check that there is enough RAM left */
-  ._user_heap_stack :
+  .stack :
   {
+    . = ORIGIN(STACK);
     . = ALIGN(4);
-    PROVIDE ( end = . );
-    PROVIDE ( _end = . );
-    . = . + freeRtosStackSz;
-    . = . + initStackSz;
+    /* Bottom of Stack */
+    bstack = .;
+    
+    . = ORIGIN(STACK) + LENGTH(STACK);
     . = ALIGN(4);
-  } >SRAM2
+    /* Top of Stack */
+    estack = .;
+  } >STACK
+
+  .heap :
+  {
+    . = ORIGIN(HEAP);
+    . = ALIGN(4);
+
+    /* FreeRTOS Heap */
+    ucHeap = .;
+
+    . = ORIGIN(HEAP) + LENGTH(HEAP);
+    . = ALIGN(4);
+  } >HEAP
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

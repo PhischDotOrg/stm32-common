@@ -93,11 +93,19 @@ public:
     /* FIXME Make a Policy; depends on CPU */
     void
     putf(const char p_char) const {
+#if defined(USART_SR_TXE)
         while (!(m_uart.SR & USART_SR_TXE));
 
         m_uart.DR = p_char;
 
         while (!(m_uart.SR & USART_SR_TC));
+#elif defined(USART_ISR_TXE)
+        while (!(m_uart.ISR & USART_ISR_TXE));
+
+        m_uart.TDR = p_char;
+
+        while (!(m_uart.ISR & USART_ISR_TC));
+#endif
     }
 
     static void
