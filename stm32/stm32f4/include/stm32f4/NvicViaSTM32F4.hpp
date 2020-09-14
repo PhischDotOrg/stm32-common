@@ -15,25 +15,25 @@ extern "C" {
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
 
+#include <stm32/RccEngine.hpp>
 #include <stm32f4/ScbViaSTM32F4.hpp>
-
-#if 0
-#include <stm32f4/AdcViaSTM32F4.hpp>
-#include <dma/DmaStreamViaSTM32F4.hpp>
-#include <spi/SpiAccessViaSTM32F4.hpp>
-#include <timer/TimerViaSTM32F4.hpp>
-#if (STM32F4_HAVE_USB_OTG)
-#include <usb/UsbCoreViaSTM32F4.hpp>
-#endif
-#endif
 
 #include <FreeRTOSConfig.h>
 
-namespace dma {
-    class DmaStreamViaSTM32F4;
-}
-
+/*****************************************************************************/
 namespace devices {
+/*****************************************************************************/
+
+/*****************************************************************************/
+template<typename EngineT> struct IrqTypeT {
+    static constexpr std::nullptr_t m_irq = nullptr;
+};
+
+#define MAP_NVIC_IRQ(Engine)                                                        \
+template<> struct IrqTypeT< ::stm32::EngineT< (Engine ## _BASE) > > {               \
+    static constexpr auto m_irq = NvicViaSTM32F4Base::Irq_t:: Engine ## _IRQn;      \
+}
+/*****************************************************************************/
 
 /*******************************************************************************
  * 
@@ -148,17 +148,6 @@ protected:
 
     }
 
-    static constexpr Irq_t m_dmaIrq[2][8] = {
-        { /* DMA-1 Streams */
-            DMA1_Stream0_IRQn, DMA1_Stream1_IRQn, DMA1_Stream2_IRQn, DMA1_Stream3_IRQn,
-            DMA1_Stream4_IRQn, DMA1_Stream5_IRQn, DMA1_Stream6_IRQn, DMA1_Stream7_IRQn
-        },
-        { /* DMA-2 Streams */
-            DMA2_Stream0_IRQn, DMA2_Stream1_IRQn, DMA2_Stream2_IRQn, DMA2_Stream3_IRQn,
-            DMA2_Stream4_IRQn, DMA2_Stream5_IRQn, DMA2_Stream6_IRQn, DMA2_Stream7_IRQn
-        }
-    };
-    
     void enableIrqWithPriorityGroup(const Irq_t p_irq, const unsigned p_priorityGroup) const {
         m_nvic->IP[p_irq] = (configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY << (p_priorityGroup - 3)) << (8 - __NVIC_PRIO_BITS);
         m_nvic->ISER[p_irq >> 0x05] = 1 << (p_irq & 0x1F);
@@ -168,51 +157,23 @@ private:
     NVIC_Type * const m_nvic;
 };
 
-#if 0
-/*******************************************************************************
- * 
- ******************************************************************************/
-template<typename T> struct NvicViaSTM32F4_IrqHelper;
+MAP_NVIC_IRQ(DMA1_Stream0);
+MAP_NVIC_IRQ(DMA1_Stream1);
+MAP_NVIC_IRQ(DMA1_Stream2);
+MAP_NVIC_IRQ(DMA1_Stream3);
+MAP_NVIC_IRQ(DMA1_Stream4);
+MAP_NVIC_IRQ(DMA1_Stream5);
+MAP_NVIC_IRQ(DMA1_Stream6);
+MAP_NVIC_IRQ(DMA1_Stream7);
 
-#if defined(ADC1_BASE)
-template<> struct NvicViaSTM32F4_IrqHelper<devices::AdcViaSTM32F4_Adc1> {
-    static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::ADC_IRQn;
-};
-#endif
-#if defined(SPI1_BASE)
-template<> struct NvicViaSTM32F4_IrqHelper<spi::SpiAccessViaSTM32F4_Spi1> {
-    static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::SPI1_IRQn;
-};
-#endif
-#if defined(SPI2_BASE)
-template<> struct NvicViaSTM32F4_IrqHelper<spi::SpiAccessViaSTM32F4_Spi2> {
-    static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::SPI2_IRQn;
-};
-#endif
-#if defined(TIM2_BASE)
-template<> struct NvicViaSTM32F4_IrqHelper<timer::TimerViaSTM32F4_Tim2> {
-    static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::TIM2_IRQn;
-};
-#endif
-#if defined(TIM3_BASE)
-template<> struct NvicViaSTM32F4_IrqHelper<timer::TimerViaSTM32F4_Tim3> {
-    static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::TIM3_IRQn;
-};
-#endif
-#if defined(STM32F4_HAVE_USB_OTG)
-    #if defined(USB_OTG_FS_PERIPH_BASE)
-template<> struct NvicViaSTM32F4_IrqHelper<usb::stm32f4::UsbFullSpeedCore> {
-    static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::OTG_FS_IRQn;
-};
-    #endif /* USB_OTG_FS_PERIPH_BASE */
-    #if defined(USB_OTG_HS_PERIPH_BASE)
-template<> struct NvicViaSTM32F4_IrqHelper<usb::stm32f4::UsbHighSpeedCore> {
-    static const NvicViaSTM32F4Base::Irq_t m_irq = NvicViaSTM32F4Base::OTG_HS_IRQn;
-};
-    #endif /* USB_OTG_HS_PERIPH_BASE */
-#endif /* STM32F4_HAVE_USB_OTG */
-
-#endif
+MAP_NVIC_IRQ(DMA2_Stream0);
+MAP_NVIC_IRQ(DMA2_Stream1);
+MAP_NVIC_IRQ(DMA2_Stream2);
+MAP_NVIC_IRQ(DMA2_Stream3);
+MAP_NVIC_IRQ(DMA2_Stream4);
+MAP_NVIC_IRQ(DMA2_Stream5);
+MAP_NVIC_IRQ(DMA2_Stream6);
+MAP_NVIC_IRQ(DMA2_Stream7);
 
 /*******************************************************************************
  *
@@ -225,31 +186,21 @@ public:
             m_scb.configurePriorityGroup(ScbT::e_PriorityGroup_4);
     }
 
-    ~NvicViaSTM32F4T(void) {
-
+    template<typename EngineT>
+    void
+    enableIrq(const EngineT & /* p_engine */) const {
+        this->enableIrqWithPriorityGroup(IrqTypeT<EngineT>::m_irq);
     }
 
-#if 0
-    void enableIrq(const dma::DmaStreamViaSTM32F4 &p_obj) const {
-        this->enableIrqWithPriorityGroup(m_dmaIrq[p_obj.getDmaEngine()][p_obj.getDmaStream()]);
+    template<typename EngineT>
+    void
+    disableIrq(const EngineT & /* p_engine */) const {
+        this->disableIrq(IrqTypeT<EngineT>::m_irq);
     }
-
-    void disableIrq(const dma::DmaStreamViaSTM32F4 &p_obj) const;    
-    
-    template<typename T>
-    void enableIrq(const T & /* p_obj */) const {
-        this->enableIrqWithPriorityGroup(NvicViaSTM32F4_IrqHelper<T>::m_irq);
-    }
-
-    template<typename T>
-    void disableIrq(const T & /* p_obj */) const {
-        NvicViaSTM32F4Base::disableIrq(NvicViaSTM32F4_IrqHelper<T>::m_irq);
-    }
-#endif
 
 private:
     ScbT &m_scb;
-    
+
     void enableIrqWithPriorityGroup(const Irq_t p_irq) const {
         NvicViaSTM32F4Base::enableIrqWithPriorityGroup(p_irq, static_cast<const unsigned>(this->m_scb.getPriorityGroup()));
     }
@@ -257,6 +208,8 @@ private:
 
 typedef NvicViaSTM32F4T<devices::ScbViaSTM32F4> NvicViaSTM32F4;
 
+/*****************************************************************************/
 } /* devices */
+/*****************************************************************************/
 
 #endif /* _NVIC_STM32F4_HPP_f721335c_757e_4618_a7f1_d39f1820967f */

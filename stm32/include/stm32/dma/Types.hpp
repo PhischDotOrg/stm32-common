@@ -5,7 +5,10 @@
 #ifndef _DMA_TYPES_STM32F4_HPP_2ae06011_8e2d_4019_a043_2756dccd4b9d
 #define _DMA_TYPES_STM32F4_HPP_2ae06011_8e2d_4019_a043_2756dccd4b9d
 
-namespace dma {
+/*****************************************************************************/
+namespace stm32 {
+    namespace dma {
+/*****************************************************************************/
 
 /*******************************************************************************
  * Definition corresponds to DIR Bits in DMA_SxCR Register
@@ -59,7 +62,9 @@ typedef enum DmaTransferStatus_e {
     e_DmaComplete
 } DmaTransferStatus_t;
 
-
+/*****************************************************************************/
+    } /* namespace stm32 */
 } /* namespace dma */
+/*****************************************************************************/
 
 #endif /* _DMA_TYPES_STM32F4_HPP_2ae06011_8e2d_4019_a043_2756dccd4b9d */

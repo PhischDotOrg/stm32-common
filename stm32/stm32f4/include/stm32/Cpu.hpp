@@ -16,7 +16,12 @@
 #include <stm32f4/PwrViaSTM32F4.hpp>
 #include <stm32f4/Rcc.hpp>
 #include <stm32f4/ScbViaSTM32F4.hpp>
+#include <stm32/Spi.hpp>
 #include <stm32/Uart.hpp>
+
+#include <stm32/dma/Engine.hpp>
+#include <stm32/dma/Stream.hpp>
+#include <stm32/dma/Channel.hpp>
 
 namespace stm32 {
     namespace f4 {
@@ -30,6 +35,11 @@ namespace stm32 {
                 using Rcc       = RccT<PllCfg, Flash, Pwr>;
                 using Scb       = ::devices::ScbViaSTM32F4;
 
+                struct Dma {
+                    using Engine1   = ::stm32::dma::DmaEngineT<Rcc, DMA1_BASE>;
+                    using Engine2   = ::stm32::dma::DmaEngineT<Rcc, DMA2_BASE>;
+                }; /* struct Dma */
+
                 struct Gpio {
                     using Engine = ::stm32::GpioEngineT<stm32::f4::GpioPinConfiguration>;
 
@@ -42,6 +52,10 @@ namespace stm32 {
                     using G     = ::stm32::GpioT<Rcc, GPIOG_BASE, ::stm32::f4::GpioPinConfiguration>;
                     using H     = ::stm32::GpioT<Rcc, GPIOH_BASE, ::stm32::f4::GpioPinConfiguration>;
                 }; /* struct gpio */
+
+                struct Spi {
+                    template<typename DmaChannelTxT, typename DmaChannelRxT, typename PinT> using Spi1 = ::stm32::spi::SpiAccessViaSTM32F4Fixed<SPI1_BASE, Rcc, DmaChannelTxT, DmaChannelRxT, PinT>;
+                }; /* struct Spi */
 
                 struct Uart {
                     template<typename PinT> using Usart1 = ::stm32::UartT<Rcc, USART1_BASE, stm32::BrrPolicyWithOversampling, PinT>;
@@ -64,6 +78,11 @@ namespace stm32 {
                 using Rcc       = RccT<PllCfg, Flash, Pwr>;
                 using Scb       = ::devices::ScbViaSTM32F4;
 
+                struct Dma {
+                    using Engine1   = ::stm32::dma::DmaEngineT<Rcc, DMA1_BASE>;
+                    using Engine2   = ::stm32::dma::DmaEngineT<Rcc, DMA2_BASE>;
+                }; /* struct Dma */
+
                 struct Gpio {
                     using Engine = ::stm32::GpioEngineT<stm32::f4::GpioPinConfiguration>;
 
@@ -73,7 +92,11 @@ namespace stm32 {
                     using D     = ::stm32::GpioT<Rcc, GPIOD_BASE, ::stm32::f4::GpioPinConfiguration>;
                     using E     = ::stm32::GpioT<Rcc, GPIOE_BASE, ::stm32::f4::GpioPinConfiguration>;
                     using H     = ::stm32::GpioT<Rcc, GPIOH_BASE, ::stm32::f4::GpioPinConfiguration>;
-                }; /* struct gpio */
+                }; /* struct Gpio */
+
+                struct Spi {
+                    template<typename DmaChannelTxT, typename DmaChannelRxT, typename PinT> using Spi1 = ::stm32::spi::SpiAccessViaSTM32F4Fixed<SPI1_BASE, Rcc, DmaChannelTxT, DmaChannelRxT, PinT>;
+                }; /* struct Spi */
 
                 struct Uart {
                     template<typename PinT> using Usart1 = ::stm32::UartT<Rcc, USART1_BASE, stm32::BrrPolicyWithOversampling, PinT>;
@@ -95,7 +118,16 @@ namespace stm32 {
     using Gpio = Cpu::Gpio;
     using GpioEngine = Cpu::Gpio::Engine;
     using Rcc = Cpu::Rcc;
+    using Dma = Cpu::Dma;
+    using Spi = Cpu::Spi;
     using Uart = Cpu::Uart;
+
+#if defined(DMA1_BASE)
+    MAP_RCC_ENGINE(DMA1);
+#endif
+#if defined(DMA2_BASE)
+    MAP_RCC_ENGINE(DMA2);
+#endif
 
 #if defined(GPIOA_BASE)
     MAP_RCC_ENGINE(GPIOA);
@@ -121,6 +153,23 @@ namespace stm32 {
 #if defined(GPIOH_BASE)
     MAP_RCC_ENGINE(GPIOH);
 #endif
+
+#if defined(SPI1_BASE)
+    MAP_RCC_ENGINE(SPI1);
+#endif
+#if defined(SPI2_BASE)
+    MAP_RCC_ENGINE(SPI2);
+#endif
+#if defined(SPI3_BASE)
+    MAP_RCC_ENGINE(SPI3);
+#endif
+/* FIXME Are the engines really not present? */
+// #if defined(SPI4_BASE)
+//     MAP_RCC_ENGINE(SPI4);
+// #endif
+// #if defined(SPI5_BASE)
+//     MAP_RCC_ENGINE(SPI5);
+// #endif
 
 #if defined(USART1_BASE)
     MAP_RCC_ENGINE(USART1);

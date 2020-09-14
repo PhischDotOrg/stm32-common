@@ -245,6 +245,7 @@ public:
     ~UartT() {
         this->terminate();
 
+        /* FIXME Disable Alternate Function on I/O Pins */
         // m_tx.disable();
         // m_rx.disable();
 

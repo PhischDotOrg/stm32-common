@@ -49,9 +49,9 @@ struct GpioPinConfiguration {
 //        e_I2c1 = 1,
 //        e_I2c2 = 1,
 //        e_I2c3 = 1,
-        e_Spi1 = 5,
-        e_Spi2 = 5,
-        e_Spi3 = 6,
+        e_SPI1 = 5,
+        e_SPI2 = 5,
+        e_SPI3 = 6,
         e_USART1 = 7,
         e_USART2 = 7,
         e_Uart3 = 7,
@@ -95,6 +95,16 @@ private:
 template<> struct IoMuxT< EngineT< (Engine ## _BASE) > > {                              \
     static constexpr GpioPinConfiguration::Function_e m_alternateFn = GpioPinConfiguration::Function_e::e_##Engine; \
 }
+
+#if defined(SPI1_BASE)
+    MAP_IO_ENGINE(SPI1);
+#endif
+#if defined(SPI2_BASE)
+    MAP_IO_ENGINE(SPI2);
+#endif
+#if defined(SPI3_BASE)
+    MAP_IO_ENGINE(SPI3);
+#endif
 
 #if defined(USART1_BASE)
 MAP_IO_ENGINE(USART1);

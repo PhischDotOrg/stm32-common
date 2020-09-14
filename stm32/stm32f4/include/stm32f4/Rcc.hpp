@@ -57,10 +57,10 @@ namespace stm32 {
                 e_Wwdg      = RCC_APB1ENR_WWDGEN,
 #endif
 #if defined(RCC_APB1ENR_SPI2EN)
-                e_Spi2      = RCC_APB1ENR_SPI2EN,
+                e_SPI2      = RCC_APB1ENR_SPI2EN,
 #endif
 #if defined(RCC_APB1ENR_SPI3EN)
-                e_Spi3      = RCC_APB1ENR_SPI3EN,
+                e_SPI3      = RCC_APB1ENR_SPI3EN,
 #endif
 #if defined(RCC_APB1ENR_USART2EN)
                 e_USART2    = RCC_APB1ENR_USART2EN,
@@ -123,7 +123,7 @@ namespace stm32 {
                 e_Sdio      = RCC_APB2ENR_SDIOEN,
 #endif
 #if defined(RCC_APB2ENR_SPI1EN)
-                e_Spi1      = RCC_APB2ENR_SPI1EN,
+                e_SPI1      = RCC_APB2ENR_SPI1EN,
 #endif
 #if defined(RCC_APB2ENR_SYSCFGEN)
                 e_SysCfg    = RCC_APB2ENR_SYSCFGEN,
@@ -177,10 +177,10 @@ namespace stm32 {
                 e_CcmDataRam    = RCC_AHB1ENR_CCMDATARAMEN,
 #endif
 #if defined(RCC_AHB1ENR_DMA1EN)
-                e_Dma1          = RCC_AHB1ENR_DMA1EN,
+                e_DMA1          = RCC_AHB1ENR_DMA1EN,
 #endif
 #if defined(RCC_AHB1ENR_DMA2EN)
-                e_Dma2          = RCC_AHB1ENR_DMA2EN,
+                e_DMA2          = RCC_AHB1ENR_DMA2EN,
 #endif
 #if defined(RCC_AHB1ENR_ETHMACEN)
                 e_EthMac        = RCC_AHB1ENR_ETHMACEN,
