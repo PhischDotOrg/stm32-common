@@ -157,23 +157,55 @@ private:
     NVIC_Type * const m_nvic;
 };
 
+#if defined(DMA1_Stream0_BASE)
 MAP_NVIC_IRQ(DMA1_Stream0);
+#endif
+#if defined(DMA1_Stream1_BASE)
 MAP_NVIC_IRQ(DMA1_Stream1);
+#endif
+#if defined(DMA1_Stream2_BASE)
 MAP_NVIC_IRQ(DMA1_Stream2);
+#endif
+#if defined(DMA1_Stream3_BASE)
 MAP_NVIC_IRQ(DMA1_Stream3);
+#endif
+#if defined(DMA1_Stream4_BASE)
 MAP_NVIC_IRQ(DMA1_Stream4);
+#endif
+#if defined(DMA1_Stream5_BASE)
 MAP_NVIC_IRQ(DMA1_Stream5);
+#endif
+#if defined(DMA1_Stream6_BASE)
 MAP_NVIC_IRQ(DMA1_Stream6);
+#endif
+#if defined(DMA1_Stream7_BASE)
 MAP_NVIC_IRQ(DMA1_Stream7);
+#endif
 
+#if defined(DMA2_Stream0_BASE)
 MAP_NVIC_IRQ(DMA2_Stream0);
+#endif
+#if defined(DMA2_Stream1_BASE)
 MAP_NVIC_IRQ(DMA2_Stream1);
+#endif
+#if defined(DMA2_Stream2_BASE)
 MAP_NVIC_IRQ(DMA2_Stream2);
+#endif
+#if defined(DMA2_Stream3_BASE)
 MAP_NVIC_IRQ(DMA2_Stream3);
+#endif
+#if defined(DMA2_Stream4_BASE)
 MAP_NVIC_IRQ(DMA2_Stream4);
+#endif
+#if defined(DMA2_Stream5_BASE)
 MAP_NVIC_IRQ(DMA2_Stream5);
+#endif
+#if defined(DMA2_Stream6_BASE)
 MAP_NVIC_IRQ(DMA2_Stream6);
+#endif
+#if defined(DMA2_Stream7_BASE)
 MAP_NVIC_IRQ(DMA2_Stream7);
+#endif
 
 /*******************************************************************************
  *
