@@ -18,21 +18,40 @@ namespace stm32 {
 
         public:
             typedef enum FunctionAPB1_e {
+                e_TIM2          = RCC_APB1ENR_TIM2EN,
+                e_TIM3          = RCC_APB1ENR_TIM3EN,
+                e_TIM4          = RCC_APB1ENR_TIM4EN,
+                e_WWDG          = RCC_APB1ENR_WWDGEN,
+                e_SPI2          = RCC_APB1ENR_SPI2EN,
                 e_USART2        = RCC_APB1ENR_USART2EN,
                 e_USART3        = RCC_APB1ENR_USART3EN,
+                e_I2C1          = RCC_APB1ENR_I2C1EN,
+                e_USB           = RCC_APB1ENR_USBEN,
+                e_CAN1          = RCC_APB1ENR_CAN1EN,
+                e_BKP           = RCC_APB1ENR_BKPEN,
+                e_PWR           = RCC_APB1ENR_PWREN,
             } FunctionAPB1_t;
 
             typedef enum FunctionAPB2_e {
-                e_USART1        = RCC_APB2ENR_USART1EN,
+                e_AFIO          = RCC_APB2ENR_AFIOEN,
                 e_GPIOA         = RCC_APB2ENR_IOPAEN,
                 e_GPIOB         = RCC_APB2ENR_IOPBEN,
                 e_GPIOC         = RCC_APB2ENR_IOPCEN,
                 e_GPIOD         = RCC_APB2ENR_IOPDEN,
                 e_GPIOE         = RCC_APB2ENR_IOPEEN,
+                e_USART1        = RCC_APB2ENR_USART1EN,
+                e_ADC1          = RCC_APB2ENR_ADC1EN,
+                e_ADC2          = RCC_APB2ENR_ADC2EN,
+                e_TIM1          = RCC_APB2ENR_TIM1EN,
+                e_SPI1          = RCC_APB2ENR_SPI1EN,
             } FunctionAPB2_t;
 
-            typedef enum FunctionAHB1_e {
-            } FunctionAHB1_t;
+            typedef enum FunctionAHB_e {
+                e_DMA1          = RCC_AHBENR_DMA1EN,
+                e_SRAM          = RCC_AHBENR_SRAMEN,
+                e_FLITF         = RCC_AHBENR_FLITFEN,
+                e_CRC           = RCC_AHBENR_CRCEN,
+            } FunctionAHB_t;
 
             Rcc(RCC_TypeDef * const p_rcc, const PllCfg &p_pllCfg, const Flash &p_flash, const Pwr & /* p_pwr */)
               : RccViaSTM32T(*p_rcc), m_pllCfg(p_pllCfg) /* , m_flash(p_flash), m_pwr(p_pwr) */ {
@@ -74,7 +93,7 @@ namespace stm32 {
             }
 
             void disable(const FunctionAPB1_e &p_engine) const {
-                this->m_rcc.APB1ENR |= ~p_engine;
+                this->m_rcc.APB1ENR &= ~p_engine;
             }
 
             void enable(const FunctionAPB2_e &p_engine) const {
@@ -82,7 +101,15 @@ namespace stm32 {
             }
 
             void disable(const FunctionAPB2_e &p_engine) const {
-                this->m_rcc.APB2ENR |= ~p_engine;
+                this->m_rcc.APB2ENR &= ~p_engine;
+            }
+
+            void enable(const FunctionAHB_e &p_engine) const {
+                this->m_rcc.AHBENR |= p_engine;
+            }
+
+            void disable(const FunctionAHB_e &p_engine) const {
+                this->m_rcc.AHBENR &= ~p_engine;
             }
 
             unsigned getClockSpeed(const FunctionAPB1_t /* p_function */) const {

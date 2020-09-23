@@ -11,29 +11,31 @@
 #include <stm32f4/FlashViaSTM32F4.hpp>
 #include <stm32/Gpio.hpp>
 #include <stm32f4/GpioPinConfiguration.hpp>
-#include <stm32f4/NvicViaSTM32F4.hpp>
+#include <stm32/Nvic.hpp>
 #include <stm32f4/PllCfg.hpp>
 #include <stm32f4/PwrViaSTM32F4.hpp>
 #include <stm32f4/Rcc.hpp>
-#include <stm32f4/ScbViaSTM32F4.hpp>
+#include <stm32/Scb.hpp>
 #include <stm32/Spi.hpp>
 #include <stm32/Uart.hpp>
 
-#include <stm32/dma/Engine.hpp>
-#include <stm32/dma/Stream.hpp>
-#include <stm32/dma/Channel.hpp>
+#include <stm32f4/dma/Engine.hpp>
+#include <stm32f4/dma/Stream.hpp>
+#include <stm32f4/dma/Channel.hpp>
 
+/*****************************************************************************/
 namespace stm32 {
+/*****************************************************************************/
+    using Nvic      = NvicT<Scb>;
+
     namespace f4 {
 #if defined(STM32F407xx)
         namespace f407 {
             struct Cpu {
                 using Flash     = ::stm32::f4::Flash;
-                using Nvic      = ::devices::NvicViaSTM32F4T<devices::ScbViaSTM32F4>;
                 using PllCfg    = ::stm32::f4::PllCfgT<8, ::stm32::f4::f407::PllCfgValidCheck>;
                 using Pwr       = ::stm32::f4::Pwr;
                 using Rcc       = RccT<PllCfg, Flash, Pwr>;
-                using Scb       = ::devices::ScbViaSTM32F4;
 
                 struct Dma {
                     using Engine1   = ::stm32::dma::DmaEngineT<Rcc, DMA1_BASE>;
@@ -72,11 +74,9 @@ namespace stm32 {
         namespace f411 {
             struct Cpu {
                 using Flash     = ::stm32::f4::Flash;
-                using Nvic      = ::devices::NvicViaSTM32F4T<devices::ScbViaSTM32F4>;
                 using PllCfg    = ::stm32::f4::PllCfgT<16, ::stm32::f4::f411::PllCfgValidCheck>;
                 using Pwr       = ::stm32::f4::Pwr;
                 using Rcc       = RccT<PllCfg, Flash, Pwr>;
-                using Scb       = ::devices::ScbViaSTM32F4;
 
                 struct Dma {
                     using Engine1   = ::stm32::dma::DmaEngineT<Rcc, DMA1_BASE>;
@@ -115,10 +115,10 @@ namespace stm32 {
     using Cpu = f4::f411::Cpu;
 #endif
 
+    using Dma = Cpu::Dma;
     using Gpio = Cpu::Gpio;
     using GpioEngine = Cpu::Gpio::Engine;
     using Rcc = Cpu::Rcc;
-    using Dma = Cpu::Dma;
     using Spi = Cpu::Spi;
     using Uart = Cpu::Uart;
 
@@ -189,6 +189,62 @@ namespace stm32 {
 #if defined(USART6_BASE)
     MAP_RCC_ENGINE(USART6);
 #endif
+/*****************************************************************************/
+
+/*****************************************************************************/
+#if defined(DMA1_Stream0_BASE)
+    MAP_NVIC_IRQ(DMA1_Stream0);
+#endif
+#if defined(DMA1_Stream1_BASE)
+    MAP_NVIC_IRQ(DMA1_Stream1);
+#endif
+#if defined(DMA1_Stream2_BASE)
+    MAP_NVIC_IRQ(DMA1_Stream2);
+#endif
+#if defined(DMA1_Stream3_BASE)
+    MAP_NVIC_IRQ(DMA1_Stream3);
+#endif
+#if defined(DMA1_Stream4_BASE)
+    MAP_NVIC_IRQ(DMA1_Stream4);
+#endif
+#if defined(DMA1_Stream5_BASE)
+    MAP_NVIC_IRQ(DMA1_Stream5);
+#endif
+#if defined(DMA1_Stream6_BASE)
+    MAP_NVIC_IRQ(DMA1_Stream6);
+#endif
+#if defined(DMA1_Stream7_BASE)
+    MAP_NVIC_IRQ(DMA1_Stream7);
+#endif
+
+#if defined(DMA2_Stream0_BASE)
+    MAP_NVIC_IRQ(DMA2_Stream0);
+#endif
+#if defined(DMA2_Stream1_BASE)
+    MAP_NVIC_IRQ(DMA2_Stream1);
+#endif
+#if defined(DMA2_Stream2_BASE)
+    MAP_NVIC_IRQ(DMA2_Stream2);
+#endif
+#if defined(DMA2_Stream3_BASE)
+    MAP_NVIC_IRQ(DMA2_Stream3);
+#endif
+#if defined(DMA2_Stream4_BASE)
+    MAP_NVIC_IRQ(DMA2_Stream4);
+#endif
+#if defined(DMA2_Stream5_BASE)
+    MAP_NVIC_IRQ(DMA2_Stream5);
+#endif
+#if defined(DMA2_Stream6_BASE)
+    MAP_NVIC_IRQ(DMA2_Stream6);
+#endif
+#if defined(DMA2_Stream7_BASE)
+    MAP_NVIC_IRQ(DMA2_Stream7);
+#endif
+/*****************************************************************************/
+
+/*****************************************************************************/
 } /* namespace stm32 */
+/*****************************************************************************/
 
 #endif /* _STM32_CPU_HPP_F936BB8E_9326_416B_BD61_9F6F683DFF3D */
