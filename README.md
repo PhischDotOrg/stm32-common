@@ -88,7 +88,7 @@ It is used to look up CPU/Board-specific files in a `boards` subdirectory. As of
 ## System APIs
 
 | CPU       | Flash | MCO   | NVIC  | PLL   | RCC   | SCB   |
-| --------- |*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|
+| --------- |:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
 | STM32F103 | [x]   | [x]   | [x]   | [x]   | [x]   | [x]   |
 | STM32F407 | [x]   | [x]   | [x]   | [x]   | [x]   | [x]   |
 | STM32F411 | [x]   | [x]   | [x]   | [x]   | [x]   | [x]   |
@@ -97,7 +97,7 @@ It is used to look up CPU/Board-specific files in a `boards` subdirectory. As of
 ## Peripheral APIs
 
 | CPU       | ADC   | DMA   | GPIO  | I2C   | SPI   | Timer | UART  | USB   |
-| --------- |*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|
+| --------- |:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
 | STM32F103 | [ ]   | [ ]   | [ ]   | [ ]   | [ ]   | [ ]   | [x]   | [ ]   |
 | STM32F407 | [ ]   | [x]   | [x]   | [ ]   | [x]   | [ ]   | [x]   | [ ]   |
 | STM32F411 | [ ]   | [x]   | [x]   | [ ]   | [x]   | [ ]   | [x]   | [ ]   |
