@@ -86,6 +86,7 @@ It is used to look up CPU/Board-specific files in a `boards` subdirectory. As of
 # Supported APIs
 
 ## System APIs
+
 | CPU       | Flash | MCO   | NVIC  | PLL   | RCC   | SCB   |
 | --------- |*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|
 | STM32F103 | [x]   | [x]   | [x]   | [x]   | [x]   | [x]   |
@@ -94,6 +95,7 @@ It is used to look up CPU/Board-specific files in a `boards` subdirectory. As of
 | STM32L432 | [x]   | [x]   | [x]   | [x]   | [x]   | [x]   |
 
 ## Peripheral APIs
+
 | CPU       | ADC   | DMA   | GPIO  | I2C   | SPI   | Timer | UART  | USB   |
 | --------- |*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|
 | STM32F103 | [ ]   | [ ]   | [ ]   | [ ]   | [ ]   | [ ]   | [x]   | [ ]   |
