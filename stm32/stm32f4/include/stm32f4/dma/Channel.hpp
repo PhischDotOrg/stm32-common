@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 #include <stm32/dma/Types.hpp>
-#include <stm32/dma/Stream.hpp>
+#include <stm32f4/dma/Stream.hpp>
 
 /*****************************************************************************/
 namespace stm32 {
@@ -32,10 +32,6 @@ public:
 
     ChannelT(DmaStreamT &p_stream, const unsigned p_channel)
       : m_stream(p_stream), m_channel(p_channel), m_streamCallback(*this), m_callback(NULL) {
-
-    }
-
-    ~ChannelT() {
 
     }
 

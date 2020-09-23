@@ -74,6 +74,11 @@ public:
     constexpr GpioT(const RccT &p_rcc)
       : GpioEngineT<PinConfigurationPolicyT>(reinterpret_cast<GPIO_TypeDef *>(Address)), m_rcc(p_rcc) {
         m_rcc.enableEngine(* static_cast<EngineT<Address> *>(this));
+        /*
+        * Assert that class type really is just the size of two pointers, i.e. that
+        * the base class EngineT<> does not add to the size of the object
+        */
+        static_assert(sizeof(GpioT<RccT, Address, PinConfigurationPolicyT>) == 2 * sizeof(void *));
     }
 
     ~GpioT() {
@@ -81,11 +86,6 @@ public:
     }
 }; /* class GpioT */
 
-/*
- * Assert that class type really is just the size of two pointers, i.e. that
- * the base class EngineT<> does not add to the size of the object
- */
-// static_assert(sizeof(GpioT<void *, 0>) == 2 * sizeof(void *));
 /*****************************************************************************/
 
 /*****************************************************************************/

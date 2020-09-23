@@ -10,7 +10,7 @@
 
 #include <stm32/Engine.hpp>
 #include <stm32/dma/Types.hpp>
-#include <stm32/dma/Engine.hpp>
+#include <stm32f4/dma/Engine.hpp>
 
 /*****************************************************************************/
 namespace stm32 {
