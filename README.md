@@ -82,3 +82,21 @@ It is used to look up CPU/Board-specific files in a `boards` subdirectory. As of
 - _doxygen_: Build the Doxygen documentation for the C++ Code.
 - _bin_: Build a `.bin`, `.s19`and `.hex` file from the `.elf` file. Also generate an ASCII dump from the `.bin` file.
   - This may be useful if you need to flash using other tools. The ASCII dump may come in handy if you need to compare binary changes between two builds.
+
+# Supported APIs
+
+## System APIs
+| CPU       | Flash | MCO   | NVIC  | PLL   | RCC   | SCB   |
+| --------- |*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|
+| STM32F103 | [x]   | [x]   | [x]   | [x]   | [x]   | [x]   |
+| STM32F407 | [x]   | [x]   | [x]   | [x]   | [x]   | [x]   |
+| STM32F411 | [x]   | [x]   | [x]   | [x]   | [x]   | [x]   |
+| STM32L432 | [x]   | [x]   | [x]   | [x]   | [x]   | [x]   |
+
+## Peripheral APIs
+| CPU       | ADC   | DMA   | GPIO  | I2C   | SPI   | Timer | UART  | USB   |
+| --------- |*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|*-----*|
+| STM32F103 | [ ]   | [ ]   | [ ]   | [ ]   | [ ]   | [ ]   | [x]   | [ ]   |
+| STM32F407 | [ ]   | [x]   | [x]   | [ ]   | [x]   | [ ]   | [x]   | [ ]   |
+| STM32F411 | [ ]   | [x]   | [x]   | [ ]   | [x]   | [ ]   | [x]   | [ ]   |
+| STM32L432 | [ ]   | [ ]   | [ ]   | [ ]   | [ ]   | [ ]   | [x]   | [ ]   |
