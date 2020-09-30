@@ -117,6 +117,14 @@ public:
 
         *cr &= ~((0b11 << modeOffs) | (0b11 << confOffs));
         *cr |= (static_cast<unsigned>(modeBits) << modeOffs) | (static_cast<unsigned>(confBits) << confOffs);
+
+        if (p_mode == Mode_e::e_Input) {
+            if (p_termination == Termination_e::e_PullUp) {
+                p_engine.ODR |= (1 << p_pin);
+            } else if (p_termination == Termination_e::e_PullDown) {
+                p_engine.ODR &= ~(1 << p_pin);
+            }
+        }
     }
 
     template<typename EngineT>
