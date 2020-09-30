@@ -113,6 +113,12 @@ namespace stm32 {
     MAP_NVIC_IRQ(DMA1_Channel5);
     MAP_NVIC_IRQ(DMA1_Channel6);
     MAP_NVIC_IRQ(DMA1_Channel7);
+
+    /* FIXME TIM1 has more than one IRQ handler */
+    // MAP_NVIC_IRQ(TIM1);
+    MAP_NVIC_IRQ(TIM2);
+    MAP_NVIC_IRQ(TIM3);
+    MAP_NVIC_IRQ(TIM4);
 } /* namespace stm32 */
 
 #endif /* _STM32_CPU_HPP_22D04FB3_F771_4620_A5A3_D3F32BBB711A */
