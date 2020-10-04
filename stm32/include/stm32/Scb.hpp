@@ -51,6 +51,24 @@ public:
     ScbPriorityGroup_t getPriorityGroup(void) const {
         return static_cast<ScbPriorityGroup_t>(((m_scb.AIRCR & SCB_AIRCR_PRIGROUP_Msk) >> SCB_AIRCR_PRIGROUP_Pos));
     }
+
+    void
+    setSleepDeep(bool p_sleepDeep) const {
+        if (p_sleepDeep) {
+            m_scb.SCR |= (1 << SCB_SCR_SLEEPDEEP_Pos);
+        } else {
+            m_scb.SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
+        }
+    }
+
+    void
+    setSleepOnExit(bool p_sleepOnExit) const {
+        if (p_sleepOnExit) {
+            m_scb.SCR |= (1 << SCB_SCR_SLEEPONEXIT_Pos);
+        } else {
+            m_scb.SCR &= ~SCB_SCR_SLEEPONEXIT_Msk;
+        }
+    }
 };
 /*****************************************************************************/
 

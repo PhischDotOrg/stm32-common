@@ -29,8 +29,8 @@ namespace stm32 {
             struct Cpu {
                 using Flash     = f1::Flash;
                 using PllCfg    = f1::PllCfg;
-                using Pwr       = f1::Pwr;
                 using Rcc       = f1::Rcc;
+                using Pwr       = f1::PwrT<Rcc, Scb>;
 
                 struct Dma {
                     using Engine                                    = ::stm32::f1::DmaEngineT<Rcc, DMA1_BASE>;
@@ -93,6 +93,8 @@ namespace stm32 {
     MAP_RCC_ENGINE(GPIOB);
     MAP_RCC_ENGINE(GPIOC);
     MAP_RCC_ENGINE(GPIOD);
+
+    MAP_RCC_ENGINE(PWR);
 
     MAP_RCC_ENGINE(SPI1);
     MAP_RCC_ENGINE(SPI2);
