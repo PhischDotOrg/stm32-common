@@ -27,11 +27,11 @@ MEMORY
   ISR (r)       : ORIGIN = 0x08000000, LENGTH = 512
   FIXEDDATA (r) : ORIGIN = 0x08000200, LENGTH = 512
   FLASH (rx)    : ORIGIN = 0x08000400, LENGTH = 63K
-  STACK (rw)    : ORIGIN = 0x20000000, LENGTH = 4K
+  STACK (rw)    : ORIGIN = 0x20000000, LENGTH = 1K
   /* Make sure the length of this section matches the definition of configTOTAL_HEAP_SIZE in FreeRTOSConfig.h */
-  HEAP (rw)     : ORIGIN = 0x20001000, LENGTH = 4K
+  HEAP (rw)     : ORIGIN = 0x20000400, LENGTH = 9K
   /* RAM (rw)      : ORIGIN = ORIGIN(HEAP) + LENGTH(HEAP), LENGTH = 20K - LENGTH(STACK) - LENGTH(HEAP) */
-  RAM (rw)      : ORIGIN = 0x20002000, LENGTH = 12K
+  RAM (rw)      : ORIGIN = 0x20002800, LENGTH = 10K
 }
 
 /* Define output sections */
