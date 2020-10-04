@@ -53,7 +53,7 @@ namespace stm32 {
                 e_CRC           = RCC_AHBENR_CRCEN,
             } FunctionAHB_t;
 
-            Rcc(RCC_TypeDef * const p_rcc, const PllCfg &p_pllCfg, const Flash &p_flash, const Pwr & /* p_pwr */)
+            Rcc(RCC_TypeDef * const p_rcc, const PllCfg &p_pllCfg, const Flash &p_flash)
               : RccViaSTM32T(*p_rcc), m_pllCfg(p_pllCfg) /* , m_flash(p_flash), m_pwr(p_pwr) */ {
                 p_flash.setupLatency(p_pllCfg.getSysclkSpeedInHz());
 
