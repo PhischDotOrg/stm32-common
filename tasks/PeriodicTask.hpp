@@ -54,7 +54,7 @@ public:
     typedef int(*Callback_t)(void * p_data);
 
 public:
-    PeriodicCallback(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs, Callback_t p_callback, void * p_data)
+    PeriodicCallback(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs, Callback_t p_callback, void * p_data = nullptr)
        : Task(p_name, p_priority), m_period(p_periodMs / portTICK_PERIOD_MS), m_callback(p_callback), m_data(p_data) {
 
     };
