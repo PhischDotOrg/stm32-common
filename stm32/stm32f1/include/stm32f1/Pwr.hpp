@@ -58,8 +58,10 @@ namespace stm32 {
                     break;
                 }
 
+#if !defined(HOSTBUILD)
                 __asm__ __volatile__("cpsid i");
                 __asm__ __volatile__("wfi");
+#endif /* defined(HOSTBUILD) */
             }
         };
     } /* namespace f1 */
