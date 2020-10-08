@@ -87,11 +87,11 @@ if ((NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
     add_definitions("-Wno-error=unused-variable")
 endif()
 
+add_definitions("-DGPIO_ENV=STM32")
+
 ###############################################################################
 # Set up the environment for the Phisch.Org libraries
 ###############################################################################
-add_definitions("-DGPIO_ENV=STM32")
-
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
     add_definitions("-DHAVE_STM32")
     add_definitions("-DSTM32_CPU_FAMILY=${STM32_CPU_FAMILY}")
@@ -100,6 +100,10 @@ if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
     add_definitions("-DUART_ENV=STM32")
 else()
     add_definitions("-DHOSTBUILD")
+
+    add_definitions("-DHAVE_STM32")
+    add_definitions("-DSTM32_CPU_FAMILY=${STM32_CPU_FAMILY}")
+    add_definitions("-D${STM32_CPU_FAMILY}")
 
     #    add_definitions("-DUART_ENV=${CMAKE_SYSTEM_NAME}")
 endif()
@@ -174,3 +178,4 @@ else()
     set(GDBINIT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/gdbinit-native.tpl)
 endif()
 configure_file(${GDBINIT_FILE} ${CMAKE_CURRENT_BINARY_DIR}/.gdbinit)
+

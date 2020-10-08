@@ -106,6 +106,30 @@ vApplicationTickHook(void) {
  */
 }
 
+#if defined(HOSTBUILD)
+
+void
+vTaskDelete(void) {
+
+}
+
+void
+vTaskStartScheduler(void) {
+
+}
+
+void
+xTaskGenericNotifyFromISR(void) {
+
+}
+
+void
+xTaskNotifyWait(void) {
+    
+}
+
+#endif /* defined(HOSTBUILD) */
+
 #if defined(__cplusplus)
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

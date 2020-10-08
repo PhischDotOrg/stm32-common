@@ -19,12 +19,12 @@ extern "C" {
 extern "C" {
 #endif /* defined(__cplusplus) */
 
-#if !defined(HOSTBUILD)
+// #if !defined(HOSTBUILD)
 #include <FreeRTOS.h>
 #include <semphr.h>
-#else
-typedef void * SemaphoreHandle_t;
-#endif /* defined(HOSTBUILD) */
+// #else
+// typedef void * SemaphoreHandle_t;
+// #endif /* defined(HOSTBUILD) */
 
 #include "stm32f4xx.h"
 
