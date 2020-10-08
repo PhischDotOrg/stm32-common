@@ -200,7 +200,7 @@ public:
     };
 
     int
-    shift(const uint8_t p_bits, uint8_t * const p_rx = nullptr, const uint8_t *p_tx = nullptr, const ::spi::Mode p_mode = ::spi::SpiMode0) const {
+    shift(const uint32_t p_bits, uint8_t * const p_rx = nullptr, const uint8_t *p_tx = nullptr, const ::spi::Mode p_mode = ::spi::SpiMode0) const {
         int rc = -1;
 
         assert((p_bits > 0) && (p_bits < (1 << 16)));
