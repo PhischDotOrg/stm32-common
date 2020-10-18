@@ -3,18 +3,14 @@ name: STM32 Regression
 on: [workflow_dispatch]
 
 jobs:
-  build:
+  checkout-common:
+    name: Checkout Common Repository
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        project: [
-          stm32f1-bluepill,
-          stm32l4-nucleo32,
-          stm32f4-nucleo64,
-          stm32f4-minimal
+        os: [
+          ubuntu-latest
         ]
-        # build_type: [ Release, RelWithDebInfo, MinSizeRel, Debug ]
 
     steps:
       - name: Setup Node
@@ -22,15 +18,43 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Checkout Repositories
+      - name: Checkout Common Repository
         uses: actions/checkout@v2
-        working-directory: ${{runner.workspace}}
+
+        with:
+          submodules: true
+
+  checkout-project:
+    name: Checkout Project Repositories
+    runs-on: ubuntu-latest
+    needs: checkout-common
+    strategy:
+      matrix:
+        project: [
+          # stm32f1-bluepill,
+          # stm32l4-nucleo32,
+          # stm32f4-nucleo64,
+          stm32f4-minimal
+        ]
+
+    steps:
+      - name: Checkout Project Repository
+        uses: actions/checkout@v2
 
         with:
           repository: PhischDotOrg/${{ matrix.project }}
           path: src-${{ matrix.project }}
 
-      - name: CMake Configure
-        working-directory: ${{runner.workspace}}/src-${{ matrix.project }}
+      - name: Link to Common Repository
+        working-directory: src-${{ matrix.project }}
 
-        run: git describe --always --dirty=+
+        run: ln -s $GITHUB_WORKSPACE common
+
+      - name: CMake Configure
+        # run: cmake -S src-${{ matrix.project }} -B build-${{ matrix.project }} -DUNITTEST=true
+        run: |
+          ls -l
+          ls -l src-${{ matrix.project }}
+          ls -l src-${{ matrix.project }}/common
+          ls -l src-${{ matrix.project }}/common/
+
