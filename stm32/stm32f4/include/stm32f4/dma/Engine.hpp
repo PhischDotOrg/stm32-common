@@ -175,7 +175,7 @@ public:
 protected:
     DmaEngine(DMA_TypeDef & p_dma, unsigned p_engine)
       : m_dma(p_dma), m_engine(p_engine) {
-
+          (void) m_engine;
     }
 
     ~DmaEngine() {

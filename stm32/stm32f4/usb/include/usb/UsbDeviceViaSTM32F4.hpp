@@ -11,8 +11,12 @@
 
 #include <stm32f4xx.h>
 
-namespace usb {
-    namespace stm32f4 {
+#include <cstddef>
+
+/******************************************************************************/
+namespace stm32 {
+    namespace usb {
+/******************************************************************************/
 
 /*******************************************************************************
  *
@@ -27,7 +31,7 @@ class OutEndpointViaSTM32F4;
  * Class that encapsulates the operation of the STM32F4's USB On-the-Go (OTG)
  * Core in USB Device Mode. 
  ******************************************************************************/
-class UsbDeviceViaSTM32F4 : public UsbHwDevice {
+class UsbDeviceViaSTM32F4 : public ::usb::UsbHwDevice {
 public:
     /**
      * @brief Typedef for USB Packet ID (PID).
@@ -78,7 +82,7 @@ private:
      * 
      * \see #m_irq_handler
      */
-    typedef void (usb::stm32f4::UsbDeviceViaSTM32F4::*irq_handler_fn)() const;
+    typedef void (stm32::usb::UsbDeviceViaSTM32F4::*irq_handler_fn)() const;
 
     /**
      * @brief Private Data Type to construct the Table of IRQ Handlers.
@@ -277,10 +281,9 @@ private:
     void initialize(void) const;
 };
 
-/*******************************************************************************
- *
- ******************************************************************************/
-    } /* namespace stm32f4 */
-} /* namespace usb */
+/******************************************************************************/
+    } /* namespace usb */
+} /* namespace stm32 */
+/******************************************************************************/
 
 #endif /* _USBDEVICE_HPP_32f4ccff_87e2_4eac_87e7_6297472e365d */

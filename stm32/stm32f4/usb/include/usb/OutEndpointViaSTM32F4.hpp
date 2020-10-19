@@ -9,9 +9,12 @@
 
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 
-namespace usb {
+#include <cstddef>
 
-    namespace stm32f4 {
+/******************************************************************************/
+namespace stm32 {
+    namespace usb {
+/******************************************************************************/
 
         class OutEndpointViaSTM34F4Callback;
 
@@ -38,7 +41,7 @@ private:
      * 
      * \see #m_irq_handler
      */
-    typedef void (usb::stm32f4::OutEndpointViaSTM32F4::*irq_handler_fn)() const;
+    typedef void (stm32::usb::OutEndpointViaSTM32F4::*irq_handler_fn)() const;
 
     /**
      * @brief Private enum / typedef for OUT Endpoint IRQs.
@@ -196,19 +199,17 @@ public:
 ///@}
 };
 
-/*******************************************************************************
- *
- ******************************************************************************/
-    } /* namespace stm32f4 */
-} /* namespace usb */
+/******************************************************************************/
+    } /* namespace usb */
+} /* namespace stm32 */
+/******************************************************************************/
 
 #include <usb/UsbOutEndpoint.hpp>
 
-/*******************************************************************************
- *
- ******************************************************************************/
-namespace usb {
-    namespace stm32f4 {
+/******************************************************************************/
+namespace stm32 {
+    namespace usb {
+/******************************************************************************/
 
 /***************************************************************************//**
  * @brief Interface between the OUT Endpoint driver and the type-specific classes.
@@ -389,7 +390,7 @@ private:
      * 
      * \see ::usb::stm32f4::CtrlOutEndpointViaSTM32F4::m_irq_handler
      */
-    typedef void (usb::stm32f4::CtrlOutEndpointViaSTM32F4::*irq_handler_fn)() const;
+    typedef void (stm32::usb::CtrlOutEndpointViaSTM32F4::*irq_handler_fn)() const;
 
     /**
      * @brief Private Data Type to construct the Table of IRQ Handlers.
@@ -414,7 +415,7 @@ private:
      * 
      * \see handleSetupDoneIrq
      */
-    UsbSetupPacket_t            m_setupPacketBuffer;
+    ::usb::UsbSetupPacket_t m_setupPacketBuffer;
 
     /**
      * @brief Callback to USB-generic Control OUT Endpoint implementation.
@@ -425,7 +426,7 @@ private:
      * \see #transferComplete
      * \see #handleSetupDoneIrq
      */
-    UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &    m_endpointCallout;
+    ::usb::UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &    m_endpointCallout;
 
     /***************************************************************************//**
      * @name Interrupt Handlers.
@@ -462,7 +463,7 @@ public:
      * 
      * @see m_endpointCallout
      */
-    CtrlOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &p_endpointCallout)
+    CtrlOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, ::usb::UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &p_endpointCallout)
       : OutEndpointViaSTM34F4Callback(p_usbDevice, 0), m_setupPacketBuffer {}, m_endpointCallout(p_endpointCallout) {
           p_endpointCallout.registerHwEndpoint(*this);
           this->m_outEndpoint.registerEndpointCallback(*this);
@@ -547,7 +548,7 @@ private:
     /**
      * @brief Callback to USB-generic Bulk OUT Endpoint implementation.
      */
-    UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> & m_endpointCallout;
+    ::usb::UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> & m_endpointCallout;
 
     /***************************************************************************//**
      * @name Interface to OutEndpointViaSTM34F4Callback.
@@ -586,7 +587,7 @@ public:
      * 
      * @see m_endpointCallout
      */
-    BulkOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> &p_endpointCallout, const unsigned p_endpointNumber)
+    BulkOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, ::usb::UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> &p_endpointCallout, const unsigned p_endpointNumber)
       : OutEndpointViaSTM34F4Callback(p_usbDevice, p_endpointNumber), m_endpointCallout(p_endpointCallout) {
         m_endpointCallout.registerHwEndpoint(*this);
         m_outEndpoint.registerEndpointCallback(*this);
@@ -646,10 +647,9 @@ public:
 ///@}
 };
 
-/*******************************************************************************
- *
- ******************************************************************************/
-    } /* namespace stm32f4 */
-} /* namespace usb */
+/******************************************************************************/
+    } /* namespace usb */
+} /* namespace stm32 */
+/******************************************************************************/
 
 #endif /* _OUTENDPOINT_HPP_669fcf90_b666_4583_97b7_e50a9d1447d9 */

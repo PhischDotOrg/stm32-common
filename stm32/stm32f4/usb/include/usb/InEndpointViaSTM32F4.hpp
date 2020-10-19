@@ -8,9 +8,12 @@
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 #include <stm32f4xx.h>
 
-namespace usb {
+#include <cstddef>
 
-    namespace stm32f4 {
+/******************************************************************************/
+namespace stm32 {
+    namespace usb {
+/******************************************************************************/
 
 class UsbDeviceViaSTM32F4;
 class BulkInEndpointViaSTM32F4;
@@ -71,7 +74,7 @@ private:
      * 
      * \see #m_irq_handler
      */
-    typedef void (usb::stm32f4::InEndpointViaSTM32F4::*irq_handler_fn)();
+    typedef void (stm32::usb::InEndpointViaSTM32F4::*irq_handler_fn)();
 
     /**
      * @brief Typedef for IRQ Handler.
@@ -278,10 +281,9 @@ public:
     };
 };
 
-/*******************************************************************************
- *
- ******************************************************************************/
-    } /* namespace stm32f4 */
-} /* namespace usb */
+/******************************************************************************/
+    } /* namespace usb */
+} /* namespace stm32 */
+/******************************************************************************/
 
 #endif /* _INENDPOINT_HPP_34f149e0_9f89_489b_a2c0_95b3363fe4a8 */

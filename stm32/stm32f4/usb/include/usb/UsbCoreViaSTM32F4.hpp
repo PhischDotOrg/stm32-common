@@ -5,12 +5,11 @@
 #ifndef _USBCORE_HPP_bd4e7744_c603_4e62_9377_165a9988ac70
 #define	_USBCORE_HPP_bd4e7744_c603_4e62_9377_165a9988ac70
 
-#include <stm32f4/RccViaSTM32.hpp>
-
-#include <gpio/GpioAccessViaSTM32F4.hpp>
-#include <gpio/GpioPin.hpp>
+#include <stm32/Engine.hpp>
 
 #include <stm32f4xx.h>
+
+#include <assert.h>
 
 /*******************************************************************************
  * This file is needed / used from <stm32f4/NvicViaSTM32F4.hpp -- in order to
@@ -22,52 +21,12 @@ namespace devices {
     template<typename ScbT = devices::ScbViaSTM32F4> class NvicViaSTM32F4T;
 }
 
-namespace usb {
-    namespace stm32f4 {
+/******************************************************************************/
+namespace stm32 {
+    namespace usb {
+/******************************************************************************/
 
-        class UsbDeviceViaSTM32F4;
-
-/***************************************************************************//**
- * @brief Helper Class / Type to encapsulate the GPIO Configuration.
- * 
- * GPIO Configuration of the USB Pins depends on the used USB Function (High vs.
- * Full Speed).
- * 
- * This helper class encapsulates this in a type-safe way.
- ******************************************************************************/
-template<gpio::GpioAccessViaSTM32F4::Function_e GpioFunctionT>
-class UsbCoreViaSTM32F4GpioHelperT {
-public:
-    /**
-     * @brief Configure the GPIO Pins required by the USB Core.
-     * 
-     * @param p_pinDm GPIO Pin used for the USB D+ Line.
-     * @param p_pinDp GPIO Pin used for the USB D- Line.
-     * @param p_pinVbus GPIO Pin used for the Vbus Line.
-     * @param p_pinId GPIO Pin used for the GND / ID Sense Line.
-     */
-    static constexpr void initalize(const gpio::GpioPin &p_pinDm, const gpio::GpioPin &p_pinDp, const gpio::GpioPin &p_pinVbus, const gpio::GpioPin &p_pinId) {
-        p_pinDm.enable(gpio::GpioAccessViaSTM32F4::e_Alternate, gpio::GpioAccessViaSTM32F4::e_None, GpioFunctionT);
-        p_pinDp.enable(gpio::GpioAccessViaSTM32F4::e_Alternate, gpio::GpioAccessViaSTM32F4::e_None, GpioFunctionT);
-        p_pinVbus.enable(gpio::GpioAccessViaSTM32F4::e_Alternate, gpio::GpioAccessViaSTM32F4::e_None, GpioFunctionT);
-        p_pinId.enable(gpio::GpioAccessViaSTM32F4::e_Alternate, gpio::GpioAccessViaSTM32F4::e_None, GpioFunctionT);
-    }
-
-    /**
-     * @brief Un-configure the GPIO Pins required by the USB Core.
-     * 
-     * @param p_pinDm GPIO Pin used for the USB D+ Line.
-     * @param p_pinDp GPIO Pin used for the USB D- Line.
-     * @param p_pinVbus GPIO Pin used for the Vbus Line.
-     * @param p_pinId GPIO Pin used for the GND / ID Sense Line.
-     */
-    static constexpr void terminate(const gpio::GpioPin &p_pinDm, const gpio::GpioPin &p_pinDp, const gpio::GpioPin &p_pinVbus, const gpio::GpioPin &p_pinId) {
-        p_pinDm.disable();
-        p_pinDp.disable();
-        p_pinVbus.disable();
-        p_pinId.disable();
-    }
-};
+    class UsbDeviceViaSTM32F4;
 
 /***************************************************************************//**
  * \brief Driver for the STM32F4 USB Core.
@@ -201,7 +160,7 @@ public:
      * \see unregisterDevice
      */
     void registerDevice(const UsbDeviceViaSTM32F4 &p_device) {
-        assert(this->m_usbDevice == NULL);
+        assert(this->m_usbDevice == nullptr);
         m_usbDevice = &p_device;
     }
 
@@ -218,7 +177,7 @@ public:
      */
     void unregisterDevice(void) {
         assert(this->m_usbDevice != nullptr);
-        this->m_usbDevice = NULL;
+        this->m_usbDevice = nullptr;
     }
 
     void    setupTxFifo(const unsigned p_endpoint, const uint16_t p_fifoSzInWords) const;
@@ -347,7 +306,7 @@ private:
      * IRQ handlers are Pointers to Member Functions. This typedef is declared
      * for convenience when using the pointers.
      */
-    typedef void (usb::stm32f4::UsbCoreViaSTM32F4::*irq_handler_fn)() const;
+    typedef void (stm32::usb::UsbCoreViaSTM32F4::*irq_handler_fn)() const;
 
     /**
      * @brief Type definition for the USB Core IRQ handler table.
@@ -475,62 +434,13 @@ private:
 /*******************************************************************************
  * Forward declare and typedef the instance specific types for the USB cores
  ******************************************************************************/
-template<intptr_t UsbT, typename GpioPinT = gpio::GpioPin,
-  typename RccT = devices::RccViaSTM32F4, typename NvicT = devices::NvicViaSTM32F4T<> >
+template<
+    intptr_t UsbT,
+    typename GpioPinT,
+    typename RccT,
+    typename NvicT
+>
 class UsbCoreViaSTM32F4FromAddressPointerT;
-
-#if defined(USB_OTG_FS_PERIPH_BASE)
-/**
- * @brief Convenience typedef to create an Object to access the USB Full Speed Core.
- * 
- * This typedef uses the convenience class #UsbCoreViaSTM32F4FromAddressPointerT to
- * create an type / object to drive the USB Full Speed Core in the STM32F4 Controller.
- */
-typedef UsbCoreViaSTM32F4FromAddressPointerT<USB_OTG_FS_PERIPH_BASE> UsbFullSpeedCore;
-#endif
-#if defined(USB_OTG_HS_PERIPH_BASE)
-/**
- * @brief Convenience typedef to create an Object to access the USB High Speed Core.
- * 
- * This typedef uses the convenience class #UsbCoreViaSTM32F4FromAddressPointerT to
- * create an type / object to drive the USB High Speed Core in the STM32F4 Controller.
- */
-typedef UsbCoreViaSTM32F4FromAddressPointerT<USB_OTG_HS_PERIPH_BASE> UsbHighSpeedCore;
-#endif
-
-/*******************************************************************************
- * Helper Template to resolve the SPI Address to the corresponding GPIO
- * Alternate Function Defintion
- ******************************************************************************/
-template<intptr_t> struct UsbCoreGpioFunction;
-
-#if defined(USB_OTG_FS_PERIPH_BASE)
-template<> struct UsbCoreGpioFunction<USB_OTG_FS_PERIPH_BASE> {
-    static const gpio::GpioAccessViaSTM32F4::Function_e m_type = gpio::GpioAccessViaSTM32F4::e_UsbFs;
-};
-#endif
-#if defined(USB_OTG_HS_PERIPH_BASE)
-template<> struct UsbCoreGpioFunction<USB_OTG_HS_PERIPH_BASE> {
-    static const gpio::GpioAccessViaSTM32F4::Function_e m_type = gpio::GpioAccessViaSTM32F4::e_UsbHs;
-};
-#endif
-
-/*******************************************************************************
- * Helper Template to resolve the USB Core Base Address to the corresponding
- * RCC Function Defintion
- ******************************************************************************/
-template<intptr_t> struct UsbCoreRccFunction;
-
-#if defined(USB_OTG_FS_PERIPH_BASE)
-template<> struct UsbCoreRccFunction<USB_OTG_FS_PERIPH_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB2_t m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_OtgFs;
-};
-#endif
-#if defined(USB_OTG_HS_PERIPH_BASE)
-template<> struct UsbCoreRccFunction<USB_OTG_HS_PERIPH_BASE> {
-    static const devices::RccViaSTM32F4::FunctionAHB1_t m_type = devices::RccViaSTM32F4::Stm32FxxCpu_t::e_OtgHs;
-};
-#endif
 
 /***************************************************************************//**
  * \brief Utility class to create a UsbCoreViaSTM32F4 object from an address.
@@ -539,8 +449,13 @@ template<> struct UsbCoreRccFunction<USB_OTG_HS_PERIPH_BASE> {
  * the adress to the USB Hardware's Registers.
  * 
  ******************************************************************************/
-template<intptr_t UsbT, typename GpioPinT /* = gpio::GpioPin */, typename RccT /* = devices::RccViaSTM32F4 */, typename NvicT /* = devices::NvicViaSTM32F4*/>
-class UsbCoreViaSTM32F4FromAddressPointerT : public UsbCoreViaSTM32F4 {
+template<
+    intptr_t Address,
+    typename GpioPinT /* = gpio::GpioPin */,
+    typename RccT /* = devices::RccViaSTM32F4 */,
+    typename NvicT /* = devices::NvicViaSTM32F4*/
+>
+class UsbCoreViaSTM32F4FromAddressPointerT : public EngineT<Address>, public UsbCoreViaSTM32F4 {
 private:
     /** @brief Reference to the NVIC.  */
     NvicT &     m_nvic;
@@ -581,11 +496,16 @@ public:
      */
     UsbCoreViaSTM32F4FromAddressPointerT(NvicT &p_nvic, RccT &p_rcc,
       GpioPinT &p_pinDm, GpioPinT &p_pinDp, GpioPinT &p_pinVbus, GpioPinT &p_pinId, uint32_t p_rxFifoSzInWords = 128)
-        : UsbCoreViaSTM32F4(reinterpret_cast<USB_OTG_GlobalTypeDef *>(UsbT), UsbT + USB_OTG_PCGCCTL_BASE, p_rxFifoSzInWords), m_nvic(p_nvic),
+        : UsbCoreViaSTM32F4(reinterpret_cast<USB_OTG_GlobalTypeDef *>(this->m_engineType), this->m_engineType + USB_OTG_PCGCCTL_BASE, p_rxFifoSzInWords), m_nvic(p_nvic),
             m_rcc(p_rcc), m_pinDm(p_pinDm), m_pinDp(p_pinDp), m_pinVbus(p_pinVbus), m_pinId(p_pinId)
     {
-        m_rcc.enable(UsbCoreRccFunction<UsbT>::m_type);
-        UsbCoreViaSTM32F4GpioHelperT< UsbCoreGpioFunction<UsbT>::m_type >::initalize(m_pinDm, m_pinDp, m_pinVbus, m_pinId);
+        m_rcc.enableEngine(* static_cast<EngineT<Address> *>(this));
+
+        p_pinDm.selectAlternateFn(static_cast<const EngineT<Address> &>(*this));
+        p_pinDp.selectAlternateFn(static_cast<const EngineT<Address> &>(*this));
+        p_pinVbus.selectAlternateFn(static_cast<const EngineT<Address> &>(*this));
+        p_pinId.selectAlternateFn(static_cast<const EngineT<Address> &>(*this));
+
         this->initialize();
         m_nvic.enableIrq(*this);
     }
@@ -606,15 +526,16 @@ public:
     virtual ~UsbCoreViaSTM32F4FromAddressPointerT() {
         m_nvic.disableIrq(*this);
         this->terminate();
-        UsbCoreViaSTM32F4GpioHelperT< UsbCoreGpioFunction<UsbT>::m_type >::terminate(m_pinDm, m_pinDp, m_pinVbus, m_pinId);
-        m_rcc.disable(UsbCoreRccFunction<UsbT>::m_type);
+
+        /* TODO Disable GPIO Pins? */
+
+        m_rcc.disableEngine(* static_cast<EngineT<Address> *>(this));
     }
 };
 
-/*******************************************************************************
- *
- *******************************************************************************/
-    } /* namespace stm32f4 */
-} /* namespace usb */
+/******************************************************************************/
+    } /* namespace usb */
+} /* namespace stm32 */
+/******************************************************************************/
 
 #endif	/* _USBCORE_HPP_bd4e7744_c603_4e62_9377_165a9988ac70 */

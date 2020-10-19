@@ -46,9 +46,10 @@ BitField(uint32_t p_register, uint32_t p_startBit, uint32_t p_endBit, uint32_t p
     return ((p_register & mask) >> p_startBit) == p_value;
 }
 
-
-namespace usb {
-    namespace stm32f4 {
+/******************************************************************************/
+namespace stm32 {
+    namespace usb {
+/******************************************************************************/
 
 /*******************************************************************************
  *
@@ -107,8 +108,7 @@ TEST_F(UsbCoreViaSTM32F4Test, DISABLED_SetupTxFifoCtrlEndpoint) {
     EXPECT_PRED4(BitField, this->m_usbOtgRegisters.DIEPTXF0_HNPTXFSIZ,  0, 15, m_rxFifoSzInWords * sizeof(uint32_t));
 }
 
-/*******************************************************************************
- *
- ******************************************************************************/
-    } /* namespace stm32f4 */
-} /* namespace usb */
+/******************************************************************************/
+    } /* namespace usb */
+} /* namespace stm32 */
+/******************************************************************************/

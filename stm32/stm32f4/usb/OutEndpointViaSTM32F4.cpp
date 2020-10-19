@@ -8,11 +8,12 @@
 #include <usb/OutEndpointViaSTM32F4.hpp>
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 
-
 #include <algorithm>
 
-namespace usb {
-    namespace stm32f4 {
+/******************************************************************************/
+namespace stm32 {
+    namespace usb {
+/******************************************************************************/
 
 /***************************************************************************//**
  * \brief Constructor.
@@ -166,8 +167,8 @@ CtrlOutEndpointViaSTM32F4::setupDataReceivedDeviceCallback(const size_t p_numByt
 
     USB_PRINTF("CtrlOutEndpointViaSTM32F4::%s(p_numBytes=%d)\r\n", __func__, p_numBytes);
 
-    assert(p_numBytes == sizeof(UsbSetupPacket_t));                     // Expect 8 Bytes
-    assert(numWords == sizeof(UsbSetupPacket_t) / sizeof(uint32_t));    // Expect two Words
+    assert(p_numBytes == sizeof(::usb::UsbSetupPacket_t));                  // Expect 8 Bytes
+    assert(numWords == sizeof(::usb::UsbSetupPacket_t) / sizeof(uint32_t)); // Expect two Words
 
     for (unsigned idx = 0; idx < numWords; idx++) {
         m_setupPacketBuffer[idx] = *(this->m_outEndpoint.m_fifoAddr);
@@ -448,10 +449,9 @@ CtrlOutEndpointViaSTM32F4::handleStatusPhaseReceivedIrq(void) const {
     USB_PRINTF("CtrlOutEndpointViaSTM32F4::STATUS Complete %s()\r\n", __func__);
 }
 
-/*******************************************************************************
- *
- ******************************************************************************/
-    } /* namespace stm32f4 */
-} /* namespace usb */
+/******************************************************************************/
+    } /* namespace usb */
+} /* namespace stm32 */
+/******************************************************************************/
 
 #endif /* _OUTENDPOINT_CPP_4c0d9db1_5757_4b12_83e7_69b04d8c655a */
