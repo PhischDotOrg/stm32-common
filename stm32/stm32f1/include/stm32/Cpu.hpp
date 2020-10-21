@@ -14,7 +14,7 @@
 #include <stm32f1/Pwr.hpp>
 #include <stm32f1/Rcc.hpp>
 #include <stm32/Scb.hpp>
-#include <stm32f1/Spi.hpp>
+#include <stm32/Spi.hpp>
 #include <stm32/Uart.hpp>
 
 #include <stm32f1/dma/Engine.hpp>
@@ -48,21 +48,21 @@ namespace stm32 {
                 }; /* struct gpio */
 
                 struct Spi {
-                    template<
-                        typename PinT,
-                        typename DmaChannelTxT,
-                        typename DmaChannelRxT
-                    > using DmaSpi1 = ::stm32::f1::SpiViaDmaT<
-                        SPI1_BASE,
-                        Rcc,
-                        DmaChannelTxT,
-                        DmaChannelRxT,
-                        PinT
-                    >;
+                    // template<
+                    //     typename PinT,
+                    //     typename DmaChannelTxT,
+                    //     typename DmaChannelRxT
+                    // > using DmaSpi1 = ::stm32::f1::SpiViaDmaT<
+                    //     SPI1_BASE,
+                    //     Rcc,
+                    //     DmaChannelTxT,
+                    //     DmaChannelRxT,
+                    //     PinT
+                    // >;
 
                     template<
                         typename PinT
-                    > using Spi1 = ::stm32::f1::SpiT<
+                    > using Spi1 = ::stm32::SpiT<
                         SPI1_BASE,
                         Rcc,
                         PinT
