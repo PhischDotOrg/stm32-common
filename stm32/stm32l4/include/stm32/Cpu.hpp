@@ -11,23 +11,23 @@
 #include <stm32f4/FlashViaSTM32F4.hpp>
 #include <stm32/Gpio.hpp>
 #include <stm32f4/GpioPinConfiguration.hpp>
-#include <stm32f4/NvicViaSTM32F4.hpp>
+#include <stm32/Nvic.hpp>
 #include <stm32l4/PllCfg.hpp>
 #include <stm32f4/PwrViaSTM32F4.hpp>
 #include <stm32l4/Rcc.hpp>
-#include <stm32f4/ScbViaSTM32F4.hpp>
+#include <stm32/Scb.hpp>
 #include <stm32/Uart.hpp>
 
 namespace stm32 {
+    using Nvic      = NvicT<Scb>;
+
     namespace l4 {
         namespace l432 {
             struct Cpu {
                 using Flash     = ::stm32::f4::Flash;
-                using Nvic      = ::devices::NvicViaSTM32F4T<devices::ScbViaSTM32F4>;
                 using PllCfg    = ::stm32::l4::PllCfgT<::stm32::l4::l432::PllCfgValidCheck, 16, 32>;
                 using Pwr       = ::stm32::f4::Pwr;
                 using Rcc       = RccT<PllCfg, Flash, Pwr>;
-                using Scb       = ::devices::ScbViaSTM32F4;
 
                 struct Gpio {
                     using Engine = ::stm32::GpioEngineT<stm32::f4::GpioPinConfiguration>;
