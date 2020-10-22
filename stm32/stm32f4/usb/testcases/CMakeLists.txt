@@ -16,11 +16,14 @@ set(TC_SOURCES
 )
 
 set(TARGET_EXE test_usb_stm32f4)
-add_executable(${TARGET_EXE} ${TC_SOURCES})
-target_link_libraries(${TARGET_EXE}
-    gmock
-    gmock_main
-    usb-stm32f4
-)
 
-add_test(NAME usb-stm32f4 COMMAND ${TARGET_EXE})
+if(${HAVE_USB_OTG})
+    add_executable(${TARGET_EXE} ${TC_SOURCES})
+    target_link_libraries(${TARGET_EXE}
+        gmock
+        gmock_main
+        usb-stm32f4
+    )
+
+    add_test(NAME usb-stm32f4 COMMAND ${TARGET_EXE})
+endif()
