@@ -113,7 +113,33 @@ namespace stm32 {
                 }; /* struct Gpio */
 
                 struct Spi {
-                    template<typename DmaChannelTxT, typename DmaChannelRxT, typename PinT> using Spi1 = ::stm32::spi::SpiAccessViaSTM32F4Fixed<SPI1_BASE, Rcc, DmaChannelTxT, DmaChannelRxT, PinT>;
+                    // template<
+                    //     typename PinT,
+                    //     typename DmaChannelTxT,
+                    //     typename DmaChannelRxT
+                    // > using DmaSpi1 = ::stm32::f4::SpiViaDmaT<
+                    //     SPI1_BASE,
+                    //     Rcc,
+                    //     DmaChannelTxT,
+                    //     DmaChannelRxT,
+                    //     PinT
+                    // >;
+
+                    template<
+                        typename PinT
+                    > using Spi1 = ::stm32::SpiT< SPI1_BASE, Rcc, PinT >;
+
+                    template<
+                        typename PinT
+                    > using Spi2 = ::stm32::SpiT< SPI2_BASE, Rcc, PinT >;
+
+                    template<
+                        typename PinT
+                    > using Spi3 = ::stm32::SpiT< SPI3_BASE, Rcc, PinT >;
+
+                    template<
+                        typename PinT
+                    > using Spi4 = ::stm32::SpiT< SPI4_BASE, Rcc, PinT >;
                 }; /* struct Spi */
 
                 struct Uart {
