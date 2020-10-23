@@ -30,7 +30,7 @@ FILE(APPEND ${BUILD_VERSION_CMAKE_FILE}
     ")\n"
     "\n"
     "if(NOT(\$\{GIT_RESULT\} EQUAL 0))\n"
-    "   message(FATAL_ERROR \"Git Command returned rc=\$\{GIT_RESULT\}. Output: '\$\{GIT_OUTPUT\}'. Error: '\$\{GIT_ERROR\}'\")\n"
+    "   message(WARNING \"Git Command returned rc=\$\{GIT_RESULT\}. Output: '\$\{GIT_OUTPUT\}'. Error: '\$\{GIT_ERROR\}'\")\n"
     "else()\n"
     "   set(GIT_VERSION \$\{GIT_OUTPUT\})\n"
     "   message(STATUS \"Git Build ID: \$\{GIT_VERSION\}\")\n"

@@ -11,7 +11,7 @@ execute_process(COMMAND git describe --always --dirty=+
 )
 
 if(NOT(${GIT_RESULT} EQUAL 0))
-   message(FATAL_ERROR "Git Command returned rc=${GIT_RESULT}. Output: '${GIT_OUTPUT}'. Error: '${GIT_ERROR}'")
+   message(WARNING "Git Command returned rc=${GIT_RESULT}. Output: '${GIT_OUTPUT}'. Error: '${GIT_ERROR}'")
 else()
    set(GIT_VERSION ${GIT_OUTPUT})
    message(STATUS "Git Build ID: ${GIT_VERSION}")
