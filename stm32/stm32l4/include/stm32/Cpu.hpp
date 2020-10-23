@@ -16,6 +16,7 @@
 #include <stm32f4/PwrViaSTM32F4.hpp>
 #include <stm32l4/Rcc.hpp>
 #include <stm32/Scb.hpp>
+#include <stm32/Spi.hpp>
 #include <stm32/Uart.hpp>
 
 namespace stm32 {
@@ -38,6 +39,28 @@ namespace stm32 {
                     using H     = ::stm32::GpioT<Rcc, GPIOH_BASE, ::stm32::f4::GpioPinConfiguration>;
                 }; /* struct gpio */
 
+                struct Spi {
+                    // template<
+                    //     typename PinT,
+                    //     typename DmaChannelTxT,
+                    //     typename DmaChannelRxT
+                    // > using DmaSpi1 = ::stm32::f4::SpiViaDmaT<
+                    //     SPI1_BASE,
+                    //     Rcc,
+                    //     DmaChannelTxT,
+                    //     DmaChannelRxT,
+                    //     PinT
+                    // >;
+
+                    template<
+                        typename PinT
+                    > using Spi1 = ::stm32::SpiT< SPI1_BASE, Rcc, PinT >;
+
+                    template<
+                        typename PinT
+                    > using Spi3 = ::stm32::SpiT< SPI3_BASE, Rcc, PinT >;
+                }; /* struct Spi */
+
                 struct Uart {
                     template<typename PinT> using Usart1 = ::stm32::UartT<Rcc, USART1_BASE, stm32::BrrPolicyWithOversampling, PinT>;
                     template<typename PinT> using Usart2 = ::stm32::UartT<Rcc, USART2_BASE, stm32::BrrPolicyWithOversampling, PinT>;
@@ -53,6 +76,7 @@ namespace stm32 {
     using Gpio = Cpu::Gpio;
     using GpioEngine = Cpu::Gpio::Engine;
     using Rcc = Cpu::Rcc;
+    using Spi = Cpu::Spi;
     using Uart = Cpu::Uart;
 
 #if defined(GPIOA_BASE)
@@ -78,6 +102,19 @@ namespace stm32 {
 #endif
 #if defined(GPIOH_BASE)
     MAP_RCC_ENGINE(GPIOH);
+#endif
+
+#if defined(SPI1_BASE)
+    MAP_RCC_ENGINE(SPI1);
+#endif
+#if defined(SPI2_BASE)
+    MAP_RCC_ENGINE(SPI2);
+#endif
+#if defined(SPI3_BASE)
+    MAP_RCC_ENGINE(SPI3);
+#endif
+#if defined(SPI4_BASE)
+    MAP_RCC_ENGINE(SPI4);
 #endif
 
 #if defined(USART1_BASE)

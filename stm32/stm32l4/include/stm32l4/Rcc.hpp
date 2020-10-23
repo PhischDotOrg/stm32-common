@@ -37,7 +37,7 @@ public:
 #if 0 
         e_Spi2      = RCC_APB1ENR1_SPI2EN,
 #endif
-        e_Spi3      = RCC_APB1ENR1_SPI3EN,
+        e_SPI3      = RCC_APB1ENR1_SPI3EN,
         e_USART2    = RCC_APB1ENR1_USART2EN,
 /* FIXME Does the H/W really not exist or is it just the #define that is missing? */
 #if 0 
@@ -74,7 +74,7 @@ public:
         e_SysCfg    = RCC_APB2ENR_SYSCFGEN,
         e_Fw        = RCC_APB2ENR_FWEN,
         e_Tim1      = RCC_APB2ENR_TIM1EN,
-        e_Spi1      = RCC_APB2ENR_SPI1EN,
+        e_SPI1      = RCC_APB2ENR_SPI1EN,
         e_USART1    = RCC_APB2ENR_USART1EN,
         e_Tim15     = RCC_APB2ENR_TIM15EN,
         e_Tim16     = RCC_APB2ENR_TIM16EN,
