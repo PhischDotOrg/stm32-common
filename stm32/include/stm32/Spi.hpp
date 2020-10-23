@@ -96,7 +96,13 @@ protected:
     void
     setupMaster(void) const {
         m_spi.CR1 |= (SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_MSTR);
-        m_spi.I2SCFGR &= ~SPI_I2SCFGR_I2SMOD;
+        /*
+         * Removed so the code can be built on µC architectures that don't include
+         * I2S Support in their SPI Engine, e.g. the STM32L4 Line.
+         * 
+         * Default is SPI Mode anyways, so no need to clear the I2S Mode Bit.
+         */
+        // m_spi.I2SCFGR &= ~SPI_I2SCFGR_I2SMOD;
 
         enable();
         pollForIdle();
