@@ -29,6 +29,60 @@ namespace stm32 {
     using Nvic      = NvicT<Scb>;
 
     namespace f4 {
+#if defined(STM32F401xC)
+        namespace f401 {
+            struct Cpu {
+                using Flash     = ::stm32::f4::Flash;
+                using PllCfg    = ::stm32::f4::PllCfgT<8, ::stm32::f4::f407::PllCfgValidCheck>;
+                using Pwr       = ::stm32::f4::Pwr;
+                using Rcc       = RccT<PllCfg, Flash, Pwr>;
+
+                struct Dma {
+                    using Engine1   = ::stm32::dma::DmaEngineT<Rcc, DMA1_BASE>;
+                    using Engine2   = ::stm32::dma::DmaEngineT<Rcc, DMA2_BASE>;
+                }; /* struct Dma */
+
+                struct Gpio {
+                    using Engine = ::stm32::GpioEngineT<stm32::f4::GpioPinConfiguration>;
+
+                    using A     = ::stm32::GpioT<Rcc, GPIOA_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using B     = ::stm32::GpioT<Rcc, GPIOB_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using C     = ::stm32::GpioT<Rcc, GPIOC_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using D     = ::stm32::GpioT<Rcc, GPIOD_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using E     = ::stm32::GpioT<Rcc, GPIOE_BASE, ::stm32::f4::GpioPinConfiguration>;
+                    using H     = ::stm32::GpioT<Rcc, GPIOH_BASE, ::stm32::f4::GpioPinConfiguration>;
+                }; /* struct gpio */
+
+                struct Spi {
+                    // template<
+                    //     typename PinT,
+                    //     typename DmaChannelTxT,
+                    //     typename DmaChannelRxT
+                    // > using DmaSpi1 = ::stm32::f4::SpiViaDmaT<
+                    //     SPI1_BASE,
+                    //     Rcc,
+                    //     DmaChannelTxT,
+                    //     DmaChannelRxT,
+                    //     PinT
+                    // >;
+
+                    template<
+                        typename PinT
+                    > using Spi1 = ::stm32::SpiT<
+                        SPI1_BASE,
+                        Rcc,
+                        PinT
+                    >;
+                }; /* struct Spi */
+
+                struct Uart {
+                    template<typename PinT> using Usart1 = ::stm32::UartT<Rcc, USART1_BASE, stm32::BrrPolicyWithOversampling, PinT>;
+                    template<typename PinT> using Usart2 = ::stm32::UartT<Rcc, USART2_BASE, stm32::BrrPolicyWithOversampling, PinT>;
+                    template<typename PinT> using Usart6 = ::stm32::UartT<Rcc, USART6_BASE, stm32::BrrPolicyWithOversampling, PinT>;
+                }; /* struct Uart */
+            }; /* struct Cpu */
+        } /* namespace f407 */
+#endif /* defined(STM32F407xx) */
 #if defined(STM32F407xx)
         namespace f407 {
             struct Cpu {
@@ -152,6 +206,9 @@ namespace stm32 {
 #endif /* defined(STM32F411xE) */
     } /* namespace f4 */
 
+#if defined(STM32F401xC)
+    using Cpu = f4::f401::Cpu;
+#endif
 #if defined(STM32F407xx)
     using Cpu = f4::f407::Cpu;
 #endif
