@@ -33,7 +33,7 @@ namespace stm32 {
         namespace f401 {
             struct Cpu {
                 using Flash     = ::stm32::f4::Flash;
-                using PllCfg    = ::stm32::f4::PllCfgT<8, ::stm32::f4::f407::PllCfgValidCheck>;
+                using PllCfg    = ::stm32::f4::PllCfgT<8, ::stm32::f4::f401::PllCfgValidCheck>;
                 using Pwr       = ::stm32::f4::Pwr;
                 using Rcc       = RccT<PllCfg, Flash, Pwr>;
 
