@@ -11,6 +11,8 @@
 #include <usb/InEndpointViaSTM32F4.hpp>
 #include <usb/OutEndpointViaSTM32F4.hpp>
 
+#include <cassert>
+
 /******************************************************************************/
 namespace stm32 {
     namespace usb {
@@ -938,6 +940,7 @@ UsbDeviceViaSTM32F4::getEnumeratedSpeed(void) const {
         break;
     default:
         assert(false);
+        enumeratedSpeed = e_UsbFullSpeed;
         break;
     }
 

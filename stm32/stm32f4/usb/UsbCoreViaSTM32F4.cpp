@@ -9,6 +9,7 @@
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 #include <usb/UsbTypes.hpp>
 
+#include <cassert>
 #include <cstdlib>
 
 extern "C" {

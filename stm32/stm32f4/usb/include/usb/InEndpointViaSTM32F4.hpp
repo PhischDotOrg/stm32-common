@@ -8,6 +8,7 @@
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 #include <stm32f4xx.h>
 
+#include <cassert>
 #include <cstddef>
 
 /******************************************************************************/

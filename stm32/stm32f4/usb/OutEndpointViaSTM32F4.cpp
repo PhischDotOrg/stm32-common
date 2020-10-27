@@ -10,6 +10,8 @@
 
 #include <algorithm>
 
+#include <cassert>
+
 /******************************************************************************/
 namespace stm32 {
     namespace usb {

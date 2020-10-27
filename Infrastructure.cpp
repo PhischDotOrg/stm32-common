@@ -16,6 +16,26 @@
 extern "C" {
 #endif /* defined (__cplusplus) */
 
+#if !defined(HOSTBUILD)
+void __assert_func (const char *p_file, int p_line, const char *p_func, const char *p_msg) {
+#if defined(NO_LOGGING)
+    (void) p_file;
+    (void) p_line;
+    (void) p_func;
+    (void) p_msg;
+#endif
+
+    PHISCH_LOG("%s() @ %s : %d \r\n%s\r\n", p_func, p_file, p_line, p_msg);
+
+    while (1) { };
+}
+
+void
+__assert (const char *p_file, int p_line, const char *p_msg) {
+    __assert_func (p_file, p_line, __func__, p_msg);
+}
+#endif /* defined(HOSTBUILD) */
+
 void
 PrintStartupMessage(unsigned p_sysclk, unsigned p_ahb, unsigned p_apb1, unsigned p_apb2) {
 #if defined(NO_LOGGING)
@@ -48,22 +68,7 @@ PrintStartupMessage(unsigned p_sysclk, unsigned p_ahb, unsigned p_apb1, unsigned
     PHISCH_LOG("\r\n");
 }
 
-void
-halt(const char * const p_file, const unsigned p_line) {
-#if defined(NO_LOGGING)
-    (void) p_file;
-    (void) p_line;
-#endif
-    PHISCH_LOG("%s(): %s : %d\r\n", __func__, p_file, p_line);
-
-    while (1) { };
-}
-
-void
-assert_failed(uint8_t *p_file, uint32_t p_line) {
-    halt(reinterpret_cast<char *>(p_file), p_line);
-}
-
+#if !defined(HOSTBUILD)
 int
 usleep(unsigned p_usec) {
     SysTick_Type *sysTick = reinterpret_cast<SysTick_Type *>(SysTick_BASE);
@@ -129,6 +134,7 @@ usleep(unsigned p_usec) {
     
     return 0;
 }
+#endif /* defined(HOSTBUILD) */
 
 #if defined(__cplusplus)
 } /* extern "C" */

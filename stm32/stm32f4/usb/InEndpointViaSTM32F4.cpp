@@ -9,9 +9,12 @@
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 #include <usb/UsbTypes.hpp>
 
+#include <cassert>
+
 #include <unistd.h>
 
 #include <algorithm>
+
 
 /******************************************************************************/
 namespace stm32 {

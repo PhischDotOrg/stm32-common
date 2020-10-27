@@ -9,7 +9,7 @@
 
 #include <stm32f4xx.h>
 
-#include <assert.h>
+#include <cassert>
 
 /*******************************************************************************
  * This file is needed / used from <stm32f4/NvicViaSTM32F4.hpp -- in order to
@@ -507,7 +507,7 @@ public:
         p_pinId.selectAlternateFn(static_cast<const EngineT<Address> &>(*this));
 
         this->initialize();
-        m_nvic.enableIrq(*this);
+        m_nvic.enableIrq(* static_cast<EngineT<Address> *>(this));
     }
 
     /**
@@ -532,6 +532,24 @@ public:
         m_rcc.disableEngine(* static_cast<EngineT<Address> *>(this));
     }
 };
+
+#if defined(USB_OTG_FS_PERIPH_BASE)
+template<
+    typename NvicT,
+    typename RccT,
+    typename GpioPinT
+>
+using UsbFullSpeedCoreT = UsbCoreViaSTM32F4FromAddressPointerT<USB_OTG_FS_PERIPH_BASE, GpioPinT, RccT, NvicT>;
+#endif /* defined(USB_OTG_FS_PERIPH_BASE) */
+
+#if defined(USB_OTG_HS_PERIPH_BASE)
+template<
+    typename NvicT,
+    typename RccT,
+    typename GpioPinT
+>
+using UsbHighSpeedCoreT = UsbCoreViaSTM32F4FromAddressPointerT<USB_OTG_HS_PERIPH_BASE, GpioPinT, RccT, NvicT>;
+#endif /* defined(USB_OTG_HS_PERIPH_BASE) */
 
 /******************************************************************************/
     } /* namespace usb */
