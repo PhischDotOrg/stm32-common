@@ -290,6 +290,14 @@ namespace stm32 {
 #if defined(USART6_BASE)
     MAP_RCC_ENGINE(USART6);
 #endif
+
+#if defined(USB_OTG_FS_PERIPH_BASE)
+    MAP_RCC_ENGINE(USB_OTG_FS_PERIPH);
+#endif
+#if defined(USB_OTG_HS_PERIPH_BASE)
+    MAP_RCC_ENGINE(USB_OTG_HS_PERIPH);
+#endif
+
 /*****************************************************************************/
 
 /*****************************************************************************/
@@ -342,6 +350,19 @@ namespace stm32 {
 #if defined(DMA2_Stream7_BASE)
     MAP_NVIC_IRQ(DMA2_Stream7);
 #endif
+
+#if defined(USB_OTG_FS_PERIPH_BASE)
+    MAP_NVIC_ENGINE_IRQ(USB_OTG_FS_PERIPH,  OTG_FS);
+#endif
+
+#if defined(USB_OTG_HS_PERIPH_BASE)
+    // MAP_NVIC_ENGINE_IRQ(USB_OTG_HS_PERIPH,  OTG_HS_EP1_OUT);
+    // MAP_NVIC_ENGINE_IRQ(USB_OTG_HS_PERIPH,  OTG_HS_EP1_IN);
+    // MAP_NVIC_ENGINE_IRQ(USB_OTG_HS_PERIPH,  OTG_HS_WKUP);
+    // MAP_NVIC_ENGINE_IRQ(USB_OTG_HS_PERIPH,  OTG_HS);
+    /* TODO IRQ Enabling for USB OTG HighSpeed not implemented */
+#endif /* defined(USB_OTG_HS_PERIPH_BASE) */
+
 /*****************************************************************************/
 
 /*****************************************************************************/

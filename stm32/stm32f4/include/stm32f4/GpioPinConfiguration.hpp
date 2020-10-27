@@ -58,7 +58,7 @@ struct GpioPinConfiguration {
         e_Uart4 = 8,
         e_Uart5 = 8,
         e_USART6 = 8,
-        e_UsbFs = 10,
+        e_USB_OTG_FS_PERIPH = 10,
         e_UsbHs = 10,
         e_Alternate,
     };
@@ -107,15 +107,18 @@ template<> struct IoMuxT< EngineT< (Engine ## _BASE) > > {                      
 #endif
 
 #if defined(USART1_BASE)
-MAP_IO_ENGINE(USART1);
+    MAP_IO_ENGINE(USART1);
 #endif
 #if defined(USART2_BASE)
-MAP_IO_ENGINE(USART2);
+    MAP_IO_ENGINE(USART2);
 #endif
 #if defined(USART6_BASE)
-MAP_IO_ENGINE(USART6);
+    MAP_IO_ENGINE(USART6);
 #endif
 
+#if defined(USB_OTG_FS_PERIPH_BASE)
+    MAP_IO_ENGINE(USB_OTG_FS_PERIPH);
+#endif /* defined(USB_OTG_FS_PERIPH_BASE) */
 
 /*****************************************************************************/
     } /* namespace f4 */

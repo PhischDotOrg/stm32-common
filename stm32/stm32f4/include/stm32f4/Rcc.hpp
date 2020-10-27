@@ -195,7 +195,7 @@ namespace stm32 {
                 e_EthMacPtp     = RCC_AHB1ENR_ETHMACPTPEN,
 #endif
 #if defined(RCC_AHB1ENR_OTGHSEN)
-                e_OtgHs         = RCC_AHB1ENR_OTGHSEN,
+                e_USB_OTG_HS_PERIPH = RCC_AHB1ENR_OTGHSEN,
 #endif
 #if defined(RCC_AHB1ENR_OTGHSULPIEN)
                 e_OtgHsUlpi     = RCC_AHB1ENR_OTGHSULPIEN,
@@ -210,7 +210,7 @@ namespace stm32 {
                 e_RNGEN     = RCC_AHB2ENR_RNGEN,
 #endif
 #if defined(RCC_AHB2ENR_OTGFSEN)
-                e_OtgFs     = RCC_AHB2ENR_OTGFSEN,
+                e_USB_OTG_FS_PERIPH = RCC_AHB2ENR_OTGFSEN,
 #endif
             } FunctionAHB2_t;
 

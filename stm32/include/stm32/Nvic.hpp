@@ -19,9 +19,14 @@ template<typename EngineT> struct IrqTypeT {
     static constexpr std::nullptr_t m_irq = nullptr;
 };
 
-#define MAP_NVIC_IRQ(Engine)                                                        \
-template<> struct IrqTypeT< ::stm32::EngineT< (Engine ## _BASE) > > {               \
-    static constexpr auto m_irq = NvicBase::Irq_t:: Engine ## _IRQn;      \
+#define MAP_NVIC_ENGINE_IRQ(Engine, Irq)                                    \
+template<> struct IrqTypeT< ::stm32::EngineT< (Engine ## _BASE) > > {       \
+    static constexpr auto m_irq = NvicBase::Irq_t:: Irq ## _IRQn;           \
+}
+
+#define MAP_NVIC_IRQ(Engine)                                                \
+template<> struct IrqTypeT< ::stm32::EngineT< (Engine ## _BASE) > > {       \
+    static constexpr auto m_irq = NvicBase::Irq_t:: Engine ## _IRQn;        \
 }
 /*****************************************************************************/
 
