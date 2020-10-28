@@ -12,6 +12,10 @@
 
 #include <phisch/log.h>
 
+#include <FreeRTOS.h> 
+#include <FreeRTOS/include/queue.h>
+#include <FreeRTOS/include/semphr.h>
+
 namespace tasks {
 
 /***************************************************************************//**
@@ -32,7 +36,7 @@ private:
 
         while(xQueueReceive(this->m_buttonHandlerQueue, &buttonState, portMAX_DELAY) == pdTRUE) {
             if (m_led != nullptr) {
-                m_led->set(buttonState ? gpio::GpioPin::On : gpio::GpioPin::Off);
+                m_led->set(buttonState);
             } else {
                 PHISCH_LOG("UsbMouseButtonHandler::%s(): Button State = 0x%x\r\n", __func__, buttonState);
             }
@@ -45,9 +49,8 @@ private:
         }
         
         PHISCH_LOG("UsbMouseButtonHandler::%s(): Failed to receive Button State from queue.\r\n", __func__);
-        if (m_led != nullptr) {
-            m_led->set(gpio::GpioPin::HiZ);
-        }
+        m_led->disable();
+
         assert(false);
     };
 
@@ -93,7 +96,7 @@ private:
     int executePeriod(void) override {
         m_direction *= -1;
 
-        m_led.set(m_direction > 0 ? gpio::GpioPin::On : gpio::GpioPin::Off);
+        m_led.set(m_direction);
 
         m_usbMouseApplication.setXAxis(m_direction * m_xOffset);
         m_usbMouseApplication.setYAxis(m_direction * m_yOffset);
