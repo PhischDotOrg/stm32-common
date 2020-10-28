@@ -922,6 +922,7 @@ UsbDeviceViaSTM32F4::flushTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const {
  ******************************************************************************/
 ::usb::UsbHwDevice::DeviceSpeed_e
 UsbDeviceViaSTM32F4::getEnumeratedSpeed(void) const {
+<<<<<<< HEAD
     ::usb::UsbHwDevice::DeviceSpeed_e enumeratedSpeed = ::usb::UsbHwDevice::DeviceSpeed_e::e_UsbUnknown;
 
     enum EnumeratedSpeed_e {
@@ -937,14 +938,65 @@ UsbDeviceViaSTM32F4::getEnumeratedSpeed(void) const {
     case e_HighSpeed:
         /* FIXME USB High Speed Mode not yet implemented */
         assert(false);
+=======
+    ::usb::UsbHwDevice::DeviceSpeed_e enumeratedUsbSpeed = ::usb::UsbHwDevice::DeviceSpeed_e::e_UsbUnknown;
+
+    /*
+     * The CPU Reference Manual lists the Bit Combination 0b01 and 0b10 as reserved. I've
+     * however noticed in some of my tests that the DTS_ENUMSPD bits sometimes do come up
+     * as 0b01.
+     * 
+     * The mbed Codebase has a driver for the same core, but on STM32F1, which #defines
+     * essntially the below.
+     *
+     * The same thing applies for the USB OTG Driver that is part of the ST USB OTG Demo,
+     * see STSW-STM32046 on st.com.
+     *
+     *  #define DSTS_ENUMSPD_HS_PHY_30MHZ_OR_60MHZ      0b00
+     *  #define DSTS_ENUMSPD_FS_PHY_30MHZ_OR_60MHZ      0b01
+     *  #define DSTS_ENUMSPD_LS_PHY_6MHZ                0b10
+     *  #define DSTS_ENUMSPD_FS_PHY_48MHZ               0b11
+     *
+     * Also, the same driver(s) assumes the following mapping:
+     *
+     *  DSTS_ENUMSPD_HS_PHY_30MHZ_OR_60MHZ  -> USB_SPEED_HIGH
+     *  DSTS_ENUMSPD_FS_PHY_30MHZ_OR_60MHZ  -> USB_SPEED_FULL
+     *  DSTS_ENUMSPD_FS_PHY_48MHZ           -> USB_SPEED_FULL
+     *  DSTS_ENUMSPD_LS_PHY_6MHZ            -> USB_SPEED_LOW
+     */
+    enum class EnumeratedSpeed_e : uint8_t {
+        e_HighSpeed                 = 0b00,
+        e_FullSpeed_30MHz_or_60MHz  = 0b01,
+        e_LowSpeed                  = 0b10,
+        e_FullSpeed                 = 0b11
+    };
+
+    EnumeratedSpeed_e emumeratedDeviceSpeed = static_cast<EnumeratedSpeed_e>((this->m_usbDevice->DSTS & USB_OTG_DSTS_ENUMSPD_Msk) >> USB_OTG_DSTS_ENUMSPD_Pos);
+
+    switch(emumeratedDeviceSpeed) {
+    case EnumeratedSpeed_e::e_FullSpeed_30MHz_or_60MHz: // TODO Why is this needed?
+        /*
+         * This case was not needed until a rework of the stm32-common architecture.
+         * There seems to be an issue with timing, i.e. how fast / slow the IRQs
+         * leading to this method being called are served.
+         *
+         * The PLL and GPIO Settings were checked and seem to be the same as before.
+         */
+    case EnumeratedSpeed_e::e_FullSpeed:
+        enumeratedUsbSpeed = e_UsbFullSpeed;
+>>>>>>> 82dcef1... Extend the USB Enumeration Speed Handling to some undocumented cases.
         break;
     default:
+        /* FIXME USB Low or High Speed Mode not yet implemented */
         assert(false);
+<<<<<<< HEAD
         enumeratedSpeed = e_UsbFullSpeed;
+=======
+>>>>>>> 82dcef1... Extend the USB Enumeration Speed Handling to some undocumented cases.
         break;
     }
 
-    return enumeratedSpeed;
+    return enumeratedUsbSpeed;
 }
 
 /******************************************************************************/
