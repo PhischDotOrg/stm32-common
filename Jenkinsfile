@@ -52,7 +52,8 @@ pipeline {
                         name 'STM32_PROJECT'
                         values 'stm32f4-minimal',
                           'stm32f1-bluepill',
-                          'stm32f4-nucleo64'
+                          'stm32f4-nucleo64',
+                          'stm32f4-usbdevice'
                         //   'stm32l4-nucleo32'
                     }
                 }
