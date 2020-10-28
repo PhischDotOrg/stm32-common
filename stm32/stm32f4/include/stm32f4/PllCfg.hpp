@@ -152,6 +152,14 @@ namespace stm32 {
                 return (getSysclkSpeedInHz() + (prescaler / 2)) / prescaler;    
             }
 
+            constexpr unsigned getPllVcoSpeedInHz(void) const {
+                const unsigned long long input = getPllInputSpeedInHz();
+
+                const unsigned long long vco = ((input * m_pllN) + (m_pllM / 2)) / m_pllM;
+
+                return vco;
+            }
+
         protected:
             constexpr unsigned getPllSpeedInHz(void) const {
                 unsigned vco = getPllVcoSpeedInHz();
@@ -159,22 +167,6 @@ namespace stm32 {
                 unsigned pllp = 2 << m_pllP;
 
                 return (vco + (pllp / 2)) / pllp;
-            }
-
-            constexpr unsigned getPllVcoSpeedInHz(void) const {
-                const unsigned input = getPllInputSpeedInHz();
-
-                const unsigned vco = ((input * m_pllN) + (m_pllM / 2)) / m_pllM;
-
-                return vco;
-            }
-
-            /*
-             * Facade for the non-static getPllVcoSpeedInHz() to be used from the
-             * PllCfgValidCheckT policy class.
-             */
-            static constexpr unsigned getPllVcoSpeedInHz(const PllCfgT &p_obj) {
-                return p_obj.getPllVcoSpeedInHz();
             }
 
             constexpr unsigned getAPBPrescalerValue(const APBPrescaler_t p_prescaler) const {
@@ -216,7 +208,9 @@ namespace stm32 {
                     const bool isValid = true
                         && (p_pllCfg.m_pllN >= 50) && (p_pllCfg.m_pllN <= 432)
                         && (p_pllCfg.m_pllM >= 2) && (p_pllCfg.m_pllM <= 63)
-                        // && (p_pllCfg.getPllVcoSpeedInHz(p_pllCfg) >= 100 * 1000 * 1000) && (p_pllCfg.getPllVcoSpeedInHz(p_pllCfg) <= 432 * 1000 * 1000)
+                        && (p_pllCfg.m_pllQ >= 2) && (p_pllCfg.m_pllQ <= 15)
+                        && ((p_pllCfg.getPllVcoSpeedInHz() / p_pllCfg.m_pllQ) == 48 * 1000 * 1000)
+                        && (p_pllCfg.getPllVcoSpeedInHz(p_pllCfg) >= 100 * 1000 * 1000) && (p_pllCfg.getPllVcoSpeedInHz(p_pllCfg) <= 432 * 1000 * 1000)
                         && ((p_pllCfg.m_hseSpeedInHz >= 4 * 1000 * 1000) && (p_pllCfg.m_hseSpeedInHz <= 26 * 1000 * 1000))
                         && (p_pllCfg.getSysclkSpeedInHz() > 0) && (p_pllCfg.getSysclkSpeedInHz() <= 84 * 1000 * 1000)
                         && (p_pllCfg.getAhbSpeedInHz() > 0) && (p_pllCfg.getAhbSpeedInHz() <= p_pllCfg.getSysclkSpeedInHz())
@@ -228,7 +222,6 @@ namespace stm32 {
                 }                
             }; /* PllCfgValidCheck */
         } /* namespace f407 */
-
         namespace f407 {
             struct PllCfgValidCheck {
                 template<typename PllCfgT>
@@ -236,10 +229,12 @@ namespace stm32 {
                 bool isValid(const PllCfgT &p_pllCfg) {
                     const bool isValid = true
                         && (p_pllCfg.getPllInputSpeedInHz() >= 4 * 1000 * 1000) && (p_pllCfg.getPllInputSpeedInHz() <= 48 * 1000 * 1000)
-                        && (p_pllCfg.m_pllN > 1) && (p_pllCfg.m_pllN < 433)
-                        && (p_pllCfg.m_pllM > 1) && (p_pllCfg.m_pllM < 64)
+                        && (p_pllCfg.m_pllN >= 2) && (p_pllCfg.m_pllN <= 432)
+                        && (p_pllCfg.m_pllM >= 2) && (p_pllCfg.m_pllM <= 63)
+                        && (p_pllCfg.m_pllQ >= 2) && (p_pllCfg.m_pllQ <= 15)
+                        // && ((p_pllCfg.getPllVcoSpeedInHz() / p_pllCfg.m_pllQ) == 48 * 1000 * 1000)
                         // && (p_pllCfg.getPllVcoSpeedInHz(p_pllCfg) >= 100 * 1000 * 1000) && (p_pllCfg.getPllVcoSpeedInHz(p_pllCfg) <= 432 * 1000 * 1000)
-                        && ((p_pllCfg.m_hseSpeedInHz >= 4 * 1000 * 1000) && (p_pllCfg.m_hseSpeedInHz <= 48 * 1000 * 1000))
+                        && ((p_pllCfg.m_hseSpeedInHz == 0) || ((p_pllCfg.m_hseSpeedInHz >= 4 * 1000 * 1000) && (p_pllCfg.m_hseSpeedInHz <= 48 * 1000 * 1000)))
                         && (p_pllCfg.getSysclkSpeedInHz() > 0) && (p_pllCfg.getSysclkSpeedInHz() <= 168 * 1000 * 1000)
                         && (p_pllCfg.getAhbSpeedInHz() > 0) && (p_pllCfg.getAhbSpeedInHz() >= p_pllCfg.getSysclkSpeedInHz())
                         && true;
