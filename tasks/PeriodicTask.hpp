@@ -18,8 +18,8 @@ private:
     const TickType_t    m_period;
 
 public:
-    PeriodicTask(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs)
-       : Task(p_name, p_priority), m_period(p_periodMs / portTICK_PERIOD_MS) {
+    PeriodicTask(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs, const size_t p_stackSz = 0)
+       : Task(p_name, p_priority, p_stackSz), m_period(p_periodMs / portTICK_PERIOD_MS) {
 
     };
 

@@ -96,7 +96,7 @@ private:
     int executePeriod(void) override {
         m_direction *= -1;
 
-        m_led.set(m_direction);
+        m_led.set(m_direction > 0);
 
         m_usbMouseApplication.setXAxis(m_direction * m_xOffset);
         m_usbMouseApplication.setYAxis(m_direction * m_yOffset);
@@ -111,7 +111,7 @@ private:
 public:
     UsbMouseMover(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs,
       usb::UsbMouseApplication &p_usbMouseApplication, const int p_xOffset, const int p_yOffset, const gpio::GpioPin &p_led)
-        : PeriodicTask(p_name, p_priority, p_periodMs), m_usbMouseApplication(p_usbMouseApplication), m_led(p_led),
+        : PeriodicTask(p_name, p_priority, p_periodMs, 256), m_usbMouseApplication(p_usbMouseApplication), m_led(p_led),
             m_xOffset(p_xOffset), m_yOffset(p_yOffset), m_direction(1) {
 
     }
