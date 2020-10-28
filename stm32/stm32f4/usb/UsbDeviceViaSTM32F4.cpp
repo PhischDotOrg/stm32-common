@@ -922,23 +922,6 @@ UsbDeviceViaSTM32F4::flushTxFifo(const InEndpointViaSTM32F4 &p_endpoint) const {
  ******************************************************************************/
 ::usb::UsbHwDevice::DeviceSpeed_e
 UsbDeviceViaSTM32F4::getEnumeratedSpeed(void) const {
-<<<<<<< HEAD
-    ::usb::UsbHwDevice::DeviceSpeed_e enumeratedSpeed = ::usb::UsbHwDevice::DeviceSpeed_e::e_UsbUnknown;
-
-    enum EnumeratedSpeed_e {
-        e_HighSpeed     = 0x00,
-        e_Reserved_Init = 0x01, /* Datasheet marks this combination as reserved, seems to be set up as initial value */
-        e_FullSpeed     = 0x03
-    };
-
-    switch((this->m_usbDevice->DSTS & USB_OTG_DSTS_ENUMSPD_Msk) >> USB_OTG_DSTS_ENUMSPD_Pos) {
-    case e_FullSpeed:
-        enumeratedSpeed = e_UsbFullSpeed;
-        break;
-    case e_HighSpeed:
-        /* FIXME USB High Speed Mode not yet implemented */
-        assert(false);
-=======
     ::usb::UsbHwDevice::DeviceSpeed_e enumeratedUsbSpeed = ::usb::UsbHwDevice::DeviceSpeed_e::e_UsbUnknown;
 
     /*
@@ -984,15 +967,10 @@ UsbDeviceViaSTM32F4::getEnumeratedSpeed(void) const {
          */
     case EnumeratedSpeed_e::e_FullSpeed:
         enumeratedUsbSpeed = e_UsbFullSpeed;
->>>>>>> 82dcef1... Extend the USB Enumeration Speed Handling to some undocumented cases.
         break;
     default:
         /* FIXME USB Low or High Speed Mode not yet implemented */
         assert(false);
-<<<<<<< HEAD
-        enumeratedSpeed = e_UsbFullSpeed;
-=======
->>>>>>> 82dcef1... Extend the USB Enumeration Speed Handling to some undocumented cases.
         break;
     }
 

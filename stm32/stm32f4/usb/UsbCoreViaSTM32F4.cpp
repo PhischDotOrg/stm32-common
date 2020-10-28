@@ -98,11 +98,8 @@ void
 UsbCoreViaSTM32F4::reset(void) const {
     this->performReset(USB_OTG_GRSTCTL_CSRST);
 
-    /* TODO Is the wait really needed? If it asked for by the Spec, then include a reference if so. */
-    usleep(25);
-
     this->disableInterrupt();
-    this->stopPhy();
+    this->suspendPhy();
 
     USB_PRINTF("UsbCoreViaSTM32F4::%s(): Core Reset\r\n", __func__);
 }
@@ -162,18 +159,6 @@ UsbCoreViaSTM32F4::flushTxFifo(const uint8_t p_fifo) const {
 }
 
 /***************************************************************************//**
- * @brief Stops the USB PHY.
- * 
- * \bug This method essentially does the same thing as #resumePhy.
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::startPhy(void) const {
-    /* FIXME Remove this method, it's the same as suspendPhy() */
-    this->m_usbPwrCtrl->PCGCCTL &= ~USB_OTG_PCGCCTL_PHYSUSP;
-    this->resumePhy();
-}
-
-/***************************************************************************//**
  * @brief Resumes the USB PHY.
  * 
  * Resumes the USB PHY by enabling the clocks via the \c PCGCCTL register.
@@ -215,19 +200,7 @@ void
 UsbCoreViaSTM32F4::suspendPhy(void) const {
     this->m_usbPwrCtrl->PCGCCTL |= (USB_OTG_PCGCCTL_STOPCLK | USB_OTG_PCGCCTL_GATECLK);
 
-    while (!(this->m_usbPwrCtrl->PCGCCTL & USB_OTG_PCGCCTL_PHYSUSP));
-}
-
-/***************************************************************************//**
- * @brief Stops the USB PHY.
- * 
- * \bug This method essentially does the same thing as #suspendPhy.
- ******************************************************************************/
-void
-UsbCoreViaSTM32F4::stopPhy(void) const {
-    /* FIXME Remove this method, it's the same as suspendPhy() */
-    this->m_usbPwrCtrl->PCGCCTL |= USB_OTG_PCGCCTL_PHYSUSP;
-    this->suspendPhy();
+    while ((this->m_usbPwrCtrl->PCGCCTL & USB_OTG_PCGCCTL_PHYSUSP) != USB_OTG_PCGCCTL_PHYSUSP);
 }
 
 /***************************************************************************//**
@@ -254,16 +227,18 @@ UsbCoreViaSTM32F4::setupModeInHw(const DeviceMode_e p_mode) const {
         this->m_usbCore->GCCFG |= USB_OTG_GCCFG_VBUSBSEN;
         this->m_usbCore->GUSBCFG |= USB_OTG_GUSBCFG_FDMOD;
 
-        this->startPhy();
+        this->m_usbCore->GUSBCFG |= USB_OTG_GUSBCFG_PHYSEL_Msk;
+
+        this->resumePhy();
         this->startTransceiver();
 
-        /* TODO Is the wait really needed? If it asked for by the Spec, then include a reference if so. */
-
         /*
-         * Let USB Core settle for a bit. If not, then the session request IRQ will
-         * fire immediately.
+         * The USB Turn-around Time and the FS should be set up according
+         * to the data sheet description of the register, but I found that
+         * it doesn't make a difference in my tests.
          */
-        usleep(25000);
+        this->m_usbCore->GUSBCFG |= ((0x9 << USB_OTG_GUSBCFG_TRDT_Pos) & USB_OTG_GUSBCFG_TRDT_Msk);
+        this->m_usbCore->GUSBCFG |= (17 << USB_OTG_GUSBCFG_TOCAL_Pos) & USB_OTG_GUSBCFG_TOCAL_Msk;
 
         this->flushRxFifo();
         this->flushTxFifo(0x10); // Flush all Tx FIFOs
@@ -292,16 +267,8 @@ UsbCoreViaSTM32F4::setupModeInHw(const DeviceMode_e p_mode) const {
  ******************************************************************************/
 void
 UsbCoreViaSTM32F4::start(void) const {
-    this->startPhy();
     this->startTransceiver();
-
-    /* TODO Is the wait really needed? If it asked for by the Spec, then include a reference if so. */
-
-    /*
-     * Let USB Core settle for a bit. If not, then the session request IRQ will
-     * fire immediately.
-     */
-    usleep(25000);
+    this->resumePhy();
 
     this->enableInterrupt();
 }
@@ -321,8 +288,8 @@ UsbCoreViaSTM32F4::stop(void) const {
 
     /* TODO start() enables the IRQs, should we disable them here? */
 
+    this->suspendPhy();
     this->stopTransceiver();
-    this->stopPhy();
 }
 
 /***************************************************************************//**
