@@ -10,9 +10,9 @@
 namespace stm32 {
 /*****************************************************************************/
 
-template<intptr_t EngineAddress>
+template<uintptr_t EngineAddress>
 struct EngineT {
-    enum : intptr_t {
+    enum : uintptr_t {
         m_engineType = EngineAddress
     };
 
