@@ -121,6 +121,7 @@ public:
     void disable(DMA_Stream_TypeDef * p_stream, const unsigned p_streamNo) const {
         uint8_t flags = this->handleStreamIrq(p_stream, p_streamNo);
         assert(!(flags & ~e_Complete));
+        (void) flags;
 
         p_stream->CR &= ~DMA_SxCR_EN;
     }
