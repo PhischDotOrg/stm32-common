@@ -68,7 +68,8 @@ class CoreDbgT : public EngineT<AddressT>, public CoreDbg {
 
 public:
     constexpr CoreDbgT(void) : CoreDbg(* reinterpret_cast<CoreDebug_Type *>(this->m_engineType)) {
-
+        /* FIXME This should go in the Object Tree somewhere */
+        DBGMCU->CR = /* DBGMCU_CR_DBG_SLEEP_Msk | DBGMCU_CR_DBG_STOP_Msk | DBGMCU_CR_DBG_STANDBY_Msk | */ DBGMCU_CR_TRACE_IOEN_Msk;
     }
 }; /* class CoreDebugT */
 /*****************************************************************************/
