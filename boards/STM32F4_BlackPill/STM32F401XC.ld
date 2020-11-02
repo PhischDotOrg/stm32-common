@@ -29,8 +29,8 @@ MEMORY
   FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 255K
   STACK (rw)    : ORIGIN = 0x20000000, LENGTH = 4K
   /* Make sure the length of this section matches the definition of configTOTAL_HEAP_SIZE in FreeRTOSConfig.h */
-  HEAP (rw)     : ORIGIN = 0x20001000, LENGTH = 4K
-  RAM (rw)      : ORIGIN = 0x20002000, LENGTH = 56K
+  HEAP (rw)     : ORIGIN = 0x20001000, LENGTH = 8K
+  RAM (rw)      : ORIGIN = 0x20003000, LENGTH = 52K
 }
 
 /* Define output sections */
