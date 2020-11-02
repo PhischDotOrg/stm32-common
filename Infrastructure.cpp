@@ -9,13 +9,13 @@
 #include "version.h"
 #include <cassert>
 
-/*******************************************************************************
- *
- ******************************************************************************/
+/******************************************************************************/
 #if defined(__cplusplus)
 extern "C" {
 #endif /* defined (__cplusplus) */
+/******************************************************************************/
 
+/******************************************************************************/
 #if !defined(HOSTBUILD)
 void __assert_func (const char *p_file, int p_line, const char *p_func, const char *p_msg) {
 #if defined(NO_LOGGING)
@@ -35,7 +35,9 @@ __assert (const char *p_file, int p_line, const char *p_msg) {
     __assert_func (p_file, p_line, __func__, p_msg);
 }
 #endif /* defined(HOSTBUILD) */
+/******************************************************************************/
 
+/******************************************************************************/
 void
 PrintStartupMessage(unsigned p_sysclk, unsigned p_ahb, unsigned p_apb1, unsigned p_apb2) {
 #if defined(NO_LOGGING)
@@ -67,7 +69,9 @@ PrintStartupMessage(unsigned p_sysclk, unsigned p_ahb, unsigned p_apb1, unsigned
     PHISCH_LOG("       APB2 @ %d kHz\r\n", p_apb2);
     PHISCH_LOG("\r\n");
 }
+/******************************************************************************/
 
+/******************************************************************************/
 #if !defined(HOSTBUILD)
 int
 usleep(unsigned p_usec) {
@@ -135,7 +139,46 @@ usleep(unsigned p_usec) {
     return 0;
 }
 #endif /* defined(HOSTBUILD) */
+/******************************************************************************/
 
+/******************************************************************************/
 #if defined(__cplusplus)
 } /* extern "C" */
 #endif /* defined (__cplusplus) */
+/******************************************************************************/
+
+/******************************************************************************/
+#if !defined(NO_LOGGING)
+#include <uart/UartDevice.hpp>
+
+    __attribute__((weak))
+    extern uart::UartDevice g_uart;
+
+    #if defined(__cplusplus)
+    extern "C" {
+    #endif /* defined (__cplusplus) */
+
+        __attribute__((weak))
+        void
+        debug_printf(const char * const p_fmt, ...) {
+            va_list va;
+            va_start(va, p_fmt);
+
+        /*
+         * Remove this call from the Host Build as this weak-symbol implementation
+         * of the debug_printf() method ends up in the ELF file which can lead to
+         * an unresolved symbol in linking.
+         */
+        #if !defined(HOSTBUILD)
+            g_uart.vprintf(p_fmt, va);
+        #endif
+
+            va_end(va);
+        }
+    #if defined(__cplusplus)
+    } /* extern "C" */
+    #endif /* defined (__cplusplus) */
+
+#endif
+/******************************************************************************/
+
