@@ -12,7 +12,7 @@
 
 #include <phisch/log.h>
 
-#include <FreeRTOS.h> 
+#include <FreeRTOS.h>
 #include <FreeRTOS/include/queue.h>
 #include <FreeRTOS/include/semphr.h>
 
@@ -20,7 +20,7 @@ namespace tasks {
 
 /***************************************************************************//**
  * @brief USB Mouse Button Handler.
- * 
+ *
  * This Task reacts on events from a Queue and translates them to Button press /
  * release in the USB Mouse Application.
  *******************************************************************************/
@@ -47,7 +47,7 @@ private:
             m_usbMouseApplication.updateHost();
             xSemaphoreGive(m_usbMutex);
         }
-        
+
         PHISCH_LOG("UsbMouseButtonHandler::%s(): Failed to receive Button State from queue.\r\n", __func__);
         m_led->disable();
 
@@ -81,13 +81,13 @@ public:
 
 /***************************************************************************//**
  * @brief USB Mouse Mover.
- * 
+ *
  * This Task updates the x- and y-Position periodically.
  *******************************************************************************/
 class UsbMouseMover : public PeriodicTask {
 private:
     usb::UsbMouseApplication &  m_usbMouseApplication;
-    const gpio::GpioPin &       m_led;
+    const gpio::GpioPin * const m_led;
     int                         m_xOffset;
     int                         m_yOffset;
     int                         m_direction;
@@ -96,7 +96,9 @@ private:
     int executePeriod(void) override {
         m_direction *= -1;
 
-        m_led.set(m_direction > 0);
+        if (m_led != nullptr) {
+            m_led->set(m_direction > 0);
+        }
 
         m_usbMouseApplication.setXAxis(m_direction * m_xOffset);
         m_usbMouseApplication.setYAxis(m_direction * m_yOffset);
@@ -104,13 +106,13 @@ private:
         xSemaphoreTake(m_usbMutex, portMAX_DELAY);
         m_usbMouseApplication.updateHost();
         xSemaphoreGive(m_usbMutex);
-      
+
         return (0);
     }
 
 public:
     UsbMouseMover(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs,
-      usb::UsbMouseApplication &p_usbMouseApplication, const int p_xOffset, const int p_yOffset, const gpio::GpioPin &p_led)
+      usb::UsbMouseApplication &p_usbMouseApplication, const int p_xOffset, const int p_yOffset, const gpio::GpioPin *p_led = nullptr)
         : PeriodicTask(p_name, p_priority, p_periodMs, 256), m_usbMouseApplication(p_usbMouseApplication), m_led(p_led),
             m_xOffset(p_xOffset), m_yOffset(p_yOffset), m_direction(1) {
 
