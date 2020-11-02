@@ -45,11 +45,25 @@ if(NOT("${STM32_BOARD}" STREQUAL ""))
         "\'${BOARD_CMAKE_FILE}\' does not exist!")
     else()
         message(STATUS "STM32 Board: ${STM32_BOARD}")
+
         # Configure Board-specific Options
         include(${BOARD_CMAKE_FILE})
 
         add_definitions(-D${STM32_CPU_FAMILY})
         add_definitions(-D${STM32_CPU_TYPE})
+
+        # Copy the CPU-/Board-specific SVD File to a common place so it can be referenced
+        # with a generic launch configuration Visual Studio Code.
+        set(STM32_SVD_FILE_FULLPATH ${CMAKE_CURRENT_SOURCE_DIR}/boards/${STM32_BOARD}/${STM32_SVD_FILE})
+        if (EXISTS ${STM32_SVD_FILE_FULLPATH})
+            message(STATUS "Using SVD File: ${STM32_SVD_FILE_FULLPATH}")
+
+            configure_file(
+                ${STM32_SVD_FILE_FULLPATH}
+                ${CMAKE_CURRENT_BINARY_DIR}/STM32.svd
+                COPYONLY
+            )
+        endif()
     endif()
 endif()
 

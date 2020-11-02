@@ -6,4 +6,6 @@ set(STM32_CPU_TYPE          "STM32F401xC")
 
 set(STM32_FLASH_INTERFACE   "BlackMagicProbe")
 
+set(STM32_SVD_FILE          "STM32F401.svd")
+
 set(HAVE_USB_OTG            TRUE)
