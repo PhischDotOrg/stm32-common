@@ -78,16 +78,15 @@ public:
 template<
     uintptr_t AddressT,
     typename CoreDbgT,
-    typename PinT
+    typename DbgMcuT
 >
 class TpiT : public EngineT<AddressT>, public Tpi {
 
 public:
-    TpiT(const CoreDbgT &p_coreDbg, PinT &p_swo)
+    TpiT(const CoreDbgT &p_coreDbg, const DbgMcuT &p_dbgMcu)
       : Tpi(* reinterpret_cast<TPI_Type *>(this->m_engineType)) {
         p_coreDbg.enableTpi();
-
-        p_swo.selectAlternateFn(* static_cast<EngineT<AddressT> *>(this));
+        p_dbgMcu.enableSwo();
     }
 }; /* class Itm */
 /*****************************************************************************/

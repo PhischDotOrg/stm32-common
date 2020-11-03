@@ -37,7 +37,7 @@ struct GpioPinConfiguration {
     enum class Function_e : uint32_t {
         e_Gpio = 0,
         e_Mco = 0,
-        e_TPI = 0,  // For SWO Support
+        e_DBGMCU = 0,  // For SWO Support
         e_Tim1 = 1,
         e_Tim2 = 1,
         e_Tim3 = 2,
@@ -107,8 +107,8 @@ template<> struct IoMuxT< EngineT< (Engine ## _BASE) > > {                      
     MAP_IO_ENGINE(SPI3);
 #endif
 
-#if defined(TPI_BASE)
-    MAP_IO_ENGINE(TPI);
+#if defined(DBGMCU_BASE)
+    MAP_IO_ENGINE(DBGMCU);
 #endif
 
 #if defined(USART1_BASE)
