@@ -24,9 +24,12 @@ namespace tasks {
  * This Task reacts on events from a Queue and translates them to Button press /
  * release in the USB Mouse Application.
  *******************************************************************************/
-class UsbMouseButtonHandler : public Task {
+template<
+    typename UsbMouseApplicationT
+>
+class UsbMouseButtonHandlerT : public Task {
 private:
-    usb::UsbMouseApplication &  m_usbMouseApplication;
+    UsbMouseApplicationT &      m_usbMouseApplication;
     const gpio::GpioPin *       m_led;
     QueueHandle_t               m_buttonHandlerQueue;
     SemaphoreHandle_t           m_usbMutex;
@@ -41,7 +44,7 @@ private:
                 PHISCH_LOG("UsbMouseButtonHandler::%s(): Button State = 0x%x\r\n", __func__, buttonState);
             }
 
-            m_usbMouseApplication.setButton(usb::UsbMouseApplication::Button_e::e_LeftButton, buttonState);
+            m_usbMouseApplication.setButton(UsbMouseApplicationT::Button_e::e_LeftButton, buttonState);
 
             xSemaphoreTake(m_usbMutex, portMAX_DELAY);
             m_usbMouseApplication.updateHost();
@@ -55,19 +58,17 @@ private:
     };
 
 public:
-    UsbMouseButtonHandler(const char * const p_name, const unsigned p_priority, usb::UsbMouseApplication &p_usbMouseApplication)
+    UsbMouseButtonHandlerT(const char * const p_name, const unsigned p_priority, UsbMouseApplicationT &p_usbMouseApplication)
       : Task(p_name, p_priority), m_usbMouseApplication(p_usbMouseApplication), m_led(nullptr) {
 
     }
 
-    UsbMouseButtonHandler(const char * const p_name, const unsigned p_priority, usb::UsbMouseApplication &p_usbMouseApplication, const gpio::GpioPin * const p_led)
+    UsbMouseButtonHandlerT(const char * const p_name, const unsigned p_priority, UsbMouseApplicationT &p_usbMouseApplication, const gpio::GpioPin * const p_led)
       : Task(p_name, p_priority), m_usbMouseApplication(p_usbMouseApplication), m_led(p_led) {
 
     }
 
-    virtual ~UsbMouseButtonHandler() {
-
-    };
+    virtual ~UsbMouseButtonHandlerT() = default;
 
     void setRxQueue(const QueueHandle_t p_buttonHandlerQueue) {
         this->m_buttonHandlerQueue = p_buttonHandlerQueue;
@@ -84,9 +85,12 @@ public:
  *
  * This Task updates the x- and y-Position periodically.
  *******************************************************************************/
-class UsbMouseMover : public PeriodicTask {
+template<
+    typename UsbMouseApplicationT
+>
+class UsbMouseMoverT : public PeriodicTask {
 private:
-    usb::UsbMouseApplication &  m_usbMouseApplication;
+    UsbMouseApplicationT &      m_usbMouseApplication;
     const gpio::GpioPin * const m_led;
     int                         m_xOffset;
     int                         m_yOffset;
@@ -111,14 +115,10 @@ private:
     }
 
 public:
-    UsbMouseMover(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs,
-      usb::UsbMouseApplication &p_usbMouseApplication, const int p_xOffset, const int p_yOffset, const gpio::GpioPin *p_led = nullptr)
+    UsbMouseMoverT(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs,
+      UsbMouseApplicationT &p_usbMouseApplication, const int p_xOffset, const int p_yOffset, const gpio::GpioPin *p_led = nullptr)
         : PeriodicTask(p_name, p_priority, p_periodMs, 256), m_usbMouseApplication(p_usbMouseApplication), m_led(p_led),
             m_xOffset(p_xOffset), m_yOffset(p_yOffset), m_direction(1) {
-
-    }
-
-    ~UsbMouseMover() {
 
     }
 
