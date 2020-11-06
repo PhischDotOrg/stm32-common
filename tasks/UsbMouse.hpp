@@ -16,6 +16,8 @@
 #include <FreeRTOS/include/queue.h>
 #include <FreeRTOS/include/semphr.h>
 
+#include <cmath>
+
 namespace tasks {
 
 /***************************************************************************//**
@@ -104,8 +106,8 @@ private:
         m_oldPos = m_newPos;
         m_newPos = MovePolicyT::getPosition();
 
-        m_usbMouseApplication.setXAxis(m_oldPos.first - m_newPos.first);
-        m_usbMouseApplication.setYAxis(m_oldPos.first - m_newPos.first);
+        m_usbMouseApplication.setXAxis(m_newPos.first - m_oldPos.first);
+        m_usbMouseApplication.setYAxis(m_newPos.second - m_oldPos.second);
 
         xSemaphoreTake(m_usbMutex, portMAX_DELAY);
         m_usbMouseApplication.updateHost();
@@ -144,6 +146,44 @@ struct UsbMouseMover {
 
         std::pair<int, int>
         getPosition(void) const {
+            return std::pair(x, y);
+        }
+    };
+
+    template<
+        unsigned nRadius,
+        unsigned nSpeed,
+        int nDirection = 1
+    >
+    class CircleT {
+        int w;
+
+    public:
+        constexpr CircleT(void) : w(0) {
+
+        }
+
+        void
+        move(void) {
+            static_assert((nDirection == 1) || (nDirection == -1));
+
+            if (nDirection > 0) {
+                w += nSpeed;
+            } else {
+                w -= nSpeed;
+            }
+
+            w %= 360;
+        };
+
+        std::pair<int, int>
+        getPosition(void) const {
+            static constexpr float pi = 3.14159265359f;
+            float rad = w * (pi / 180.0f);
+
+            int x = cosf(rad) * nRadius;
+            int y = sinf(rad) * nRadius;
+
             return std::pair(x, y);
         }
     }; 
