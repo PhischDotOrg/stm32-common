@@ -86,26 +86,26 @@ public:
  * This Task updates the x- and y-Position periodically.
  *******************************************************************************/
 template<
-    typename UsbMouseApplicationT
+    typename UsbMouseApplicationT,
+    typename MovePolicyT
 >
-class UsbMouseMoverT : public PeriodicTask {
+class UsbMouseMoverT : public PeriodicTask, MovePolicyT {
 private:
     UsbMouseApplicationT &      m_usbMouseApplication;
-    const gpio::GpioPin * const m_led;
-    int                         m_xOffset;
-    int                         m_yOffset;
-    int                         m_direction;
     SemaphoreHandle_t           m_usbMutex;
 
+    using Position_t = std::pair<int, int>;
+    Position_t  m_oldPos;
+    Position_t  m_newPos;
+
     int executePeriod(void) override {
-        m_direction *= -1;
+        MovePolicyT::move();
 
-        if (m_led != nullptr) {
-            m_led->set(m_direction > 0);
-        }
+        m_oldPos = m_newPos;
+        m_newPos = MovePolicyT::getPosition();
 
-        m_usbMouseApplication.setXAxis(m_direction * m_xOffset);
-        m_usbMouseApplication.setYAxis(m_direction * m_yOffset);
+        m_usbMouseApplication.setXAxis(m_oldPos.first - m_newPos.first);
+        m_usbMouseApplication.setYAxis(m_oldPos.first - m_newPos.first);
 
         xSemaphoreTake(m_usbMutex, portMAX_DELAY);
         m_usbMouseApplication.updateHost();
@@ -115,27 +115,38 @@ private:
     }
 
 public:
-    UsbMouseMoverT(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs,
-      UsbMouseApplicationT &p_usbMouseApplication, const int p_xOffset, const int p_yOffset, const gpio::GpioPin *p_led = nullptr)
-        : PeriodicTask(p_name, p_priority, p_periodMs, 256), m_usbMouseApplication(p_usbMouseApplication), m_led(p_led),
-            m_xOffset(p_xOffset), m_yOffset(p_yOffset), m_direction(1) {
-
-    }
-
-    void
-    setXOffset(int p_xOffset) {
-        m_xOffset = p_xOffset;
-    }
-
-    void
-    setYOffset(int p_yOffset) {
-        m_yOffset = p_yOffset;
+    UsbMouseMoverT(const char * const p_name, const unsigned p_priority, const unsigned p_periodMs, UsbMouseApplicationT &p_usbMouseApplication)
+      : PeriodicTask(p_name, p_priority, p_periodMs, 256), m_usbMouseApplication(p_usbMouseApplication) {
     }
 
     void
     setUsbMutex(SemaphoreHandle_t p_usbMutex) {
         m_usbMutex = p_usbMutex;
     }
+};
+
+struct UsbMouseMover {
+    template<
+        unsigned nOffset
+    >
+    class BackAndForthT {
+        int x, y, direction;
+    public:
+        constexpr BackAndForthT(void) : x(0), y(0), direction(1) {
+
+        }
+
+        void
+        move(void) {
+            direction *= -1;
+            y = x = direction * nOffset;
+        };
+
+        std::pair<int, int>
+        getPosition(void) const {
+            return std::pair(x, y);
+        }
+    }; 
 };
 
 } /* namespace tasks */
