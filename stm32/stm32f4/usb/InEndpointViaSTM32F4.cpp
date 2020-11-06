@@ -605,14 +605,6 @@ InEndpointViaSTM32F4::enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpoi
 /*******************************************************************************
  *
  ******************************************************************************/
-bool
-InEndpointViaSTM32F4::isEnabled(void) const {
-    return (this->m_endpoint->DIEPCTL & USB_OTG_DIEPCTL_USBAEP);
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
 void
 InEndpointViaSTM32F4::setupEndpointType(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const {
     /* FIXME Endpoint Types != Bulk or Control are not yet supported. */

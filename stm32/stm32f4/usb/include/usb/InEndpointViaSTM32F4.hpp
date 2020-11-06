@@ -179,8 +179,6 @@ public:
 
     void enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const;
     void disable(void) const;
-
-    bool isEnabled(void) const;
 };
 
 /*******************************************************************************
@@ -272,10 +270,6 @@ public:
     void disable(void) const {
         this->m_inEndpoint.disable();
     };
-
-    bool isEnabled(void) const {
-        return this->m_inEndpoint.isEnabled();
-    }
 
     void write(const uint8_t * const p_data, const size_t p_length) {
         this->m_inEndpoint.write(p_data, p_length);
