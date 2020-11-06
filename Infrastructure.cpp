@@ -27,6 +27,10 @@ void __assert_func (const char *p_file, int p_line, const char *p_func, const ch
 
     PHISCH_LOG("%s() @ %s : %d \r\n%s\r\n", p_func, p_file, p_line, p_msg);
 
+#if !defined(HOSTBUILD)
+    asm volatile("bkpt #0");
+#endif
+
     while (1) { };
 }
 
