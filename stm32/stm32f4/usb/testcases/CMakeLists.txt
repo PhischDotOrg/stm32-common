@@ -11,7 +11,7 @@ add_definitions("-DUNITTEST")
 # Testcases
 #*******************************************************************************
 set(TC_SOURCES
-    # main.cpp
+    main.cpp
     test_UsbCoreViaSTM32F4.cpp
 )
 
