@@ -15,9 +15,9 @@ namespace stm32 {
 
 /*****************************************************************************/
 class DbgMcu {
-    DBGMCU_TypeDef &m_dbgMcu;
+    // DBGMCU_TypeDef &m_dbgMcu;
 public:
-    DbgMcu(DBGMCU_TypeDef &p_dbgMcu) : m_dbgMcu(p_dbgMcu) {
+    DbgMcu(DBGMCU_TypeDef & /* p_dbgMcu */) /* : m_dbgMcu(p_dbgMcu) */ {
 
     }
 }; /* class DbgMcu */
