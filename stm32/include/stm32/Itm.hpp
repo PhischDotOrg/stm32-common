@@ -27,7 +27,7 @@ class Itm {
      * See Section 23.14 ITM (instrumentation trace macrocell).
      * 
      */
-    ITM_Type    &m_itm;
+    ITM_Type &      m_itm;
 
     void
     unlock(void) const {
@@ -86,17 +86,48 @@ class Itm {
     };
 
     void
-    enablePrivilege(PrivilegePortMask_e p_ports) {
+    enablePrivilege(PrivilegePortMask_e p_ports) const {
         m_itm.TPR |= static_cast<uint8_t>(p_ports);
     }
 
     void
-    disablePrivilege(PrivilegePortMask_e p_ports) {
+    disablePrivilege(PrivilegePortMask_e p_ports) const {
         m_itm.TPR &= ~(static_cast<uint8_t>(p_ports));
     }
 
+    bool
+    isStimulusPortEnabled(uint8_t p_stimulusPort) const {
+        return m_itm.TER & (1 << p_stimulusPort);
+    }
+
+public:
+    Itm(ITM_Type &p_itm) : m_itm(p_itm) {
+        unlock();
+
+        setAtbId(1);
+
+        enableSWO();
+        enableDwtSync();
+        enable();
+    }
+
+    static constexpr
+    uint32_t
+    getDivisor(uint32_t p_clkSpeed, uint32_t p_baudRate = 2'250'000) {
+        return ((p_clkSpeed / p_baudRate) - 1);
+    }
+
     void
-    enableStimulusPort(uint8_t p_stimulusPort) {
+    sendPort(uint8_t p_port, char p_char) const {
+        if (this->isEnabled() && this->isStimulusPortEnabled(p_port)) {
+            while (m_itm.PORT[p_port].u32 == 0);
+
+            m_itm.PORT[p_port].u8 = p_char;
+        }
+    }
+
+    void
+    enableStimulusPort(uint8_t p_stimulusPort) const {
         if (p_stimulusPort < 8) {
             enablePrivilege(PrivilegePortMask_e::e_Ports_7_0);
         } else if (p_stimulusPort < 16) {
@@ -111,50 +142,6 @@ class Itm {
 
         m_itm.TER |= (1 << p_stimulusPort);
     }
-
-    bool
-    isStimulusPortEnabled(uint8_t p_stimulusPort) const {
-        return m_itm.TER & (1 << p_stimulusPort);
-    }
-
-    void
-    sendPort(uint8_t p_port, char p_char) const {
-        if (this->isEnabled() && this->isStimulusPortEnabled(p_port)) {
-            while (m_itm.PORT[p_port].u32 == 0);
-
-            m_itm.PORT[p_port].u8 = p_char;
-        }
-    }
-
-public:
-    Itm(ITM_Type &p_itm) : m_itm(p_itm) {
-        unlock();
-
-        setAtbId(1);
-
-        enableSWO();
-        enableDwtSync();
-        enable();
-
-        enableStimulusPort(0);
-    }
-
-    static constexpr
-    uint32_t
-    getDivisor(uint32_t p_clkSpeed, uint32_t p_baudRate = 2'250'000) {
-        return ((p_clkSpeed / p_baudRate) - 1);
-    }
-
-    void
-    putf(const char p_char) const {
-        sendPort(0, p_char);
-    }
-
-    static void
-    putf(void *p_this, const char p_char) {
-        const Itm *obj = reinterpret_cast<const Itm *>(p_this);
-        obj->putf(p_char);
-    }
 }; /* class Itm */
 /*****************************************************************************/
 
@@ -167,10 +154,34 @@ class ItmT : public EngineT<AddressT>, public Itm {
 public:
     ItmT(const TpiT &p_tpi, uint32_t p_divisor)
       : Itm(* reinterpret_cast<ITM_Type *>(this->m_engineType)) {
-        p_tpi.disableFormatter();
+        p_tpi.enableFormatter();
         p_tpi.setTracePortProtocol(TpiT::TracePortProtocol_e::e_SWO_NRZ);
         p_tpi.setParallelTracePortWidth(1);
         p_tpi.setDivisor(p_divisor);
+    }
+};
+/*****************************************************************************/
+
+/*****************************************************************************/
+class ItmPort {
+    const Itm &     m_itm;
+    const unsigned  m_port;
+
+public:
+    constexpr ItmPort(const Itm &p_itm, unsigned p_port)
+      : m_itm(p_itm), m_port(p_port) {
+        p_itm.enableStimulusPort(m_port);
+    }
+
+    void
+    putf(const char p_char) const {
+        m_itm.sendPort(m_port, p_char);
+    }
+
+    static void
+    putf(void *p_this, const char p_char) {
+        const ItmPort *obj = reinterpret_cast<const ItmPort *>(p_this);
+        obj->putf(p_char);
     }
 };
 /*****************************************************************************/

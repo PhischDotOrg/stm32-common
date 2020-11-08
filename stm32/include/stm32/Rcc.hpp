@@ -8,8 +8,6 @@
 #include <stm32/Cpu.hpp>
 #include <stm32/RccEngine.hpp>
 
-#include <type_traits>
-
 namespace stm32 {
     template<
         typename RccT,

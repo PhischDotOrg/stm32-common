@@ -16,7 +16,7 @@ namespace stm32 {
 
 /*****************************************************************************/
 template<typename EngineT> struct IrqTypeT {
-    static constexpr std::nullptr_t m_irq = nullptr;
+    static constexpr decltype(nullptr) m_irq = nullptr;
 };
 
 #define MAP_NVIC_ENGINE_IRQ(Engine, Irq)                                    \

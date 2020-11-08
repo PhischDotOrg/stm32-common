@@ -16,7 +16,7 @@ template<
     typename EngineT
 >
 struct IoMuxT {
-    static constexpr std::nullptr_t m_alternateFn = nullptr;
+    static constexpr decltype(nullptr) m_alternateFn = nullptr;
 };
 
 /*****************************************************************************/

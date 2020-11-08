@@ -32,6 +32,7 @@ class IrqInEndpointViaSTM32F4;
  * callbacks from the USB Device Class.
  ******************************************************************************/
 class InEndpointViaSTM32F4 {
+    friend class InEndpointViaSTM32F4Test;
 private:
     /**
      * @brief Reference to the STM32F4 USB Device Driver Object.
@@ -75,7 +76,7 @@ private:
      * 
      * \see #m_irq_handler
      */
-    typedef void (stm32::usb::InEndpointViaSTM32F4::*irq_handler_fn)();
+    typedef void (stm32::usb::InEndpointViaSTM32F4::*irq_handler_fn)(void) const;
 
     /**
      * @brief Typedef for IRQ Handler.
@@ -87,51 +88,45 @@ private:
 
     static const irq_handler_t m_irq_handler[];
 
-    typedef struct TxBuffer_s {
-        bool                    m_isString;
-        union TxBuffer_u {
-            const uint32_t *    m_u32;
-            const uint8_t *     m_u8;
-            const char *        m_str;
-            const char16_t *    m_str16;
-            const wchar_t *     m_wstr;
-        }                       m_data;
-        uint8_t                 m_dataLength;
-        size_t                  m_txLength;
-        size_t                  m_offs;
-        bool                    m_inProgress;
-    } TxBuffer_t;
-    TxBuffer_t  m_txBuffer;
-
     /*******************************************************************************
      * Private Functions
      ******************************************************************************/
     void    setNack(const bool p_nack) const;
 
-    void    startTx(void);
+    void    startTx(size_t p_numBytes);
 
-    void    txData(void);
-    void    txString(void);
+    void    txData(const uint8_t *p_data, const size_t p_len);
 
-    void    handleTxFifoEmpty(void);
-    void    handleNakEffective(void);
-    void    handleInTokenWhenTxFifoEmpty(void);
-    void    handleTimeoutCondition(void);
-    void    handleEndpointDisabled(void);
-    void    handleTransferComplete(void);
+    void    handleTxFifoEmpty(void) const;
+    void    handleNakEffective(void) const;
+    void    handleInTokenWhenTxFifoEmpty(void) const;
+    void    handleTimeoutCondition(void) const;
+    void    handleEndpointDisabled(void) const;
+    void    handleTransferComplete(void) const;
 
     void    reset(void) const;
 
     void    disableIrq(void) const;
     void    enableIrq(void) const;
 
-    void    fillTxFifo(void);
-    void    markTxBufferComplete(void);
-    
+    void
+    disableFifoIrq(void) const {
+        this->m_usbDevice.disableEndpointFifoIrq(*this);
+    }
+
+    void
+    enableFifoIrq(void) const {
+        this->m_usbDevice.enableEndpointFifoIrq(*this);
+    }
+
     void    setupEndpointType(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const;
 
     unsigned    getPacketSize(void) const;
-    unsigned    getNumPackets(const size_t p_txLength, const size_t p_packetSz) const;
+
+    static constexpr unsigned
+    getNumPackets(const size_t p_txLength, const size_t p_packetSz) {
+        return (1 + (p_txLength / p_packetSz));
+    }
 
 public:
     InEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const size_t p_fifoSzInWords, const unsigned p_endpointNumber = 0);
@@ -175,7 +170,6 @@ public:
      * Implementation of UsbHwInEndpoint Interface
      ******************************************************************************/
     void write(const uint8_t * const p_data, const size_t p_length); 
-    void writeString(const ::usb::UsbStringDescriptor &p_string, const size_t p_len);
 
     void enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const;
     void disable(void) const;
@@ -197,16 +191,8 @@ public:
 
     }
 
-    ~CtrlInEndpointViaSTM32F4() {
-
-    }
-
     void write(const uint8_t * const p_data, const size_t p_length) {
         this->m_inEndpoint.write(p_data, p_length);
-    };
-
-    void writeString(const ::usb::UsbStringDescriptor &p_string, const size_t p_len) {
-        this->m_inEndpoint.writeString(p_string, p_len);
     };
 };
 
@@ -257,10 +243,6 @@ public:
     IrqInEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, const size_t p_fifoSzInWords, const unsigned p_endpointNumber)
       : m_inEndpoint(p_usbDevice, p_fifoSzInWords, p_endpointNumber) {
         assert(p_endpointNumber != 0);
-    }
-
-    ~IrqInEndpointViaSTM32F4() {
-
     }
 
     void enable(void) const {

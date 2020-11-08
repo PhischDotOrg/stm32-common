@@ -13,6 +13,7 @@ add_definitions("-DUNITTEST")
 set(TC_SOURCES
     main.cpp
     test_UsbCoreViaSTM32F4.cpp
+    test_InEndpointViaSTM32F4.cpp
 )
 
 set(TARGET_EXE test_usb_stm32f4)

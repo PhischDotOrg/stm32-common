@@ -12,7 +12,7 @@ namespace stm32 {
 /*****************************************************************************/
 
 template<typename EngineT> struct BusTypeT {
-    static constexpr std::nullptr_t m_busType = nullptr;
+    static constexpr decltype(nullptr) m_busType = nullptr;
 };
 
 #define MAP_RCC_ENGINE(Engine)                                  \

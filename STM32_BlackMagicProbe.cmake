@@ -29,7 +29,7 @@ message("ARM GDB found at ${GDB_BIN}")
 # Check if BlackMagicProbe UART Device exists.
 ###############################################################################
 if (NOT EXISTS ${BMP_DEVICE_FILE})
-	message(WARNING "BlackMagicProbe UART Device not found at \"${BMP_DEVICE_FILE}\". Flashing with GDB will not work.")
+	message(STATUS "BlackMagicProbe UART Device not found at \"${BMP_DEVICE_FILE}\". Flashing with GDB will not work.")
 	return()
 endif()
 

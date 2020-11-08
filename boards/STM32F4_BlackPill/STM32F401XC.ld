@@ -24,9 +24,9 @@ ENTRY(Reset_Handler)
 /* Specify the memory areas */
 MEMORY
 {
-  ISR (r)       : ORIGIN = 0x08000000, LENGTH = 512
-  FIXEDDATA (r) : ORIGIN = 0x08000400, LENGTH = 512
-  FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 255K
+  ISR (r)       : ORIGIN = 0x08000000, LENGTH = 1K
+  FIXEDDATA (r) : ORIGIN = 0x08000400, LENGTH = 1K
+  FLASH (rx)    : ORIGIN = 0x08001000, LENGTH = 254K
   STACK (rw)    : ORIGIN = 0x20000000, LENGTH = 4K
   /* Make sure the length of this section matches the definition of configTOTAL_HEAP_SIZE in FreeRTOSConfig.h */
   HEAP (rw)     : ORIGIN = 0x20001000, LENGTH = 8K
