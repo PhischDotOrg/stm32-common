@@ -332,10 +332,10 @@ UsbDeviceViaSTM32F4::handleEnumerationDone(void) const {
 	 * control packets to 64 Bytes.
 	 */
 	assert(this->m_outEndpoints[0] != nullptr);
-	this->m_outEndpoints[0]->setPacketSize(64);
+	this->m_outEndpoints[0]->setPacketSize(::usb::MAX_CTRL_PACKET_SIZE);
 
 	assert(this->m_inEndpoints[0] != nullptr);
-	this->m_inEndpoints[0]->setPacketSize(64);
+	this->m_inEndpoints[0]->setPacketSize(::usb::MAX_CTRL_PACKET_SIZE);
 
     /* Device is ready, so clear global NAK */
 	this->m_usbDevice->DCTL |= USB_OTG_DCTL_CGINAK;
@@ -701,7 +701,7 @@ UsbDeviceViaSTM32F4::setAddress(const uint8_t p_address) const {
     this->m_usbDevice->DCFG &= ~USB_OTG_DCFG_DAD;
     this->m_usbDevice->DCFG |= (p_address << USB_OTG_DCFG_DAD_Pos) & USB_OTG_DCFG_DAD_Msk;
 
-    USB_PRINTF("UsbDeviceViaSTM32F4::%s(): USB Device Adress = %x\r\n", __func__, p_address);
+    USB_PRINTF("UsbDeviceViaSTM32F4::%s(): USB Device Adress = 0x%x\r\n", __func__, p_address);
 }
 
 /***************************************************************************//**
