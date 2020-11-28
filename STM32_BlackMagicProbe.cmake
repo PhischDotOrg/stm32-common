@@ -19,7 +19,7 @@ find_program(
 )
 
 if ((NOT DEFINED GDB_BIN) OR ("${GDB_BIN}" STREQUAL "GDB_BIN-NOTFOUND"))
-	message(WARNING "ARM GDB not found in \"${GDB_SEARCH_PATH}\". Flashing with GDB will not work.")
+	message(STATUS "ARM GDB not found in \"${GDB_SEARCH_PATH}\". Flashing with GDB will not work.")
 	return()
 endif()
 
