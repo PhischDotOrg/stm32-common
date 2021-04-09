@@ -1,5 +1,5 @@
 ###############################################################################
-# stm32f4
+# stm32f1
 ###############################################################################
 set(TARGET_NAME stm32f1)
 set(TARGET_SRC
@@ -12,7 +12,7 @@ target_link_libraries(${TARGET_NAME} INTERFACE
     FreeRTOS
     gpio
     uart
-#    usb-stm32f4
+    usb-stm32f1
 )
 target_include_directories(${TARGET_NAME} PRIVATE
 )
@@ -22,3 +22,7 @@ target_include_directories(${TARGET_NAME} INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/stm32f1
 )
 
+###############################################################################
+# usb
+###############################################################################
+add_subdirectory(usb)

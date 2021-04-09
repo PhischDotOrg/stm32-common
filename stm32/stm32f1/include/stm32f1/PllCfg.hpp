@@ -45,6 +45,12 @@ namespace stm32 {
                 e_APBPrescaler_Div16    = 0b111,
             } APBPrescaler_t;
 
+            typedef enum USBPrescaler_s : unsigned {
+                e_USBPrescaler_None     = 0b00,
+                e_USBPrescaler_Div15    = 0b01,
+                e_USBPrescaler_Disabled = 0b11,
+            } USBPrescaler_t;
+
             typedef enum PllMul_e : unsigned {
                 e_PllM_2        = 0b0000,
                 e_PllM_3        = 0b0001,
@@ -71,6 +77,7 @@ namespace stm32 {
             AHBPrescaler_t      m_ahbPrescaler;
             APBPrescaler_t      m_apb1Prescaler;
             APBPrescaler_t      m_apb2Prescaler;
+            USBPrescaler_t      m_usbPrescaler;
 
             constexpr SysclkSource_t getSysclkSource(void) const {
                 return m_sysclkSource;
@@ -144,6 +151,12 @@ namespace stm32 {
                      : 0;
             }
 
+            constexpr unsigned getUsbSpeedInHz(void) const {
+                return m_usbPrescaler == USBPrescaler_t::e_USBPrescaler_None ? getPllSpeedInHz() / 1
+                     : m_usbPrescaler == USBPrescaler_t::e_USBPrescaler_Div15 ? (getPllSpeedInHz() * 2) / 3
+                     : 0;
+            }
+
             constexpr bool isValid(void) const {
                 const bool isValid = true
                     && ((m_hseSpeedInHz == 0) || ((m_hseSpeedInHz >= 4 * 1000 * 1000) && (m_hseSpeedInHz <= 16 * 1000 * 1000)))
@@ -152,6 +165,7 @@ namespace stm32 {
                     && ((getAhbSpeedInHz() != 0) && (getAhbSpeedInHz() <= 72 * 1000 * 1000))
                     && ((getApb1SpeedInHz() != 0) && (getApb1SpeedInHz() <= 36 * 1000 * 1000))
                     && ((getApb2SpeedInHz() != 0) && (getApb2SpeedInHz() <= 72 * 1000 * 1000))
+                    && ((m_usbPrescaler == USBPrescaler_t::e_USBPrescaler_Disabled) || (getUsbSpeedInHz() == 48 * 1000 * 1000))
                     && true;
 
                 return isValid;

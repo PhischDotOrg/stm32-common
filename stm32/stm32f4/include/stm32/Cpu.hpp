@@ -23,6 +23,11 @@
 #include <stm32f4/dma/Stream.hpp>
 #include <stm32f4/dma/Channel.hpp>
 
+#include <usb/UsbCoreViaSTM32F4.hpp>
+#include <usb/UsbDeviceViaSTM32F4.hpp>
+#include <usb/InEndpointViaSTM32F4.hpp>
+#include <usb/OutEndpointViaSTM32F4.hpp>
+
 /*****************************************************************************/
 namespace stm32 {
 /*****************************************************************************/
@@ -139,6 +144,19 @@ namespace stm32 {
                     template<typename PinT> using Uart5  = ::stm32::UartT<Rcc, UART5_BASE,  stm32::BrrPolicyWithOversampling, PinT>;
                     template<typename PinT> using Usart6 = ::stm32::UartT<Rcc, USART6_BASE, stm32::BrrPolicyWithOversampling, PinT>;
                 }; /* struct Uart */
+
+                struct Usb {
+                    using OtgFsCore         = decltype(nullptr);
+                    using Device            = ::stm32::usb::UsbDeviceViaSTM32F4;
+
+                    using CtrlInEndpoint    = ::stm32::usb::CtrlInEndpointViaSTM32F4;
+                    using CtrlOutEndpoint   = ::stm32::usb::CtrlOutEndpointViaSTM32F4;
+
+                    using BulkInEndpoint    = ::stm32::usb::BulkInEndpointViaSTM32F4;
+                    using BulkOutEndpoint   = ::stm32::usb::BulkOutEndpointViaSTM32F4;
+
+                    using IrqInEndpoint     = decltype(nullptr);
+                };
             }; /* struct Cpu */
         } /* namespace f407 */
 #endif /* defined(STM32F407xx) */
@@ -222,6 +240,7 @@ namespace stm32 {
     using Rcc = Cpu::Rcc;
     using Spi = Cpu::Spi;
     using Uart = Cpu::Uart;
+    using Usb = Cpu::Usb;
 
 #if defined(DMA1_BASE)
     MAP_RCC_ENGINE(DMA1);

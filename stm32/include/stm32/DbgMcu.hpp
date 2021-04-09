@@ -7,7 +7,8 @@
 #include <stm32/Engine.hpp>
 
 #include <stdint.h>
-#include "core_cm4.h"
+
+#include "stm32f4xx.h"
 
 /*****************************************************************************/
 namespace stm32 {
