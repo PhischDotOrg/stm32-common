@@ -39,5 +39,5 @@ endif()
 #*******************************************************************************
 if (UNITTEST)
     MESSAGE(STATUS "Building ${TARGET_NAME} Testcases")
-    add_subdirectory(testcases)
+    # add_subdirectory(testcases)
 endif(UNITTEST)
