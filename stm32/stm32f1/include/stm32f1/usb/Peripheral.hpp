@@ -86,7 +86,7 @@ public:
         return reinterpret_cast<uintptr_t>(&this->m_usbCore);
     }
 
-    static constexpr uint16_t
+    static /* constexpr */ uint16_t
     mapHostToPeripheral(uintptr_t p_hostAddr) {
         return static_cast<uint16_t>((p_hostAddr - reinterpret_cast<uintptr_t>(&UsbBufBegin)) / sizeof(uint16_t));
     }

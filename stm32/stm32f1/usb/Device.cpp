@@ -13,7 +13,7 @@ namespace stm32 {
         namespace usb {
 /*****************************************************************************/
 
-struct EndpointBufferDescriptor_s Device::m_bufferDescriptorTable[m_maxEndpoints];
+alignas(8) struct EndpointBufferDescriptor_s Device::m_bufferDescriptorTable[m_maxEndpoints];
 
 void
 Device::reset(void) const {

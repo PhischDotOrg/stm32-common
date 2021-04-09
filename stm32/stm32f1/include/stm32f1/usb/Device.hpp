@@ -132,7 +132,7 @@ public:
         return m_usbPeripheral.getBaseAddr();
     }
 
-    static constexpr uint16_t
+    static /* constexpr */ uint16_t
     mapHostToPeripheral(uintptr_t p_hostAddr) {
         return Peripheral::mapHostToPeripheral(p_hostAddr);
     }
