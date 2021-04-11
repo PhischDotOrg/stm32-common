@@ -97,6 +97,25 @@ Device::handleEndpointIrq(unsigned p_endpointNo, unsigned p_direction) const {
     USB_PRINTF("<-- Device::%s()\r\n", __func__);
 }
 
+
+void
+Device::setAddress(const uint8_t p_address) const {
+    /*
+     * If the address is != 0, then this method is called from the SetAddress Device 
+     * Control Request handler.
+     * 
+     * The USB Standard requires the request to be ACK'd before setting the address in
+     * Hardware. Doing it the other way around prevents the device from working (the
+     * device enumeration will already fail).
+     */
+    assert(this->m_inEndpoints[0] != nullptr);
+    if (p_address != 0) {
+        this->m_inEndpoints[0]->write(nullptr, 0);
+    }
+
+    m_usbPeripheral.setAddress(p_address);
+}
+
 /*****************************************************************************/
         } /* namespace usb */
     } /* namespace f1 */

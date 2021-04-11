@@ -19,6 +19,13 @@ BulkInEndpoint::enable(void) const {
 }
 
 void
+IrqInEndpoint::enable(void) const {
+    setAddress(this->m_endpointNumber);
+    setEndpointType(EndpointType_t::e_Interrupt);
+}
+
+
+void
 InEndpoint::handleIrq(void) const {
     unsigned reg = *(this->m_register);
     USB_PRINTF("--> InEndpoint::%s(m_endpointNumber=%d, EPnR=0x%x)\r\n", __func__, m_endpointNumber, reg);
@@ -26,7 +33,6 @@ InEndpoint::handleIrq(void) const {
     (void) reg;
 
     this->m_endptBufferDescr.m_txCount = 0;
-    this->m_endptBufferDescr.m_txAddr = 0;
 
     this->clearInterrupt(Interrupt_t::e_CorrectTransferTx);
 
@@ -36,6 +42,8 @@ InEndpoint::handleIrq(void) const {
 void
 InEndpoint::write(const uint8_t * const p_data, const size_t p_length) const {
     const size_t packetSz = this->m_bufSz;
+
+    assert(this->m_endptBufferDescr.m_txCount == 0);
 
     if (p_length > 0) {
         for (size_t offs = 0; offs < p_length; offs += packetSz) {
@@ -81,10 +89,6 @@ InEndpoint::sendPacket(const uint8_t * const p_data, const size_t p_length) cons
     }
 
     this->txEnable();
-
-    while ((*(this->m_register) & USB_EP0R_CTR_TX) == 0) ;
-
-    this->clearInterrupt(Interrupt_t::e_CorrectTransferTx);
 
     USB_PRINTF("<-- InEndpoint::%s()\r\n", __func__);
 }

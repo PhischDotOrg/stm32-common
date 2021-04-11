@@ -49,7 +49,7 @@ class OutEndpoint : protected Endpoint {
 
 public:
     OutEndpoint(Device &p_usbDevice, UsbMem * const p_buffer, const size_t p_length, const unsigned p_endpointNumber)
-      : Endpoint(p_usbDevice, p_endpointNumber, p_buffer, p_length) {
+      : Endpoint(p_usbDevice, p_endpointNumber, p_buffer, p_length), m_endpointCallback(nullptr) {
         this->m_usbDevice.registerOutEndpoint(this->m_endpointNumber, *this);
     }
 

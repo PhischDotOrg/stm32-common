@@ -37,6 +37,7 @@ public:
         Endpoint::reset();
 
         m_endptBufferDescr.m_txAddr = m_usbDevice.mapHostToPeripheral(reinterpret_cast<uintptr_t>(&(m_buffer[0].data)));
+        m_endptBufferDescr.m_txAddr = 0;
     }
 
     void handleIrq(void) const;
@@ -80,8 +81,21 @@ public:
 /*****************************************************************************/
 
 /*****************************************************************************/
-class IrqInEndpoint {
+class IrqInEndpoint : private InEndpoint {
+public:
+    IrqInEndpoint(Device &p_usbDevice, UsbMem * const p_buffer, const size_t p_length, const unsigned p_endpointNumber)
+      : InEndpoint(p_usbDevice, p_buffer, p_length, p_endpointNumber) {
+    }
 
+    void enable(void) const;
+
+    void disable(void) const {
+        InEndpoint::disable();
+    }
+
+    void write(const uint8_t * const p_data, const size_t p_length) const {
+        InEndpoint::write(p_data, p_length);
+    }
 };
 /*****************************************************************************/
 

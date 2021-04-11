@@ -161,8 +161,6 @@ void
 Peripheral::handleErrorIrq(void) const {
     USB_PRINTF("--> Peripheral::%s()\r\n", __func__);
 
-    assert(false);
-
     USB_PRINTF("<-- Peripheral::%s()\r\n", __func__);
 }
 

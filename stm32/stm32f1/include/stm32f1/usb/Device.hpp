@@ -66,9 +66,7 @@ public:
         m_usbPeripheral.unregisterDevice();
     }
 
-    void setAddress(const uint8_t p_address) const override {
-        m_usbPeripheral.setAddress(p_address);
-    }
+    void setAddress(const uint8_t p_address) const override;
 
     void
     registerCtrlEndpoint(CtrlOutEndpoint &p_endpoint) {
