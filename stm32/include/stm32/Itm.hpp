@@ -63,10 +63,15 @@ class Itm {
         m_itm.TCR &= ~ITM_TCR_SYNCENA_Msk;
     }
 
-    void
-    enable(void) const {
-        m_itm.TCR |= ITM_TCR_ITMENA_Msk;
-    }
+    /*
+     * The "enable" operation should be done by the Debugger (if connected). Otherwise,
+     * the sendPort() method will block infinitely waiting for the FIFO to clear when
+     * no debugger is connected.
+     */
+    // void
+    // enable(void) const {
+    //     m_itm.TCR |= ITM_TCR_ITMENA_Msk;
+    // }
 
     bool
     isEnabled(void) const {
@@ -108,7 +113,6 @@ public:
 
         enableSWO();
         enableDwtSync();
-        enable();
     }
 
     static constexpr
