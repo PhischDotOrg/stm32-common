@@ -23,6 +23,19 @@ namespace stm32 {
 
 /*****************************************************************************/
 class InEndpoint : protected Endpoint {
+    typedef void (stm32::f1::usb::InEndpoint::*irq_handler_fn)() const;
+
+    typedef struct irq_handler_s {
+        /** @brief Interrupt to be handled. */
+        Interrupt_t         m_irq;
+        /** @brief Pointer to Interrupt Handler function. */
+        irq_handler_fn      m_fn;
+    } irq_handler_t;
+
+    static const irq_handler_t m_irq_handler[];
+
+    void handleCorrectTransferTx(void) const;
+
 public:
     InEndpoint(Device &p_usbDevice, UsbMem * const p_buffer, const size_t p_length, const unsigned p_endpointNumber)
       : Endpoint(p_usbDevice, p_endpointNumber, p_buffer, p_length) {
@@ -33,12 +46,7 @@ public:
         this->m_usbDevice.unregisterInEndpoint(this->m_endpointNumber);
     };
 
-    void reset(void) const {
-        Endpoint::reset();
-
-        m_endptBufferDescr.m_txAddr = m_usbDevice.mapHostToPeripheral(reinterpret_cast<uintptr_t>(&(m_buffer[0].data)));
-        m_endptBufferDescr.m_txAddr = 0;
-    }
+    void reset(void) const;
 
     void handleIrq(void) const;
 

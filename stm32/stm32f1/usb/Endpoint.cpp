@@ -16,6 +16,8 @@ Endpoint::reset(void) const {
     disable();  
     clrCtrRx();
     clrCtrTx();
+
+    setAddress(this->m_endpointNumber);
 }
 
 void
