@@ -89,9 +89,10 @@ public:
  *******************************************************************************/
 template<
     typename UsbMouseApplicationT,
-    typename MovePolicyT
+    typename MovePolicyT,
+    typename EnabledPolicyT
 >
-class UsbMouseMoverT : public PeriodicTask, MovePolicyT {
+class UsbMouseMoverT : public PeriodicTask, MovePolicyT, EnabledPolicyT {
 private:
     UsbMouseApplicationT &      m_usbMouseApplication;
     SemaphoreHandle_t           m_usbMutex;
@@ -110,7 +111,9 @@ private:
         m_usbMouseApplication.setYAxis(m_newPos.second - m_oldPos.second);
 
         xSemaphoreTake(m_usbMutex, portMAX_DELAY);
-        m_usbMouseApplication.updateHost();
+        if (EnabledPolicyT::isEnabled()) {
+            m_usbMouseApplication.updateHost();
+        }
         xSemaphoreGive(m_usbMutex);
 
         return (0);
@@ -128,65 +131,84 @@ public:
 };
 
 struct UsbMouseMover {
-    template<
-        unsigned nOffset
-    >
-    class BackAndForthT {
-        int x, y, direction;
-    public:
-        constexpr BackAndForthT(void) : x(0), y(0), direction(1) {
+    struct MovePolicy {
+        template<
+            unsigned nOffset
+        >
+        class BackAndForthT {
+            int x, y, direction;
+        public:
+            constexpr BackAndForthT(void) : x(0), y(0), direction(1) {
 
-        }
-
-        void
-        move(void) {
-            direction *= -1;
-            y = x = direction * nOffset;
-        };
-
-        std::pair<int, int>
-        getPosition(void) const {
-            return std::pair(x, y);
-        }
-    };
-
-    template<
-        unsigned nRadius,
-        unsigned nSpeed,
-        int nDirection = 1
-    >
-    class CircleT {
-        int w;
-
-    public:
-        constexpr CircleT(void) : w(0) {
-
-        }
-
-        void
-        move(void) {
-            static_assert((nDirection == 1) || (nDirection == -1));
-
-            if (nDirection > 0) {
-                w += nSpeed;
-            } else {
-                w -= nSpeed;
             }
 
-            w %= 360;
+            void
+            move(void) {
+                direction *= -1;
+                y = x = direction * nOffset;
+            };
+
+            std::pair<int, int>
+            getPosition(void) const {
+                return std::pair(x, y);
+            }
         };
 
-        std::pair<int, int>
-        getPosition(void) const {
-            static constexpr float pi = 3.14159265359f;
-            float rad = w * (pi / 180.0f);
+        template<
+            unsigned nRadius,
+            unsigned nSpeed,
+            int nDirection = 1
+        >
+        class CircleT {
+            int w;
 
-            int x = cosf(rad) * nRadius;
-            int y = sinf(rad) * nRadius;
+        public:
+            constexpr CircleT(void) : w(0) {
 
-            return std::pair(x, y);
-        }
-    }; 
+            }
+
+            void
+            move(void) {
+                static_assert((nDirection == 1) || (nDirection == -1));
+
+                if (nDirection > 0) {
+                    w += nSpeed;
+                } else {
+                    w -= nSpeed;
+                }
+
+                w %= 360;
+            };
+
+            std::pair<int, int>
+            getPosition(void) const {
+                static constexpr float pi = 3.14159265359f;
+                float rad = w * (pi / 180.0f);
+
+                int x = cosf(rad) * nRadius;
+                int y = sinf(rad) * nRadius;
+
+                return std::pair(x, y);
+            }
+        };
+    };
+
+    struct EnabledPolicy {
+        class AlwaysEnabled {
+        protected:
+            bool isEnabled(void) const { return true; }
+        };
+
+        template<
+            bool (*T)(void)
+        >
+        class CallbackFunctionT {
+        protected:
+            bool isEnabled(void) const {
+                return T();
+            }
+        };
+    };
 };
 
 } /* namespace tasks */
