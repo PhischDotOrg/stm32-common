@@ -224,7 +224,7 @@ void
 UsbCoreViaSTM32F4::setupModeInHw(const DeviceMode_e p_mode) const {
     switch (p_mode) {
     case e_UsbDevice:
-        this->m_usbCore->GCCFG |= USB_OTG_GCCFG_VBUSBSEN;
+        this->m_usbCore->GCCFG |= (USB_OTG_GCCFG_VBUSBSEN | USB_OTG_GCCFG_NOVBUSSENS) ;
         this->m_usbCore->GUSBCFG |= USB_OTG_GUSBCFG_FDMOD;
 
         this->m_usbCore->GUSBCFG |= USB_OTG_GUSBCFG_PHYSEL_Msk;
