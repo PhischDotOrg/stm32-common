@@ -701,6 +701,16 @@ UsbDeviceViaSTM32F4::setAddress(const uint8_t p_address) const {
     this->m_usbDevice->DCFG &= ~USB_OTG_DCFG_DAD;
     this->m_usbDevice->DCFG |= (p_address << USB_OTG_DCFG_DAD_Pos) & USB_OTG_DCFG_DAD_Msk;
 
+    /*
+     * The USB Standard requires the address to be set _after_ the status stage of the
+     *  SetAddress Device Request. However, doing so prevents the STM32F401 USB OTG Core
+     * from working correctly.
+     */
+    assert(this->m_inEndpoints[0] != nullptr);
+    if (p_address != 0) {
+        this->m_inEndpoints[0]->write(nullptr, 0);
+    }
+
     USB_PRINTF("UsbDeviceViaSTM32F4::%s(): USB Device Adress = 0x%x\r\n", __func__, p_address);
 }
 
