@@ -1,6 +1,5 @@
 set(CMAKE_C_FLAGS "-mcpu=${CMAKE_SYSTEM_PROCESSOR} -mthumb -DARM")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=soft -fsingle-precision-constant") # Not sure if this is this correct, but it has worked for a long time.
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffreestanding")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -nostdlib -nodefaultlibs -fno-builtin")

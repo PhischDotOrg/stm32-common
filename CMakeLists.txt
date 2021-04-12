@@ -73,6 +73,10 @@ endif()
 ###############################################################################
 if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Generic")
     include(${CMAKE_SYSTEM_NAME}_${CMAKE_SYSTEM_PROCESSOR}.cflags)
+
+    add_compile_options("-fdata-sections")
+    add_compile_options("-ffunction-sections")
+    add_link_options("-Wl,--gc-sections")
 endif()
 
 add_definitions("-Wall")
@@ -118,8 +122,6 @@ else()
     add_definitions("-DHAVE_STM32")
     add_definitions("-DSTM32_CPU_FAMILY=${STM32_CPU_FAMILY}")
     add_definitions("-D${STM32_CPU_FAMILY}")
-
-    #    add_definitions("-DUART_ENV=${CMAKE_SYSTEM_NAME}")
 endif()
 
 ###############################################################################
