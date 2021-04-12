@@ -25,7 +25,7 @@ find_program(
 )
 
 if ((NOT DEFINED LCOV_BIN) OR ("${LCOV_BIN}" STREQUAL "LCOV_BIN-NOTFOUND"))
-    message(WARNING "lcov not found in \"${LCOV_BIN}\". Coverage Report will not work.")
+    message(STATUS "lcov not found in \"${LCOV_BIN}\". Coverage Report will not work.")
 
     return()
 endif()

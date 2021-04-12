@@ -43,7 +43,7 @@ find_program(
 )
 
 if ((NOT DEFINED DOXYGEN_BIN) OR ("${DOXYGEN_BIN}" STREQUAL "DOXYGEN_BIN-NOTFOUND"))
-    message(WARNING "Doxygen not found in \"${DOXYGEN_SEARCH_PATH}\". Doxygen will not work.")
+    message(STATUS "Doxygen not found in \"${DOXYGEN_SEARCH_PATH}\". Doxygen will not work.")
 else()
 	message("Doxygen found at ${DOXYGEN_BIN}")
 
