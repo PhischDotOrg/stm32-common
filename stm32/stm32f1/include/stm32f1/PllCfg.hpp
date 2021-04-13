@@ -46,9 +46,9 @@ namespace stm32 {
             } APBPrescaler_t;
 
             typedef enum USBPrescaler_s : unsigned {
-                e_USBPrescaler_None     = 0b00,
-                e_USBPrescaler_Div15    = 0b01,
-                e_USBPrescaler_Disabled = 0b11,
+                e_USBPrescaler_Disabled = 0b00,
+                e_USBPrescaler_None     = 0b10,
+                e_USBPrescaler_Div15    = 0b11,
             } USBPrescaler_t;
 
             typedef enum PllMul_e : unsigned {
