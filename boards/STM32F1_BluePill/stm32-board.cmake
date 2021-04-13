@@ -5,3 +5,7 @@ set(STM32_CPU_FAMILY        "STM32F1")
 set(STM32_CPU_TYPE          "STM32F103xB")
 
 set(STM32_FLASH_INTERFACE   "BlackMagicProbe")
+
+set(STM32_SVD_FILE          "STM32F103.svd")
+
+set(HAVE_USB                TRUE)

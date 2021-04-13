@@ -371,8 +371,8 @@ public:
      * @param p_buffer Address of the Data Buffer.
      * @param p_length Size of the Data Buffer (in Bytes).
      */
-    void setDataBuffer(uint32_t * const p_buffer, size_t p_length) {
-        this->m_dataBuffer.m_buffer = p_buffer;
+    void setDataBuffer(void * const p_buffer, size_t p_length) {
+        this->m_dataBuffer.m_buffer = static_cast<uint32_t *>(p_buffer);
         this->m_dataBuffer.m_numWords = p_length / sizeof(uint32_t);
     }
 ///@}
@@ -516,7 +516,7 @@ public:
      * @param p_buffer Pointer to RAM Buffer.
      * @param p_length Length of RAM Buffer in units of Bytes.
      */
-    void setDataStageBuffer(uint32_t * const p_buffer, const size_t p_length) {
+    void setDataStageBuffer(void * const p_buffer, const size_t p_length) {
         USB_PRINTF("CtrlOutEndpointViaSTM32F4::%s(p_buffer=%p, p_length=%d)\r\n", __func__, p_buffer, p_length);
 
         this->setDataBuffer(p_buffer, p_length);

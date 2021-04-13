@@ -86,6 +86,9 @@ namespace stm32 {
 
                 m_rcc.CFGR &= ~RCC_CFGR_HPRE_Msk;
                 m_rcc.CFGR |= (m_pllCfg.m_ahbPrescaler << RCC_CFGR_HPRE_Pos) & RCC_CFGR_HPRE_Msk;
+
+                m_rcc.CFGR &= ~RCC_CFGR_USBPRE_Msk;
+                m_rcc.CFGR |= (m_pllCfg.m_usbPrescaler << RCC_CFGR_USBPRE_Pos) & RCC_CFGR_USBPRE_Msk;
             }
 
             void enable(const FunctionAPB1_e &p_engine) const {

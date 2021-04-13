@@ -13,11 +13,11 @@ char stext, etext;
 char sdata, edata;
 char sbss, ebss;
 char bstack, estack;
+char UsbBufBegin;
 
 extern const char gFixedDataBegin = 0;
 extern const char gFixedDataUsed = 0;
 extern const char gFixedDataEnd = 0;
-
 
 void
 taskDISABLE_INTERRUPTS(void) {

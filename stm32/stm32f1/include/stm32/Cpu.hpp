@@ -21,6 +21,11 @@
 #include <stm32f1/dma/Stream.hpp>
 #include <stm32f1/dma/Channel.hpp>
 
+#include <stm32f1/usb/Peripheral.hpp>
+#include <stm32f1/usb/Device.hpp>
+#include <stm32f1/usb/InEndpoint.hpp>
+#include <stm32f1/usb/OutEndpoint.hpp>
+
 namespace stm32 {
     using Nvic      = NvicT<Scb>;
 
@@ -74,6 +79,18 @@ namespace stm32 {
                     template<typename PinT> using Usart2    = ::stm32::UartT<Rcc, USART2_BASE, stm32::BrrPolicyNoOversampling, PinT>;
                     template<typename PinT> using Usart3    = ::stm32::UartT<Rcc, USART3_BASE, stm32::BrrPolicyNoOversampling, PinT>;
                 }; /* struct Uart */
+
+                struct Usb {
+                    using UsbDevice         = ::stm32::f1::usb::Device;
+
+                    using CtrlInEndpoint    = ::stm32::f1::usb::CtrlInEndpoint;
+                    using CtrlOutEndpoint   = ::stm32::f1::usb::CtrlOutEndpoint;
+
+                    using BulkInEndpoint    = ::stm32::f1::usb::BulkInEndpoint;
+                    using BulkOutEndpoint   = ::stm32::f1::usb::BulkOutEndpoint;
+
+                    using IrqInEndpoint     = ::stm32::f1::usb::IrqInEndpoint;
+                }; /* struct Usb */
             }; /* struct Cpu */
         } /* namespace f103 */
     } /* namespace f1 */
@@ -86,6 +103,7 @@ namespace stm32 {
     using Rcc = Cpu::Rcc;
     using Spi = Cpu::Spi;
     using Uart = Cpu::Uart;
+    using Usb = Cpu::Usb;
 
     MAP_RCC_ENGINE(DMA1);
 
@@ -108,6 +126,8 @@ namespace stm32 {
     MAP_RCC_ENGINE(USART2);
     MAP_RCC_ENGINE(USART3);
 
+    MAP_RCC_ENGINE(USB);
+
     MAP_NVIC_IRQ(DMA1_Channel1);
     MAP_NVIC_IRQ(DMA1_Channel2);
     MAP_NVIC_IRQ(DMA1_Channel3);
@@ -121,6 +141,12 @@ namespace stm32 {
     MAP_NVIC_IRQ(TIM2);
     MAP_NVIC_IRQ(TIM3);
     MAP_NVIC_IRQ(TIM4);
+
+    // MAP_NVIC_IRQ(USB);
+    template<> struct IrqTypeT< ::stm32::EngineT< (USB_BASE) > > {
+        static constexpr auto m_irq = NvicBase::Irq_t::USB_LP_CAN1_RX0_IRQn;
+    };
+
 } /* namespace stm32 */
 
 #endif /* _STM32_CPU_HPP_22D04FB3_F771_4620_A5A3_D3F32BBB711A */

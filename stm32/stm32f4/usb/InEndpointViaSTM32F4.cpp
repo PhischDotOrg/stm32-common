@@ -252,6 +252,7 @@ InEndpointViaSTM32F4::txData(const uint8_t *p_data, const size_t p_length) {
          *
          * This is to avoid reading from invalid addresses when filling the Tx FIFO.
          */
+        /* FIXME Potentially, this reads from an invalid address beyond p_data. */
         const uint32_t * const data = reinterpret_cast<const uint32_t *>(p_data + offset);
         *this->m_fifoAddr = *data;
 
