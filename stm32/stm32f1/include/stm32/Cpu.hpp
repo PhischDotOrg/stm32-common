@@ -9,6 +9,7 @@
 #include <stm32f1/Flash.hpp>
 #include <stm32/Gpio.hpp>
 #include <stm32f1/GpioPinConfiguration.hpp>
+#include <stm32/Iwdg.hpp>
 #include <stm32/Nvic.hpp>
 #include <stm32f1/PllCfg.hpp>
 #include <stm32f1/Pwr.hpp>
@@ -25,6 +26,7 @@
 #include <stm32f1/usb/Device.hpp>
 #include <stm32f1/usb/InEndpoint.hpp>
 #include <stm32f1/usb/OutEndpoint.hpp>
+
 
 namespace stm32 {
     using Nvic      = NvicT<Scb>;
@@ -91,6 +93,8 @@ namespace stm32 {
 
                     using IrqInEndpoint     = ::stm32::f1::usb::IrqInEndpoint;
                 }; /* struct Usb */
+
+                using Iwdg = ::stm32::IwdgT<Rcc, IWDG_BASE>;
             }; /* struct Cpu */
         } /* namespace f103 */
     } /* namespace f1 */
@@ -104,6 +108,7 @@ namespace stm32 {
     using Spi = Cpu::Spi;
     using Uart = Cpu::Uart;
     using Usb = Cpu::Usb;
+    using Iwdg = Cpu::Iwdg;
 
     MAP_RCC_ENGINE(DMA1);
 
@@ -127,6 +132,8 @@ namespace stm32 {
     MAP_RCC_ENGINE(USART3);
 
     MAP_RCC_ENGINE(USB);
+
+    MAP_RCC_ENGINE(IWDG);
 
     MAP_NVIC_IRQ(DMA1_Channel1);
     MAP_NVIC_IRQ(DMA1_Channel2);

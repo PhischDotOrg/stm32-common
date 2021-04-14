@@ -8,6 +8,7 @@ namespace stm32 {
     namespace f1 {
         struct PllCfg {
             static constexpr unsigned m_hsiSpeedInHz = 8 * 1000 * 1000;
+            static constexpr unsigned m_lsiSpeedInHz = 40 * 1000;
 
             typedef enum PllSource_e : unsigned {
                 e_PllSourceHSI = 0,

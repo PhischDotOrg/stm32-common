@@ -53,6 +53,10 @@ namespace stm32 {
                 e_CRC           = RCC_AHBENR_CRCEN,
             } FunctionAHB_t;
 
+            typedef enum FunctionLSI_e {
+                e_IWDG,
+            } FunctionLSI_t;
+
             typedef struct ResetReason_s {
                 uint32_t    m_reserved              : 24;
                 // uint32_t    m_brownOut              :  1;
@@ -136,6 +140,11 @@ namespace stm32 {
 
             void disable(const FunctionAHB_e &p_engine) const {
                 this->m_rcc.AHBENR &= ~p_engine;
+            }
+
+            void enable(const FunctionLSI_e & /* p_engine */) const {
+                this->m_rcc.CSR |= RCC_CSR_LSION;
+                while (!(this->m_rcc.CSR & RCC_CSR_LSIRDY)) __NOP();
             }
 
             ResetReason_t getResetReason(void) const {

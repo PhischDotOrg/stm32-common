@@ -18,8 +18,8 @@ namespace stm32 {
 class DbgMcu {
     // DBGMCU_TypeDef &m_dbgMcu;
 public:
-    DbgMcu(DBGMCU_TypeDef & /* p_dbgMcu */) /* : m_dbgMcu(p_dbgMcu) */ {
-
+    DbgMcu(DBGMCU_TypeDef &p_dbgMcu) /* : m_dbgMcu(p_dbgMcu) */ {
+        p_dbgMcu.CR |= DBGMCU_CR_DBG_IWDG_STOP; // Stop the Independent Watchdog when the Core is halted for debugging.
     }
 }; /* class DbgMcu */
 /*****************************************************************************/
