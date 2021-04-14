@@ -53,6 +53,29 @@ namespace stm32 {
                 e_CRC           = RCC_AHBENR_CRCEN,
             } FunctionAHB_t;
 
+            typedef struct ResetReason_s {
+                uint32_t    m_reserved              : 24;
+                // uint32_t    m_brownOut              :  1;
+                uint32_t    m_resetPin              :  1;
+                uint32_t    m_powerOn               :  1;
+                uint32_t    m_softReset             :  1;
+                uint32_t    m_independentWatchdog   :  1;
+                uint32_t    m_windowWatchdog        :  1;
+                uint32_t    m_lowPowerReset         :  1;
+
+                constexpr
+                ResetReason_s(const unsigned p_register)
+                  : m_reserved(0),
+                    m_resetPin((p_register & RCC_CSR_PINRSTF) != 0),
+                    m_powerOn((p_register & RCC_CSR_PORRSTF) != 0),
+                    m_softReset((p_register & RCC_CSR_SFTRSTF) != 0),
+                    m_independentWatchdog((p_register & RCC_CSR_IWDGRSTF) != 0),
+                    m_windowWatchdog((p_register & RCC_CSR_WWDGRSTF) != 0),
+                    m_lowPowerReset((p_register & RCC_CSR_LPWRRSTF) != 0)
+                { }
+            } ResetReason_t;
+            static_assert(sizeof(ResetReason_t) == sizeof(uint32_t));
+
             Rcc(RCC_TypeDef * const p_rcc, const PllCfg &p_pllCfg, const Flash &p_flash)
               : RccViaSTM32T(*p_rcc), m_pllCfg(p_pllCfg) /* , m_flash(p_flash), m_pwr(p_pwr) */ {
                 p_flash.setupLatency(p_pllCfg.getSysclkSpeedInHz());
@@ -113,6 +136,14 @@ namespace stm32 {
 
             void disable(const FunctionAHB_e &p_engine) const {
                 this->m_rcc.AHBENR &= ~p_engine;
+            }
+
+            ResetReason_t getResetReason(void) const {
+                return this->m_rcc.CSR;
+            }
+
+            void clearResetReason(void) const {
+                this->m_rcc.CSR |= RCC_CSR_RMVF;
             }
 
             unsigned getClockSpeed(const FunctionAPB1_t /* p_function */) const {
