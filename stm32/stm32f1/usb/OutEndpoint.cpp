@@ -35,7 +35,7 @@ OutEndpoint::irq_handler_t OutEndpoint::m_irq_handler[] = {
 void
 OutEndpoint::handleCorrectTransferRx(void) const {
     const unsigned numBytes = (this->m_endptBufferDescr.m_rxCount >> USB_COUNT0_RX_COUNT0_RX_Pos) & USB_COUNT0_RX_COUNT0_RX_Msk;
-    const unsigned numHalfWords = numBytes / sizeof(uint16_t);
+    const unsigned numHalfWords = (numBytes % 2) ? 1 + (numBytes / sizeof(uint16_t)) : numBytes / sizeof(uint16_t);
 
     USB_PRINTF("--> OutEndpoint::%s(m_endpointNumber=%d) numBytes=%d\r\n", __func__, m_endpointNumber, numBytes);
     assert(this->m_endpointCallback != nullptr);

@@ -95,22 +95,10 @@ InEndpoint::sendPacket(const uint8_t * const p_data, const size_t p_length) cons
     if (p_length > 0) {
         assert(p_data != nullptr);
 
-        // /* FIXME Potentially, this reads from an invalid address beyond p_data. */
-        // for (unsigned idx = 0; idx <= p_length; idx += sizeof(uint16_t)) {
-        //     m_buffer[idx / 2].data = ((p_data[idx+0] << 0) & 0xFF)
-        //                            | ((p_data[idx+1] << 8) & 0xFF);
-        // }
-
-        // Baue je zwei Bytes zu einem uint16_t zusammen und schreibe diesen in den USB-Pufferspeicher.
-        for (uint_fast16_t i = 0; i < p_length / 2; ++i) {
-            uint_fast16_t a = static_cast<uint8_t> (p_data [i*2]);
-            uint_fast16_t b = static_cast<uint8_t> (p_data [i*2+1]);
-
-            this->m_buffer [i].data = static_cast<uint16_t> (a | (b << 8));
-        }
-        // Falls noch ein Byte übrig geblieben ist, schreibe dies einzeln.
-        if (p_length % 2) {
-            this->m_buffer [p_length/2].data = static_cast<uint8_t> (p_data [p_length-1]);
+        /* FIXME Potentially, this reads from an invalid address beyond p_data. */
+        for (unsigned idx = 0; idx < p_length; idx += sizeof(uint16_t)) {
+            m_buffer[idx / 2].data = ((p_data[idx+0] << 0) & 0x00FF)
+                                   | ((p_data[idx+1] << 8) & 0xFF00);
         }
 
         /* FIXME Should be done once during setup of Endpoint */
