@@ -7,7 +7,6 @@ set(TARGET_SRC
     Endpoint.cpp
     InEndpoint.cpp
     OutEndpoint.cpp
-    Peripheral.cpp
 )
 
 if(${HAVE_USB})

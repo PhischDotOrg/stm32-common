@@ -8,10 +8,9 @@
 #include "stm32f1/usb/Endpoint.hpp"
 #include "stm32f1/usb/Device.hpp"
 
-#include "stm32f4xx.h"
-
 #include "f1usb/src/usbutils.hh"
 
+#include <utility>
 #include <cassert>
 #include <cstddef>
 
@@ -29,8 +28,10 @@ protected:
      * @brief Reference to the STM32F1 USB Device Driver Object.
      *
      */
-    Device &            m_usbDevice;
+    Device &                    m_usbDevice;
+    volatile USBEndpt_TypeDef & m_hwEndpt;
 
+protected:
     /**
      * @brief Endpoint Number (without Direction Bit).
      *
@@ -40,10 +41,7 @@ protected:
      */
     const unsigned      m_endpointNumber;
 
-    UsbMem * const      m_buffer;
-    const size_t        m_bufSz;
-
-    volatile uint16_t * m_register;
+    const std::pair<UsbMem * const, size_t> m_buffer;
 
     struct EndpointBufferDescriptor_s & m_endptBufferDescr;
 
@@ -77,30 +75,56 @@ protected:
         e_Nak           = 0b10,
         e_Valid         = 0b11
     };
-    typedef enum Status_e RxStatus_t;
-    typedef enum Status_e TxStatus_t;
+    using EndpointStatus_t = enum Status_e;
 
-    void setRxStatus(RxStatus_t p_rxStatus) const;
-    void setTxStatus(RxStatus_t p_rxStatus) const;
+    void setRxStatus(EndpointStatus_t p_rxStatus) const;
+    void setTxStatus(EndpointStatus_t p_rxStatus) const;
 
+    bool getCtrRx(void) const;
     void clrCtrRx(void) const;
+
+    bool getCtrTx(void) const;
     void clrCtrTx(void) const;
 
     void setAddress(const unsigned p_endpointNumber) const;
+
+    enum class DataToggleRx_e : uint8_t {
+        e_Data0 = 0,
+        e_Data1 = 1
+    };
+
+    enum class DataToggleTx_e : uint8_t {
+        e_Data0 = 0,
+        e_Data1 = 1
+    };
+
+    size_t enqueueInPacket(const size_t p_lengt) const;
+
+    void setDataToggleRx(DataToggleRx_e p_dataToggle) const;
+    DataToggleRx_e getDataToggleRx(void) const {
+        return (m_hwEndpt.EPxR & USB_EP_DTOG_RX_Msk) ? DataToggleRx_e::e_Data1 : DataToggleRx_e::e_Data0;
+    }
+
+    void setDataToggleTx(DataToggleTx_e p_dataToggle) const;
+    DataToggleTx_e getDataToggleTx(void) const {
+        return (m_hwEndpt.EPxR & USB_EP_DTOG_TX_Msk) ? DataToggleTx_e::e_Data1 : DataToggleTx_e::e_Data0;
+    }
 
     void setEPnR(uint16_t p_mask, uint16_t p_data, uint16_t p_old) const;
     void setEPnR(uint16_t p_mask, uint16_t p_data) const;
 
 public:
-    Endpoint(Device &p_usbDevice, const unsigned p_endpointNumber, UsbMem * const p_buffer, const size_t p_length)
-      : m_usbDevice(p_usbDevice), m_endpointNumber(p_endpointNumber),
-        m_buffer(p_buffer), m_bufSz(p_length),
-        m_register(reinterpret_cast<uint16_t *>(m_usbDevice.getBaseAddr() + m_endpointNumber * 4)),
+    using Buffer_t = UsbMem *;
+
+    Endpoint(Endpoint &) = delete;
+
+    Endpoint(Device &p_usbDevice, const unsigned p_endpointNumber, Endpoint::Buffer_t &p_buffer, const size_t p_length)
+      : m_usbDevice(p_usbDevice),
+        m_hwEndpt(m_usbDevice.getHwEndpt(p_endpointNumber)),
+        m_endpointNumber(p_endpointNumber),
+        m_buffer(std::make_pair(p_buffer, p_length)),
         m_endptBufferDescr(m_usbDevice.getEndptBufferDescr(m_endpointNumber))
     {
-    }
-    
-    virtual ~Endpoint() {
     }
 };
 

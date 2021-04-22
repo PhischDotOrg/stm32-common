@@ -21,7 +21,6 @@
 #include <stm32f1/dma/Stream.hpp>
 #include <stm32f1/dma/Channel.hpp>
 
-#include <stm32f1/usb/Peripheral.hpp>
 #include <stm32f1/usb/Device.hpp>
 #include <stm32f1/usb/InEndpoint.hpp>
 #include <stm32f1/usb/OutEndpoint.hpp>

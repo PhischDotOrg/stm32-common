@@ -14,229 +14,117 @@
 #include <cassert>
 #include <cstddef>
 
-
 /*****************************************************************************/
 namespace stm32 {
     namespace f1 {
         namespace usb {
 /*****************************************************************************/
 
-class OutEndpointCallback;
-
 /*****************************************************************************/
-class OutEndpoint : protected Endpoint {
-    friend class CtrlOutEndpoint;
-
-    typedef void (stm32::f1::usb::OutEndpoint::*irq_handler_fn)() const;
-
-    typedef struct irq_handler_s {
-        /** @brief Interrupt to be handled. */
-        Interrupt_t         m_irq;
-        /** @brief Pointer to Interrupt Handler function. */
-        irq_handler_fn      m_fn;
-    } irq_handler_t;
-
-    static const irq_handler_t m_irq_handler[];
-
-    /***************************************************************************//**
-     * @brief Callback to USB-generic OUT Endpoint implementation.
-     ******************************************************************************/
-    OutEndpointCallback *   m_endpointCallback;
-
+class OutEndpoint : protected Endpoint, public ::usb::UsbHwOutEndpoint {
+    void handleCorrectTransferRx(const size_t p_numBytes) const;
     void setupRxBuffer(const void * const p_buffer, const size_t p_length) const;
 
-    void handleCorrectTransferRx(void) const;
+protected:
+    ::usb::UsbOutEndpoint & m_endpointCallout;
 
-public:
-    OutEndpoint(Device &p_usbDevice, UsbMem * const p_buffer, const size_t p_length, const unsigned p_endpointNumber)
-      : Endpoint(p_usbDevice, p_endpointNumber, p_buffer, p_length), m_endpointCallback(nullptr) {
-        this->m_usbDevice.registerOutEndpoint(this->m_endpointNumber, *this);
+    virtual void setup(void) const = 0;
+
+    void enableRxPacket(void) const override {
+        // if (m_endpointNumber == 0) {
+        //     bool statusOut = (p_length == 0);
+        //     setEPnR(USB_EP_KIND_Msk, statusOut << USB_EP_KIND_Pos);
+        // }
+        setRxStatus(EndpointStatus_t::e_Valid);
     }
 
-    ~OutEndpoint() {
+public:
+    OutEndpoint(Device &p_usbDevice, ::usb::UsbOutEndpoint &p_endpointCallout, Endpoint::Buffer_t &p_buffer, const size_t p_length, const unsigned p_endpointNumber)
+      : Endpoint(p_usbDevice, p_endpointNumber, p_buffer, p_length), m_endpointCallout(p_endpointCallout) {
+        this->m_usbDevice.registerOutEndpoint(this->m_endpointNumber, *this);
+        m_endpointCallout.registerHwOutEndpoint(*this);
+    }
+
+    virtual ~OutEndpoint() {
         m_endptBufferDescr.m_rxAddr     = 0;
         m_endptBufferDescr.m_rxCount    = 0;
 
+        /* TODO Should we disable / unconfigure the Hardware here? */
+
+        m_endpointCallout.unregisterHwOutEndpoint();
         this->m_usbDevice.unregisterOutEndpoint(this->m_endpointNumber);
     }
 
-    /**
-     * @brief Register a Callback Object.
-     * 
-     * The OutEndpointCallback is used to bridge to the hardware-indepentent layer.
-     * 
-     * The object is notified e.g. in case of a _Transfer Complete_ Interrupt.
-     * 
-     * \see #handleTransferCompleteIrq
-     * 
-     * @param p_endpointCallback Reference to a OutEndpointViaSTM34F4Callback object.
-     */
-    void registerEndpointCallback(OutEndpointCallback &p_endpointCallback) {
-        assert(this->m_endpointCallback == nullptr);
-        this->m_endpointCallback = &p_endpointCallback;
-    }
-
-    /**
-     * @brief Unregisters a Callback Object.
-     * 
-     * Unregisters a OutEndpointCallback object by setting #m_endpointCallback to
-     * \c nullptr .
-     */
-    void unregisterEndpointCallback(void) {
-        assert(this->m_endpointCallback != nullptr);
-        this->m_endpointCallback = nullptr;
-    }
-
     void reset(void) const {
-        this->setupRxBuffer(&(m_buffer->data), this->m_bufSz);
-
         Endpoint::reset();
+        setupRxBuffer(m_buffer.first, m_buffer.second);
+        // setRxStatus(EndpointStatus_t::e_Disabled);
+        setup();
+        // setDataToggleRx(DataToggleRx_e::e_Data0);
     }
 
-    void handleIrq(void) const;
-};
-/*****************************************************************************/
-
-/*****************************************************************************/
-class OutEndpointCallback : public OutEndpoint {
-public:
-    typedef struct DataBuffer_s {
-        /** @brief Pointer to RAM Buffer that can hold OUT Data. */
-        uint16_t *  m_buffer;
-        /** @brief Size of Buffer pointed to by #m_buffer in units of Words (4-Bytes). */
-        size_t      m_numHalfWords;
-    } DataBuffer_t;
-
-protected:
-    size_t                  m_transmitLength;
-    DataBuffer_t            m_dataBuffer;
-
-    virtual void transferComplete(const size_t p_numBytes) const = 0;
-
-public:
-    OutEndpointCallback(Device &p_usbDevice, UsbMem * const p_buffer, const size_t p_length, const unsigned p_endpointNumber)
-      : OutEndpoint(p_usbDevice, p_buffer, p_length, p_endpointNumber) {
-
+    void stall(void) const override {
+        setRxStatus(EndpointStatus_t::e_Stall);
     }
 
-    void packetReceived(const size_t p_numBytes) {
-        this->m_transmitLength += p_numBytes;
-    };
-
-    void transferComplete(void) {
-        this->transferComplete(this->m_transmitLength);
-
-        this->m_transmitLength = 0;
+    void nack(void) const override {
+        setRxStatus(EndpointStatus_t::e_Nak);
     }
 
-    const DataBuffer_t &getDataBuffer(void) const {
-        USB_PRINTF("OutEndpointCallback::%s(p_buffer=%p, p_length=%d)\r\n", __func__, m_dataBuffer.m_buffer, m_dataBuffer.m_numHalfWords * sizeof(*m_dataBuffer.m_buffer));
+    void handleIrq(const uint16_t p_register) const;
 
-        return this->m_dataBuffer;
-    };
+    void setData(unsigned p_dtog) const override {
+        setDataToggleRx(p_dtog ? DataToggleRx_e::e_Data1 : DataToggleRx_e::e_Data0);
+    }
 
-    void setDataBuffer(void * const p_buffer, size_t p_length) {
-        m_dataBuffer.m_buffer = static_cast<uint16_t *>(p_buffer);
-        m_dataBuffer.m_numHalfWords = p_length / sizeof(*m_dataBuffer.m_buffer);
+    bool
+    getData(void) const override {
+        return (getDataToggleRx() == DataToggleRx_e::e_Data1);
     }
 };
 /*****************************************************************************/
 
 /*****************************************************************************/
-class CtrlOutEndpoint : public OutEndpointCallback {
+class CtrlOutEndpoint : public OutEndpoint {
     /**
      * @brief Callback to USB-generic Bulk OUT Endpoint implementation.
      */
-    ::usb::UsbCtrlOutEndpointT<CtrlOutEndpoint> & m_endpointCallout;
+    ::usb::UsbCtrlOutEndpoint &    m_endpointCallout;
 
-    typedef void (stm32::f1::usb::CtrlOutEndpoint::*irq_handler_fn)();
+    void handleSetupComplete(const size_t p_numBytes) const;
 
-    typedef struct irq_handler_s {
-        /** @brief Interrupt to be handled. */
-        Interrupt_t         m_irq;
-        /** @brief Pointer to Interrupt Handler function. */
-        irq_handler_fn      m_fn;
-    } irq_handler_t;
-
-    static const irq_handler_t m_irq_handler[];
-
-    /**
-     * @brief RAM Buffer for a _SETUP_ Packet.
-     * 
-     * RAM Buffer into which the _SETUP_ Packet is transferred by #handleSetupComplete.
-     * This Buffer is shared with the Hardware-independents layers, i.e. the USB Control
-     * Pipe will receive a reference to this buffer to decode the packet.
-     * 
-     * \see handleSetupComplete
-     */
-    ::usb::UsbSetupPacket_t m_setupPacketBuffer;
-
-    void handleSetupComplete(void);
-
-    void transferComplete(const size_t p_numBytes) const override {
-        m_endpointCallout.transferComplete(p_numBytes);
-    }
+protected:
+    void setup(void) const override {
+        setEndpointType(EndpointType_t::e_Control);
+        /* FIXME Not the cleanest design... -- Mis-uses setup() to send Reset info to upper layer */
+        m_endpointCallout.reset();
+    };
 
 public:
-    CtrlOutEndpoint(Device &p_usbDevice, ::usb::UsbCtrlOutEndpointT<CtrlOutEndpoint> &p_endpointCallout, UsbMem *p_buffer, const size_t p_length)
-      : OutEndpointCallback(p_usbDevice, p_buffer, p_length, 0), m_endpointCallout(p_endpointCallout) {
-        p_endpointCallout.registerHwEndpoint(*this);
-        this->registerEndpointCallback(*this);
+    CtrlOutEndpoint(Device &p_usbDevice, ::usb::UsbCtrlOutEndpoint &p_endpointCallout, Endpoint::Buffer_t p_buffer, const size_t p_length)
+      : OutEndpoint(p_usbDevice, p_endpointCallout, p_buffer, p_length, 0), m_endpointCallout(p_endpointCallout) {
         this->m_usbDevice.registerCtrlEndpoint(*this);
     };
 
-    void setDataStageBuffer(void * const p_buffer, const size_t p_length) {
-        m_dataBuffer.m_buffer = static_cast<uint16_t *>(p_buffer);
-        m_dataBuffer.m_numHalfWords = p_length / sizeof(*m_dataBuffer.m_buffer);
+    virtual ~CtrlOutEndpoint() {
+        this->m_usbDevice.unregisterCtrlEndpoint();
     }
 
-    void enableSetupPackets(void) const {
-        setEndpointType(EndpointType_t::e_Control);
-
-        this->rxEnable();
-    }
-
-    void handleIrq(void);
+    void handleIrq(const uint16_t p_register);
 };
 /*****************************************************************************/
 
 /*****************************************************************************/
-class BulkOutEndpoint : public OutEndpointCallback {
-    /**
-     * @brief Callback to USB-generic Bulk OUT Endpoint implementation.
-     */
-    ::usb::UsbBulkOutEndpointT<BulkOutEndpoint> & m_endpointCallout;
-
-    void transferComplete(const size_t p_numBytes) const override {
-        m_endpointCallout.transferComplete(p_numBytes);
-    }
-
-public:
-    BulkOutEndpoint(Device &p_usbDevice, ::usb::UsbBulkOutEndpointT<BulkOutEndpoint> &p_endpointCallout, UsbMem * const p_buffer, const size_t p_length, const unsigned p_endpointNumber)
-      : OutEndpointCallback(p_usbDevice, p_buffer, p_length, p_endpointNumber), m_endpointCallout(p_endpointCallout) {
-        m_endpointCallout.registerHwEndpoint(*this);
-        this->registerEndpointCallback(*this);
-    };
-
-    ~BulkOutEndpoint() override {
-        this->unregisterEndpointCallback();
-        m_endpointCallout.unregisterHwEndpoint();
-    }
-
-    void setup(void) const {
-        this->setAddress(this->m_endpointNumber);
+class BulkOutEndpoint : public OutEndpoint {
+    void setup(void) const override {
         this->setEndpointType(Endpoint::EndpointType_e::e_Bulk);
     }
 
-    void enable(void) const {
-        setup();
+public:
+    BulkOutEndpoint(Device &p_usbDevice, ::usb::UsbBulkOutEndpoint &p_endpointCallout, Endpoint::Buffer_t p_buffer, const size_t p_length, const unsigned p_endpointNumber)
+      : OutEndpoint(p_usbDevice, p_endpointCallout, p_buffer, p_length, p_endpointNumber) {
 
-        rxEnable();
-    }
-
-    void disable(void) const {
-        Endpoint::disable();
-    }
+    };
 };
 /*****************************************************************************/
 

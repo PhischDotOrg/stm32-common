@@ -11,6 +11,9 @@
 set(BUILD_VERSION_CMAKE_FILE  ${CMAKE_CURRENT_BINARY_DIR}/build_version.cmake)
 set(BUILD_VERSION_HEADER_FILE  ${CMAKE_CURRENT_BINARY_DIR}/build_version.h)
 
+###############################################################################
+# Determine Git Version at Build Time
+###############################################################################
 FILE(WRITE ${BUILD_VERSION_CMAKE_FILE}
  "STRING(TIMESTAMP BUILD_TIME UTC)\n"
 )
@@ -21,7 +24,7 @@ FILE(APPEND ${BUILD_VERSION_CMAKE_FILE}
 
 FILE(APPEND ${BUILD_VERSION_CMAKE_FILE}
     "execute_process(COMMAND git describe --always --dirty=+\n"
-    "   WORKING_DIRECTORY " ${CMAKE_CURRENT_SOURCE_DIR}/.. "\n"
+    "   WORKING_DIRECTORY " ${PROJECT_SOURCE_DIR} "\n"
     "   TIMEOUT 5\n"
     "   RESULT_VARIABLE   GIT_RESULT\n"
     "   OUTPUT_VARIABLE   GIT_OUTPUT\n"
@@ -62,3 +65,4 @@ ADD_LIBRARY(${TARGET_NAME} STATIC
 TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} BEFORE PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 TARGET_INCLUDE_DIRECTORIES(${TARGET_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 ADD_DEPENDENCIES(${TARGET_NAME} build_version_files)
+###############################################################################
