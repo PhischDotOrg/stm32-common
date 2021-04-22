@@ -3,9 +3,9 @@
 -*/
 
 #include "usb/Device.hpp"
-
 #include "usb/InEndpoint.hpp"
 #include "usb/OutEndpoint.hpp"
+#include <usb/UsbTypes.hpp>
 
 /*****************************************************************************/
 namespace stm32 {
@@ -14,6 +14,63 @@ namespace stm32 {
 /*****************************************************************************/
 
 alignas(8) struct EndpointBufferDescriptor_s Device::m_bufferDescriptorTable[m_maxEndpoints];
+
+void
+Device::enterPwrDown(void) const {
+    this->m_usbCore.CNTR |= USB_CNTR_PDWN;
+}
+
+void
+Device::exitPwrDown(void) const {
+    this->m_usbCore.CNTR &= ~USB_CNTR_PDWN;
+}
+
+void
+Device::enterLowPowerMode(void) const {
+    this->m_usbCore.CNTR |= USB_CNTR_LP_MODE;
+}
+
+void
+Device::exitLowPowerMode(void) const {
+    this->m_usbCore.CNTR &= ~USB_CNTR_LP_MODE;
+}
+
+void
+Device::forceReset(void) const {
+    this->m_usbCore.CNTR |= USB_CNTR_FRES;
+}
+
+void
+Device::clearReset(void) const {
+    this->m_usbCore.CNTR &= ~USB_CNTR_FRES;
+}
+
+void
+Device::start(void) const {
+    exitLowPowerMode();
+    exitPwrDown();
+
+    delay();
+
+    clearInterrupt(Interrupt_e::e_All);
+
+    enableInterrupts();
+
+    clearReset();
+
+    enableFunction();
+}
+
+void
+Device::stop(void) const {
+    disableFunction();
+
+    disableInterrupts();
+
+    forceReset();
+    enterPwrDown();
+    enterLowPowerMode();
+}
 
 void
 Device::reset(void) const {
@@ -27,11 +84,12 @@ Device::reset(void) const {
 
     setAddress(0);
 
+    /* HACK Loop assumes m_maxInEndpoints == m_maxOutEndpoints */
     for (unsigned idx = 0; idx < this->m_maxInEndpoints; idx++) {
         InEndpoint *inEp = m_inEndpoints[idx];
         OutEndpoint *outEp = m_outEndpoints[idx];
 
-        /* TODO Setup Endpoints
+        /* Setup Endpoints
          * USB_EPRX_STAT    = USB_EP_RX_NAK (0b10)
          * USB_EP_T_FIELD   = Endpoint Type (Bulk, Ctrl, Iso, Irq)
          * USB_EPADDR_FIELD = Endpoint Address (as in USB Descriptor)
@@ -46,74 +104,151 @@ Device::reset(void) const {
             outEp->reset();
         }
     }
- 
-    m_usbPeripheral.setBufferTable(this->m_bufferDescriptorTable);
 
-    assert(m_ctrlOutEndpoint != nullptr);
-    if (m_ctrlOutEndpoint != nullptr) {
-        m_ctrlOutEndpoint->enableSetupPackets();
-    }
+    setBufferTable(this->m_bufferDescriptorTable);
+}
 
-#if 0
-    USB_PRINTF("Device::%s(): m_bufferDescriptorTable=%p\r\n", __func__, m_bufferDescriptorTable);
-    for (unsigned idx = 0; idx < 8; idx++) {
-        USB_PRINTF("\tm_bufferDescriptorTable[%i] m_rxAddr=0x%x m_rxCount=0x%x m_txAddr=0x%x m_txCount=0x%x\r\n", idx,
-          m_bufferDescriptorTable[idx].m_rxAddr,
-          m_bufferDescriptorTable[idx].m_rxCount,
-          m_bufferDescriptorTable[idx].m_txAddr,
-          m_bufferDescriptorTable[idx].m_txCount
-        );
+void
+Device::clearInterrupt(Interrupt_t p_irq) const {
+    this->m_usbCore.ISTR = static_cast<uint16_t>(Interrupt_t::e_All) ^ static_cast<uint16_t>(p_irq);
+}
+
+void
+Device::enableInterrupts(void) const {
+    for (auto irq : Device::m_irq_handler) {
+        enableInterrupt(irq.m_irq);
     }
-    USB_PRINTF("\r\n");
-#endif
+}
+
+void
+Device::enableInterrupt(Interrupt_t p_irq) const {
+    this->m_usbCore.CNTR |= static_cast<uint16_t>(p_irq);
+}
+
+void
+Device::disableInterrupt(Interrupt_t p_irq) const {
+    this->m_usbCore.CNTR |= ~(static_cast<uint16_t>(p_irq));
+}
+
+/* Recursively calculate IRQ mask at compile time */
+constexpr uint16_t
+Device::getIrqMask(uint16_t p_mask, irq_handler_table_t::const_iterator p_cur, irq_handler_table_t::const_iterator p_end) {
+    return (p_cur != p_end) ? getIrqMask(p_mask | static_cast<uint16_t>(p_cur->m_irq), p_cur + 1, p_end) : p_mask;
+}
+
+void
+Device::handleIrq(void) const {
+    static constexpr uint16_t irq_mask = getIrqMask(0, m_irq_handler.begin(), m_irq_handler.end());
+    static_assert(irq_mask == (USB_CNTR_ERRM | USB_CNTR_RESETM | USB_CNTR_CTRM | USB_CNTR_PMAOVRM)); // Ensure getIrqMask() is actually calculated at compile time
+
+    const uint16_t irqStatus = m_usbCore.ISTR;
+
+    uint16_t handledIrq = 0;
+
+    if (irqStatus & irq_mask) {
+        for (auto cur : Device::m_irq_handler) {
+            if (irqStatus & static_cast<uint16_t>(cur.m_irq)) {
+                (this->*(cur.m_fn))(irqStatus); // Call member function via pointer
+
+                handledIrq |= static_cast<uint16_t>(cur.m_irq);
+            }
+        }
+
+        m_usbCore.ISTR &= ~handledIrq;
+    }
+}
+
+void
+Device::handleResetIrq(const uint16_t /* p_istr */) const {
+    clearReset();
+
+    this->reset();
+}
+
+void
+Device::handleCorrectTransferIrq(const uint16_t p_istr) const {
+    unsigned direction = (p_istr & USB_ISTR_DIR_Msk) >> USB_ISTR_DIR_Pos;
+    unsigned endpointNo = (p_istr & USB_ISTR_EP_ID_Msk) >> USB_ISTR_EP_ID_Pos;
+
+    this->handleEndpointIrq(endpointNo, direction);
+}
+
+void
+Device::handleErrorIrq(const uint16_t /* p_istr */) const {
+    assert(false);
+}
+
+void
+Device::handlePacketMemOverrunIrq(const uint16_t /* p_istr */) const {
+    assert(false);
 }
 
 void
 Device::handleEndpointIrq(unsigned p_endpointNo, unsigned p_direction) const {
-    USB_PRINTF("--> Device::%s(p_endpointNo=%d, p_direction=%d)\r\n", __func__, p_endpointNo, p_direction);
-
     assert(p_endpointNo < this->m_maxEndpoints);
     assert(p_endpointNo < this->m_maxInEndpoints);
     assert(p_endpointNo < this->m_maxOutEndpoints);
 
     const InEndpoint * const inEndp = m_inEndpoints[p_endpointNo];
     const OutEndpoint * const outEndp = m_outEndpoints[p_endpointNo];
-    CtrlOutEndpoint * const ctrlOutEndp = m_ctrlOutEndpoint;
+    const CtrlOutEndpoint * const ctrlOutEndp = static_cast<const CtrlOutEndpoint *>(m_outEndpoints[p_endpointNo]);
+
+    const unsigned irqStatus = getHwEndpt(p_endpointNo).EPxR;
 
     if (inEndp != nullptr) {
-        inEndp->handleIrq();
+        inEndp->handleIrq(irqStatus);
     }
 
     if (p_direction != 0) {
         if (p_endpointNo == 0) {
             assert(ctrlOutEndp != nullptr);
-            ctrlOutEndp->handleIrq();
-        } else {
+            ctrlOutEndp->handleIrq(irqStatus);
+        } else if (outEndp != nullptr) {
             assert(outEndp != nullptr);
-            outEndp->handleIrq();
+            outEndp->handleIrq(irqStatus);
         }
     }
-
-    USB_PRINTF("<-- Device::%s()\r\n", __func__);
 }
 
+void
+Device::setAddress(uint8_t p_address, const bool p_statusStageComplete /* =  true */) const {
+    assert(this->m_inEndpoints[0] != nullptr);
+    PHISCH_SETPIN(4, p_address != 0);
+
+    /*
+     * The USB Standard demands the Device Address to be set after completion of the
+     * Status Stage.
+     * Unfortunately, the STM32F4 doesn't adhere to this. So the Generic USB Code
+     * calls the UsbHwDevice::setAddress() method twice -- once during the Setup Stage
+     * and once after the Status Stage.
+     *
+     * The HW Device Address must only be set after the Status Stage is complete for
+     * STM32F1.
+     */
+    if (p_statusStageComplete) {
+        static constexpr uint16_t mask = 0b0011'1111;
+        this->m_usbCore.DADDR = (USB_DADDR_EF | (p_address & mask));
+    }
+}
 
 void
-Device::setAddress(const uint8_t p_address) const {
-    /*
-     * If the address is != 0, then this method is called from the SetAddress Device 
-     * Control Request handler.
-     * 
-     * The USB Standard requires the request to be ACK'd before setting the address in
-     * Hardware. Doing it the other way around prevents the device from working (the
-     * device enumeration will already fail).
-     */
-    assert(this->m_inEndpoints[0] != nullptr);
-    if (p_address != 0) {
-        this->m_inEndpoints[0]->write(nullptr, 0);
-    }
+Device::setBufferTable(const void * const p_bufferTable) const {
+    const uint16_t btablePeriphAddr = mapHostToPeripheral(p_bufferTable);
 
-    m_usbPeripheral.setAddress(p_address);
+    assert((reinterpret_cast<uintptr_t>(p_bufferTable) & 0b111) == 0);
+    assert((btablePeriphAddr & 0b111) == 0);
+
+    this->m_usbCore.BTABLE = btablePeriphAddr;
+}
+
+void
+Device::enableFunction(void) const {
+    this->m_usbCore.DADDR |= USB_DADDR_EF;
+}
+
+void
+Device::disableFunction(void) const {
+    this->m_usbCore.DADDR &= ~USB_DADDR_EF;
 }
 
 /*****************************************************************************/

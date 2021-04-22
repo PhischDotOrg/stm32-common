@@ -87,7 +87,6 @@ namespace stm32 {
                 }; /* struct Uart */
 
                 struct Usb {
-                    using OtgFsCore         = decltype(nullptr);
                     using Device            = ::stm32::usb::UsbDeviceViaSTM32F4;
 
                     using CtrlInEndpoint    = ::stm32::usb::CtrlInEndpointViaSTM32F4;
@@ -96,7 +95,7 @@ namespace stm32 {
                     using BulkInEndpoint    = ::stm32::usb::BulkInEndpointViaSTM32F4;
                     using BulkOutEndpoint   = ::stm32::usb::BulkOutEndpointViaSTM32F4;
 
-                    using IrqInEndpoint     = decltype(nullptr);
+                    using IrqInEndpoint     = ::stm32::usb::IrqInEndpointViaSTM32F4;
                 };                
             }; /* struct Cpu */
         } /* namespace f407 */
@@ -159,7 +158,6 @@ namespace stm32 {
                 }; /* struct Uart */
 
                 struct Usb {
-                    using OtgFsCore         = decltype(nullptr);
                     using Device            = ::stm32::usb::UsbDeviceViaSTM32F4;
 
                     using CtrlInEndpoint    = ::stm32::usb::CtrlInEndpointViaSTM32F4;
@@ -168,7 +166,7 @@ namespace stm32 {
                     using BulkInEndpoint    = ::stm32::usb::BulkInEndpointViaSTM32F4;
                     using BulkOutEndpoint   = ::stm32::usb::BulkOutEndpointViaSTM32F4;
 
-                    using IrqInEndpoint     = decltype(nullptr);
+                    using IrqInEndpoint     = ::stm32::usb::IrqInEndpointViaSTM32F4;
                 };
             }; /* struct Cpu */
         } /* namespace f407 */
@@ -234,7 +232,6 @@ namespace stm32 {
                 }; /* struct Uart */
 
                 struct Usb {
-                    using OtgFsCore         = decltype(nullptr);
                     using Device            = ::stm32::usb::UsbDeviceViaSTM32F4;
 
                     using CtrlInEndpoint    = ::stm32::usb::CtrlInEndpointViaSTM32F4;
@@ -243,7 +240,7 @@ namespace stm32 {
                     using BulkInEndpoint    = ::stm32::usb::BulkInEndpointViaSTM32F4;
                     using BulkOutEndpoint   = ::stm32::usb::BulkOutEndpointViaSTM32F4;
 
-                    using IrqInEndpoint     = decltype(nullptr);
+                    using IrqInEndpoint     = ::stm32::usb::IrqInEndpointViaSTM32F4;
                 };
             }; /* struct Cpu */
         } /* namespace f411 */

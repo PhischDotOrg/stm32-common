@@ -22,10 +22,10 @@ class Itm {
      *
      *  Cortex M3: https://developer.arm.com/documentation/ddi0337/e/system-debug/itm/summary-and-description-of-the-itm-registers
      *  Cortex M4: https://developer.arm.com/documentation/ddi0439/b/Instrumentation-Trace-Macrocell-Unit/ITM-programmers-model?lang=en
-     * 
+     *
      * Some of the Bits are implementation defined and are documented in the CPU Reference Manual by STMicroelectronics.
      * See Section 23.14 ITM (instrumentation trace macrocell).
-     * 
+     *
      */
     ITM_Type &      m_itm;
 
@@ -172,7 +172,7 @@ class ItmPort {
     const unsigned  m_port;
 
 public:
-    constexpr ItmPort(const Itm &p_itm, unsigned p_port)
+    ItmPort(const Itm &p_itm, unsigned p_port)
       : m_itm(p_itm), m_port(p_port) {
         p_itm.enableStimulusPort(m_port);
     }

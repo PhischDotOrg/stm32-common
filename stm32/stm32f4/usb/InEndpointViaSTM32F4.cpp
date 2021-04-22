@@ -9,13 +9,14 @@
 #include <usb/UsbDeviceViaSTM32F4.hpp>
 #include <usb/UsbTypes.hpp>
 
+#include <phisch/log.h>
+
 #include <stddef.h>
 #include <cassert>
 
 #include <unistd.h>
 
 #include <algorithm>
-
 
 /******************************************************************************/
 namespace stm32 {
@@ -33,11 +34,6 @@ InEndpointViaSTM32F4::InEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, con
     m_fifoAddr(reinterpret_cast<uint32_t *>(p_usbDevice.getBaseAddr() + USB_OTG_FIFO_BASE + (p_endpointNumber * USB_OTG_FIFO_SIZE)))
 {
     this->m_usbDevice.registerInEndpoint(this->getEndpointNumber(), *this);
-
-    this->reset();
-
-    this->m_usbDevice.setupTxFifo(*this);
-    this->setupTxFifoNumber(p_endpointNumber);
 }
 
 /*******************************************************************************
@@ -45,14 +41,6 @@ InEndpointViaSTM32F4::InEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, con
  ******************************************************************************/
 InEndpointViaSTM32F4::~InEndpointViaSTM32F4() {
     this->m_usbDevice.unregisterInEndpoint(this->getEndpointNumber());
-}
-
-/*******************************************************************************
- *
- ******************************************************************************/
-void
-InEndpointViaSTM32F4::reset() const {
-    this->m_endpoint->DIEPCTL = 0;
 }
 
 /*******************************************************************************
@@ -103,26 +91,6 @@ InEndpointViaSTM32F4::getPacketSize(void) const {
 }
 
 /***************************************************************************//**
- * @brief Write Data to IN Endpoint and trigger transmission to Host.
- *
- * This method allows a user to trigger data transmission to the Host. The method
- * will block if not enough space is available in the Tx FIFO.
- *
- * @param p_data Pointer to data buffer that is to be transmitted. Can be \c NULL
- *   in which case an empty packet is transmitted.
- * @param p_length Length of transmission. Can be zero in which case an empty
- *   packet is transmitted. The data buffer pointed to \p p_data must be large
- *   enough and valid.
- ******************************************************************************/
-void
-InEndpointViaSTM32F4::write(const uint8_t * const p_data, const size_t p_length) {
-    USB_PRINTF("InEndpointViaSTM32F4::%s(m_endpointNumber=%d, p_data=%p, p_length=%d)\r\n", __func__, m_endpointNumber, p_data, p_length);
-
-    this->startTx(p_length);
-    this->txData(p_data, p_length);
-}
-
-/***************************************************************************//**
  * @brief Start Transmission of Data.
  *
  * Start Transmission of the requested Data Transmission.
@@ -136,9 +104,8 @@ InEndpointViaSTM32F4::write(const uint8_t * const p_data, const size_t p_length)
  * - Fill the Tx FIFO with the Data requested for Transmission via ::usb::stm32f4::InEndpointViaSTM32F4::fillTxFifo
  ******************************************************************************/
 void
-InEndpointViaSTM32F4::startTx(size_t p_numBytes) {
-    /* FIXME Deadlock potential here. What if the Hardware never clears the EPENA Bit? */
-    while (this->m_endpoint->DIEPCTL & USB_OTG_DIEPCTL_EPENA_Msk);
+InEndpointViaSTM32F4::ack(size_t p_numBytes) const {
+    USB_PRINTF("InEndpointViaSTM32F4::%s(m_endpointNumber=%d) p_numBytes=%d\r\n", __func__, m_endpointNumber, p_numBytes);
 
     /* Setup Transfer Buffer (Number of Packets, Number of Bytes) */
     unsigned numBytes = p_numBytes;
@@ -153,7 +120,9 @@ InEndpointViaSTM32F4::startTx(size_t p_numBytes) {
      *
      * The XFRSIZ field initially contains the transfer size in bytes. The USB Hardware decrements
      * this field every time a packet from the external memory is written to the TxFIFO.
+     * 
      */
+    /* TODO Is this correct for transfers > 1 Packet? */
     this->m_endpoint->DIEPTSIZ = ((numPackets << USB_OTG_DIEPTSIZ_PKTCNT_Pos) & USB_OTG_DIEPTSIZ_PKTCNT_Msk)
             | ((numBytes << USB_OTG_DIEPTSIZ_XFRSIZ_Pos) & USB_OTG_DIEPTSIZ_XFRSIZ_Msk);
 
@@ -177,26 +146,10 @@ InEndpointViaSTM32F4::startTx(size_t p_numBytes) {
      * triggering the Transmission will either need to block until all Tx Data has been
      * pushed into the Tx FIFO or drop data if the Tx FIFO is not large enough.
      */
-    this->m_endpoint->DIEPCTL |= (USB_OTG_DIEPCTL_CNAK | USB_OTG_DIEPCTL_EPENA /* | USB_OTG_DIEPCTL_SD0PID_SEVNFRM */);
-}
+   this->m_endpoint->DIEPCTL |= (/* USB_OTG_DIEPCTL_CNAK | */ USB_OTG_DIEPCTL_EPENA);
 
-/***************************************************************************//**
- * \brief Table of IN Endpoint Interrupt Handlers.
- *
- * Table of interrupt handlers. Is handled in order from first to last, i.e.
- * functions listed earlier are handled before the functions listed later.
- *
- ******************************************************************************/
-const
-typename InEndpointViaSTM32F4::irq_handler_t InEndpointViaSTM32F4::m_irq_handler[] = {
-    { USB_OTG_DIEPINT_XFRC,     &InEndpointViaSTM32F4::handleTransferComplete },
-    // { USB_OTG_DIEPINT_TXFE,     &InEndpointViaSTM32F4::handleTxFifoEmpty },
-    // { USB_OTG_DIEPINT_ITTXFE,   &InEndpointViaSTM32F4::handleInTokenWhenTxFifoEmpty },
-    // { USB_OTG_DIEPINT_INEPNE,   &InEndpointViaSTM32F4::handleNakEffective },
-    // { USB_OTG_DIEPINT_TOC,      &InEndpointViaSTM32F4::handleTimeoutCondition },
-    { USB_OTG_DIEPINT_EPDISD,   &InEndpointViaSTM32F4::handleEndpointDisabled },
-    { 0, NULL }
-};
+    this->enableFifoIrq();
+}
 
 /***************************************************************************//**
  * \brief IN Endpoint specific IRQ Handler.
@@ -205,59 +158,27 @@ typename InEndpointViaSTM32F4::irq_handler_t InEndpointViaSTM32F4::m_irq_handler
  *
  ******************************************************************************/
 void
-InEndpointViaSTM32F4::handleIrq(void) {
+InEndpointViaSTM32F4::handleIrq(void) const {
     const uint32_t  irq = this->m_endpoint->DIEPINT;
     uint32_t        handledIrq = 0;
 
     USB_PRINTF("--> InEndpointViaSTM32F4::%s(m_endpointNumber=%d) DIEPINT=0x%x\r\n", __func__, this->m_endpointNumber, irq);
 
-    for (const typename InEndpointViaSTM32F4::irq_handler_t *cur = InEndpointViaSTM32F4::m_irq_handler; cur->m_irq != 0; cur++) {
-        if (irq & cur->m_irq) {
-            (this->*(cur->m_fn))(); // Call member function via pointer
-            handledIrq |= cur->m_irq;
+    for (auto cur : InEndpointViaSTM32F4::m_irq_handler) {
+        if (irq & static_cast<uint32_t>(cur.m_irq)) {
+            (this->*(cur.m_fn))(); // Call member function via pointer
+            handledIrq |= static_cast<uint32_t>(cur.m_irq);
         }
     }
 
     /*
-     * Clear all IRQs, even the ones not pending. Otherwise we risk an IRQ storm when no
-     * IRQ handler function is set up.
+     * Interrupt Flags are cleared by writing 0b1. The Tx FIFO Empty IRQ cannot
+     * be cleared by the application. Writing to that bit will have strange effects,
+     * e.g. that the Transfer Complete IRQ is not triggering.
      */
-    this->m_endpoint->DIEPINT |= irq;
+    this->m_endpoint->DIEPINT = (handledIrq & ~USB_OTG_DIEPINT_TXFE);
 
     USB_PRINTF("<-- InEndpointViaSTM32F4::%s(m_endpointNumber=%d) DIEPINT=0x%x\r\n", __func__, this->m_endpointNumber, handledIrq);
-}
-
-/***************************************************************************//**
- * @brief Copy Raw Data Buffer to Tx FIFO.
- *
- * This method will block if there is not enough space in the Tx FIFO to receive
- * the data.
- ******************************************************************************/
-void
-InEndpointViaSTM32F4::txData(const uint8_t *p_data, const size_t p_length) {
-    uint32_t freeWordsInFifo = this->m_endpoint->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV_Msk;
-    USB_PRINTF("InEndpointViaSTM32F4::%s(m_endpointNumber=%d, p_length=%d) freeWordsInFifo=%d\r\n", __func__, this->m_endpointNumber, p_length, freeWordsInFifo);
-
-    if ((freeWordsInFifo * sizeof(uint32_t)) < p_length) {
-        return;
-    }
-
-    unsigned offset = 0;
-
-    while (offset < p_length) {
-        /*
-         * In case offset + 4 would exceed the m_len of m_data, then copy the remaining
-         * data into a temporary buffer byte-wise and fill the Tx FIFO from the temporary
-         * buffer.
-         *
-         * This is to avoid reading from invalid addresses when filling the Tx FIFO.
-         */
-        /* FIXME Potentially, this reads from an invalid address beyond p_data. */
-        const uint32_t * const data = reinterpret_cast<const uint32_t *>(p_data + offset);
-        *this->m_fifoAddr = *data;
-
-        offset += sizeof(uint32_t);
-    }
 }
 
 /*******************************************************************************
@@ -267,7 +188,7 @@ void
 InEndpointViaSTM32F4::handleTxFifoEmpty(void) const {
     USB_PRINTF("InEndpointViaSTM32F4::%s(m_endpointNumber=%d)\r\n", __func__, this->m_endpointNumber);
 
-    assert((this->m_endpoint->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV) != 0);
+    fillFifo();
 }
 
 /*******************************************************************************
@@ -278,6 +199,8 @@ InEndpointViaSTM32F4::handleTransferComplete(void) const {
     USB_PRINTF("InEndpointViaSTM32F4::%s(m_endpointNumber=%d)\r\n", __func__, this->m_endpointNumber);
 
     this->disableFifoIrq();
+
+    this->m_endpointCallback->handlePacketTransmitted();
 }
 
 /*******************************************************************************
@@ -296,7 +219,34 @@ InEndpointViaSTM32F4::handleNakEffective(void) const {
 void
 InEndpointViaSTM32F4::handleInTokenWhenTxFifoEmpty(void) const {
     USB_PRINTF("InEndpointViaSTM32F4::%s(m_endpointNumber=%d)\r\n", __func__, this->m_endpointNumber);
-    // assert(false);
+
+    fillFifo();
+}
+
+void
+InEndpointViaSTM32F4::fillFifo(void) const {
+    const uint16_t wordsAvailableInFifo = this->m_endpoint->DTXFSTS & USB_OTG_DTXFSTS_INEPTFSAV;
+
+    static unsigned cnt = 0;
+
+    if (wordsAvailableInFifo > 0) {
+        const auto bufferBegin = this->m_fifoAddr;
+        const auto bufferEnd = this->m_fifoAddr + wordsAvailableInFifo;
+
+        assert(this->m_endpointCallback != nullptr);
+        size_t txLength = m_endpointCallback->handlePacketRead<sizeof(*this->m_fifoAddr), stm32::copy_to_fifo::PushToBegin>(bufferBegin, bufferEnd);
+        assert(txLength <= (this->m_fifoSzInWords * wordsAvailableInFifo));
+        assert(txLength <= (this->m_fifoSzInWords * sizeof(*this->m_fifoAddr)));
+        (void) txLength;
+
+        USB_PRINTF("InEndpointViaSTM32F4::%s(m_endpointNumber=%d) txLength=%d\r\n", __func__, this->m_endpointNumber, txLength);
+
+        cnt = txLength ? 0 : cnt + 1;
+
+        assert(cnt < 10);
+
+        this->m_endpoint->DIEPCTL = (USB_OTG_DIEPCTL_CNAK /* | USB_OTG_DIEPCTL_EPENA */);
+    }
 }
 
 /*******************************************************************************
@@ -362,7 +312,7 @@ InEndpointViaSTM32F4::enableIrq(void) const {
  *
  ******************************************************************************/
 void
-InEndpointViaSTM32F4::enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const {
+InEndpointViaSTM32F4::initialize(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpointType) const {
     uint16_t packetSize;
 
 #if defined(USB_DEBUG)
@@ -382,14 +332,18 @@ InEndpointViaSTM32F4::enable(const UsbDeviceViaSTM32F4::EndpointType_e &p_endpoi
     this->setPacketSize(packetSize);
 
     /* This may be redundant here, should have been done by USB Device after USB Reset. */
+    this->m_usbDevice.setupTxFifo(*this);
     this->setupTxFifoNumber(this->m_endpointNumber);
-
     this->setupEndpointType(p_endpointType);
 
-    /* Make Endpoint active */
-    this->m_endpoint->DIEPCTL |= (USB_OTG_DIEPCTL_USBAEP | USB_OTG_DIEPCTL_NAKSTS);
+    this->nack();
 
     this->disableFifoIrq();
+
+    for (auto irq : m_irq_handler) {
+        this->m_usbDevice.enableEndpointCommonIrq(static_cast<UsbDeviceViaSTM32F4::InEndpointIrq_e>(irq.m_irq));
+    }
+
     this->enableIrq();
 }
 
@@ -403,8 +357,10 @@ InEndpointViaSTM32F4::setupEndpointType(const UsbDeviceViaSTM32F4::EndpointType_
       || (p_endpointType == UsbDeviceViaSTM32F4::EndpointType_e::e_Bulk)
       || (p_endpointType == UsbDeviceViaSTM32F4::EndpointType_e::e_Interrupt));
 
-    this->m_endpoint->DIEPCTL &= ~(USB_OTG_DIEPCTL_EPTYP_Msk);
-    this->m_endpoint->DIEPCTL |= (p_endpointType << USB_OTG_DIEPCTL_EPTYP_Pos) & USB_OTG_DIEPCTL_EPTYP_Msk;
+    if (m_endpointNumber != 0) {
+        this->m_endpoint->DIEPCTL &= ~(USB_OTG_DIEPCTL_EPTYP_Msk);
+        this->m_endpoint->DIEPCTL |= (p_endpointType << USB_OTG_DIEPCTL_EPTYP_Pos) & USB_OTG_DIEPCTL_EPTYP_Msk;
+    }
 }
 
 /*******************************************************************************
@@ -415,6 +371,16 @@ InEndpointViaSTM32F4::disable(void) const {
     this->m_endpoint->DIEPCTL |= USB_OTG_DIEPCTL_NAKSTS;
 
     this->disableIrq();
+}
+
+void
+InEndpointViaSTM32F4::stall() const {
+    this->m_endpoint->DIEPCTL |= USB_OTG_DIEPCTL_STALL;
+}
+
+void
+InEndpointViaSTM32F4::nack() const {
+    m_endpoint->DIEPCTL |= USB_OTG_DIEPCTL_SNAK;
 }
 
 /******************************************************************************/

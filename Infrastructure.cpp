@@ -25,6 +25,8 @@ void __assert_func (const char *p_file, int p_line, const char *p_func, const ch
     (void) p_msg;
 #endif
 
+    PHISCH_SETPIN(5, true);
+
     PHISCH_LOG("%s() @ %s : %d \r\n%s\r\n", p_func, p_file, p_line, p_msg);
 
 #if !defined(HOSTBUILD)

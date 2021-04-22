@@ -41,40 +41,62 @@ TEST_F(InEndpointViaSTM32F4Test, CreateAndDelete) {
 TEST_F(InEndpointViaSTM32F4Test, getNumPackets3) {
     static const unsigned packetSz = 3;
 
+    EXPECT_EQ(1, getNumPackets(/* p_txLength */ 0, packetSz));
+
     EXPECT_EQ(1, getNumPackets(/* p_txLength */ 1, packetSz));
     EXPECT_EQ(1, getNumPackets(/* p_txLength */ 2, packetSz));
-    EXPECT_EQ(2, getNumPackets(/* p_txLength */ 3, packetSz));
+    EXPECT_EQ(1, getNumPackets(/* p_txLength */ 3, packetSz));
     EXPECT_EQ(2, getNumPackets(/* p_txLength */ 4, packetSz));
+
     EXPECT_EQ(2, getNumPackets(/* p_txLength */ 5, packetSz));
-    EXPECT_EQ(3, getNumPackets(/* p_txLength */ 6, packetSz));
+    EXPECT_EQ(2, getNumPackets(/* p_txLength */ 6, packetSz));
     EXPECT_EQ(3, getNumPackets(/* p_txLength */ 7, packetSz));
+
+    EXPECT_EQ(3, getNumPackets(/* p_txLength */ 8, packetSz));
+    EXPECT_EQ(3, getNumPackets(/* p_txLength */ 9, packetSz));
+    EXPECT_EQ(4, getNumPackets(/* p_txLength */ 10, packetSz));
 }
 
 TEST_F(InEndpointViaSTM32F4Test, getNumPackets8) {
     static const unsigned packetSz = 8;
 
+    EXPECT_EQ(1, getNumPackets(/* p_txLength */ 0, packetSz));
+
     EXPECT_EQ(1, getNumPackets(/* p_txLength */ 1, packetSz));
     EXPECT_EQ(1, getNumPackets(/* p_txLength */ 7, packetSz));
-    EXPECT_EQ(2, getNumPackets(/* p_txLength */ 8, packetSz));
+    EXPECT_EQ(1, getNumPackets(/* p_txLength */ 8, packetSz));
     EXPECT_EQ(2, getNumPackets(/* p_txLength */ 9, packetSz));
+
     EXPECT_EQ(2, getNumPackets(/* p_txLength */ 15, packetSz));
-    EXPECT_EQ(3, getNumPackets(/* p_txLength */ 16, packetSz));
+    EXPECT_EQ(2, getNumPackets(/* p_txLength */ 16, packetSz));
     EXPECT_EQ(3, getNumPackets(/* p_txLength */ 17, packetSz));
+
+    EXPECT_EQ(3, getNumPackets(/* p_txLength */ 23, packetSz));
+    EXPECT_EQ(3, getNumPackets(/* p_txLength */ 24, packetSz));
+    EXPECT_EQ(4, getNumPackets(/* p_txLength */ 25, packetSz));
 }
 
 TEST_F(InEndpointViaSTM32F4Test, getNumPackets64) {
     static const unsigned packetSz = 64;
 
+    EXPECT_EQ(1, getNumPackets(/* p_txLength */ 0, packetSz));
+
     EXPECT_EQ(1, getNumPackets(/* p_txLength */ 1, packetSz));
-    EXPECT_EQ(1, getNumPackets(/* p_txLength */ 1, packetSz));
+    EXPECT_EQ(1, getNumPackets(/* p_txLength */ 31, packetSz));
     EXPECT_EQ(1, getNumPackets(/* p_txLength */ 32, packetSz));
     EXPECT_EQ(1, getNumPackets(/* p_txLength */ 33, packetSz));
+
     EXPECT_EQ(1, getNumPackets(/* p_txLength */ 63, packetSz));
-    EXPECT_EQ(2, getNumPackets(/* p_txLength */ 64, packetSz));
+    EXPECT_EQ(1, getNumPackets(/* p_txLength */ 64, packetSz));
     EXPECT_EQ(2, getNumPackets(/* p_txLength */ 65, packetSz));
+
     EXPECT_EQ(2, getNumPackets(/* p_txLength */ 127, packetSz));
-    EXPECT_EQ(3, getNumPackets(/* p_txLength */ 128, packetSz));
+    EXPECT_EQ(2, getNumPackets(/* p_txLength */ 128, packetSz));
     EXPECT_EQ(3, getNumPackets(/* p_txLength */ 129, packetSz));
+
+    EXPECT_EQ(3, getNumPackets(/* p_txLength */ 191, packetSz));
+    EXPECT_EQ(3, getNumPackets(/* p_txLength */ 192, packetSz));
+    EXPECT_EQ(4, getNumPackets(/* p_txLength */ 193, packetSz));
 }
 
 /******************************************************************************/

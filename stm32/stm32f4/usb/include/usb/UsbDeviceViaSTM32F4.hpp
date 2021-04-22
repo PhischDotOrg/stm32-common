@@ -70,6 +70,19 @@ public:
         e_Interrupt     = 3
     } EndpointType_t;
 
+    typedef enum class InEndpointIrq_e : uint32_t {
+        e_None                      = 0,
+        e_TransferComplete          = USB_OTG_DIEPMSK_XFRCM,
+        e_EndpointDisabled          = USB_OTG_DIEPMSK_EPDM,
+        e_TimeoutCondition          = USB_OTG_DIEPMSK_TOM,
+        e_InTokenWhenTxFifoEmpty    = USB_OTG_DIEPMSK_ITTXFEMSK,
+        e_InTokenWithEndptMismatch  = USB_OTG_DIEPMSK_INEPNMM,
+        e_InEndpointNakEffective    = USB_OTG_DIEPMSK_INEPNEM,
+        e_TxFifoEmpty               = USB_OTG_DIEPMSK_TXFURM,
+        e_NakInput                  = (1 << 13),
+        e_All                       = 0b1000000111111
+    } InEndpointIrq_t;
+
 private:
     /*******************************************************************************
      * Private Variables
@@ -178,6 +191,9 @@ public:
     void enableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
     void disableEndpointIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
 
+    void enableEndpointCommonIrq(const InEndpointIrq_t &p_endpoint) const;
+    void disableEndpointCommonIrq(const InEndpointIrq_t &p_endpoint) const;
+
     void enableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
     void disableEndpointFifoIrq(const InEndpointViaSTM32F4 &p_endpoint) const;
 
@@ -234,10 +250,10 @@ public:
         return m_usbCore.getBaseAddr();
     };
 
-    void start(void) const;
-    void stop(void) const;
+    void start(void) const override;
+    void stop(void) const override;
 
-    void setAddress(const uint8_t p_address) const override;
+    void setAddress(const uint8_t p_address, const bool p_statusStageComplete = false) const override;
 
 private:
     void setupDeviceSpeed(const DeviceSpeed_e p_speed) const;

@@ -13,29 +13,15 @@ namespace stm32 {
 
 void
 Endpoint::reset(void) const {
-    disable();  
     clrCtrRx();
+    setRxStatus(EndpointStatus_t::e_Disabled);
+    setDataToggleRx(DataToggleRx_e::e_Data0);
+
     clrCtrTx();
+    setTxStatus(EndpointStatus_t::e_Disabled);
+    setDataToggleTx(DataToggleTx_e::e_Data0);
 
     setAddress(this->m_endpointNumber);
-}
-
-void
-Endpoint::rxEnable(void) const {
-    setTxStatus(TxStatus_t::e_Nak);
-    this->setRxStatus(RxStatus_t::e_Valid);
-}
-
-void
-Endpoint::txEnable(void) const {
-    setRxStatus(RxStatus_t::e_Nak);
-    this->setTxStatus(TxStatus_t::e_Valid);
-}
-
-void
-Endpoint::disable(void) const {
-    setRxStatus(RxStatus_t::e_Disabled);
-    setTxStatus(TxStatus_t::e_Disabled);
 }
 
 void
@@ -44,13 +30,18 @@ Endpoint::setEndpointType(EndpointType_t p_endpointType) const {
 }
 
 void
-Endpoint::setRxStatus(RxStatus_t p_rxStatus) const {
-    this->setEPnR(USB_EPRX_STAT_Msk, static_cast<uint16_t>(p_rxStatus) << USB_EPRX_STAT_Pos);
+Endpoint::setRxStatus(EndpointStatus_t p_rxStatus) const {
+    this->setEPnR((USB_EPRX_STAT_Msk | USB_EP_KIND_Msk), static_cast<uint16_t>(p_rxStatus) << USB_EPRX_STAT_Pos);
 }
 
 void
-Endpoint::setTxStatus(TxStatus_t p_txStatus) const {
+Endpoint::setTxStatus(EndpointStatus_t p_txStatus) const {
     this->setEPnR(USB_EPTX_STAT_Msk, static_cast<uint16_t>(p_txStatus) << USB_EPTX_STAT_Pos);
+}
+
+bool
+Endpoint::getCtrTx(void) const {
+    return (m_hwEndpt.EPxR & USB_EP_CTR_TX_Msk) >> USB_EP_CTR_TX_Pos;
 }
 
 void
@@ -75,6 +66,16 @@ Endpoint::clearInterrupt(Interrupt_t p_irq) const {
         irq = static_cast<uint16_t>(Interrupt_e::e_CorrectTransferRx);
     }
     this->setEPnR(irq, 0);
+}
+
+void
+Endpoint::setDataToggleRx(DataToggleRx_e p_dataToggle) const {
+    setEPnR(USB_EP_DTOG_RX_Msk, static_cast<uint16_t>(p_dataToggle) << USB_EP_DTOG_RX_Pos);
+}
+
+void
+Endpoint::setDataToggleTx(DataToggleTx_e p_dataToggle) const {
+    setEPnR(USB_EP_DTOG_TX_Msk, static_cast<uint16_t>(p_dataToggle) << USB_EP_DTOG_TX_Pos);
 }
 
 /*****************************************************************************/
@@ -131,7 +132,7 @@ Endpoint::setEPnR(uint16_t mask, uint16_t data, uint16_t old) const {
     uint16_t wr2 = rw & ((old & ~mask) | data);
 
     // Kombiniere alle drei Schreibmethoden.
-    *(this->m_register) = static_cast<uint16_t> (wr0 | wr1 | wr2);
+    m_hwEndpt.EPxR = static_cast<uint16_t> (wr0 | wr1 | wr2);
 }
 
 /**
@@ -140,7 +141,7 @@ Endpoint::setEPnR(uint16_t mask, uint16_t data, uint16_t old) const {
  */
 void
 Endpoint::setEPnR(uint16_t mask, uint16_t data) const {
-    setEPnR(mask, data, *(this->m_register));
+    setEPnR(mask, data, m_hwEndpt.EPxR);
 }
 
 /*****************************************************************************/

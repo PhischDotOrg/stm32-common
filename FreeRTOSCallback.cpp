@@ -15,7 +15,7 @@ extern "C" {
 #else
     void taskDISABLE_INTERRUPTS(void);
 
-    typedef unsigned xTaskHandle;
+    typedef unsigned TaskHandle_t;
 #endif /* defined(HOSTBUILD) */
 
 void
@@ -25,9 +25,9 @@ vAssertCalled(const char * /* p_file */, unsigned int /* p_line */) {
 };
 
 void
-vApplicationStackOverflowHook(xTaskHandle pxTask, signed char *pcTaskName) {
+vApplicationStackOverflowHook(TaskHandle_t xTask, char * pcTaskName) {
     (void) pcTaskName;
-    (void) pxTask;
+    (void) xTask;
 
     PHISCH_LOG("STACK OVERFLOW in Task '%s'\r\n", pcTaskName);
     

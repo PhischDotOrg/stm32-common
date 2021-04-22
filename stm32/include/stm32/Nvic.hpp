@@ -78,7 +78,7 @@ public:
     template<typename EngineT>
     void
     disableIrq(const EngineT & /* p_engine */) const {
-        this->disableIrq(IrqTypeT<EngineT>::m_irq);
+        ::stm32::NvicBase::disableIrq(IrqTypeT<EngineT>::m_irq);
     }
 };
 /*****************************************************************************/

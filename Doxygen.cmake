@@ -2,7 +2,7 @@
 #
 ###############################################################################
 execute_process(COMMAND git describe --always --dirty=+
-   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
+   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
    TIMEOUT 5
    RESULT_VARIABLE   GIT_RESULT
    OUTPUT_VARIABLE   GIT_OUTPUT
@@ -21,11 +21,7 @@ endif()
 #
 ###############################################################################
 set(DOYGEN_OUTPUT_DIRECTORY         ${CMAKE_CURRENT_BINARY_DIR}/doxygen)
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../CMakeLists.txt)
-    set(DOYGEN_TOPLEVEL_DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR}/..)
-else()
-    set(DOYGEN_TOPLEVEL_DIRECTORY   ${CMAKE_CURRENT_SOURCE_DIR})
-endif()
+set(DOYGEN_TOPLEVEL_DIRECTORY       ${PROJECT_SOURCE_DIR})
 
 set(DOXYGEN_EXECUTABLE doxygen)
 set(DOXYGEN_SEARCH_PATH

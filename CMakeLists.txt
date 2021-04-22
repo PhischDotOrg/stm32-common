@@ -51,6 +51,8 @@ if(NOT("${STM32_BOARD}" STREQUAL ""))
 
         add_definitions(-D${STM32_CPU_FAMILY})
         add_definitions(-D${STM32_CPU_TYPE})
+        add_definitions(-DSTM32_BOARD="${STM32_BOARD}")
+        add_definitions(-DSTM32_CPU_TYPE="${STM32_CPU_TYPE}")
 
         # Copy the CPU-/Board-specific SVD File to a common place so it can be referenced
         # with a generic launch configuration Visual Studio Code.
