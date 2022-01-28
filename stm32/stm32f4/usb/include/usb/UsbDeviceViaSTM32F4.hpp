@@ -234,8 +234,8 @@ public:
         return m_usbCore.getBaseAddr();
     };
 
-    void start(void) const;
-    void stop(void) const;
+    void start(void) const override;
+    void stop(void) const override;
 
     void setAddress(const uint8_t p_address) const override;
 
