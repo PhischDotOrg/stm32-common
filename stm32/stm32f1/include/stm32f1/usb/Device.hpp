@@ -66,7 +66,13 @@ class Device : public ::usb::UsbHwDevice {
     InEndpoint *        m_inEndpoints[m_maxInEndpoints] {};
     OutEndpoint *       m_outEndpoints[m_maxOutEndpoints] {};
     CtrlOutEndpoint *   m_ctrlOutEndpoint {};
-    alignas(8) static struct EndpointBufferDescriptor_s m_bufferDescriptorTable[m_maxEndpoints] __attribute__((section(".usbbuf")));
+
+    #if !defined(HOSTBUILD)
+        #define SECTION_USBBUF __attribute__((section(".usbbuf")));
+    #else
+        #define SECTION_USBBUF
+    #endif /* defined(HOSTBUILD) */
+    alignas(8) static struct EndpointBufferDescriptor_s m_bufferDescriptorTable[m_maxEndpoints] SECTION_USBBUF;
 
     typedef enum class Interrupt_e : uint16_t {
         e_None              = 0,
