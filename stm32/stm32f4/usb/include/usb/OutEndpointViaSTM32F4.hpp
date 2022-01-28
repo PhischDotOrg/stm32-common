@@ -427,7 +427,7 @@ private:
      * \see #transferComplete
      * \see #handleSetupDoneIrq
      */
-    ::usb::UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &    m_endpointCallout;
+    ::usb::UsbCtrlOutEndpoint & m_endpointCallout;
 
     /***************************************************************************//**
      * @name Interrupt Handlers.
@@ -464,9 +464,8 @@ public:
      * 
      * @see m_endpointCallout
      */
-    CtrlOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, ::usb::UsbCtrlOutEndpointT<CtrlOutEndpointViaSTM32F4> &p_endpointCallout)
+    CtrlOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, ::usb::UsbCtrlOutEndpoint &p_endpointCallout)
       : OutEndpointViaSTM34F4Callback(p_usbDevice, 0), m_setupPacketBuffer {}, m_endpointCallout(p_endpointCallout) {
-          p_endpointCallout.registerHwEndpoint(*this);
           this->m_outEndpoint.registerEndpointCallback(*this);
           this->m_outEndpoint.m_usbDevice.registerCtrlEndpoint(*this);
     };
@@ -481,7 +480,6 @@ public:
     ~CtrlOutEndpointViaSTM32F4() {
         this->m_outEndpoint.m_usbDevice.unregisterCtrlEndpoint();
         this->m_outEndpoint.unregisterEndpointCallback();
-        this->m_endpointCallout.unregisterHwEndpoint();
     }
 ///@}
 
@@ -522,20 +520,6 @@ public:
         this->setDataBuffer(p_buffer, p_length);
     }
 ///@}
-
-private:
-    /***************************************************************************//**
-     * @name Interface to OutEndpointViaSTM34F4Callback.
-     * 
-     * These methods implement an interface to the OutEndpointViaSTM34F4Callback parent class.
-     * 
-     * \see OutEndpointViaSTM34F4Callback::transferComplete
-     ******************************************************************************/
-///@{
-    void transferComplete(const size_t p_numBytes) const override {
-        m_endpointCallout.transferComplete(p_numBytes);
-    }
-///@}
 };
 
 /***************************************************************************//**
@@ -549,20 +533,7 @@ private:
     /**
      * @brief Callback to USB-generic Bulk OUT Endpoint implementation.
      */
-    ::usb::UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> & m_endpointCallout;
-
-    /***************************************************************************//**
-     * @name Interface to OutEndpointViaSTM34F4Callback.
-     * 
-     * These methods implement an interface to the OutEndpointViaSTM34F4Callback parent class.
-     * 
-     * \see OutEndpointViaSTM34F4Callback::transferComplete
-     ******************************************************************************/
-///@{
-    void transferComplete(const size_t p_numBytes) const override {
-        m_endpointCallout.transferComplete(p_numBytes);
-    }
-///@}
+    ::usb::UsbBulkOutEndpoint & m_endpointCallout;
 
 public:
     /***************************************************************************//**
@@ -588,9 +559,8 @@ public:
      * 
      * @see m_endpointCallout
      */
-    BulkOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, ::usb::UsbBulkOutEndpointT<BulkOutEndpointViaSTM32F4> &p_endpointCallout, const unsigned p_endpointNumber)
+    BulkOutEndpointViaSTM32F4(UsbDeviceViaSTM32F4 &p_usbDevice, ::usb::UsbBulkOutEndpoint &p_endpointCallout, const unsigned p_endpointNumber)
       : OutEndpointViaSTM34F4Callback(p_usbDevice, p_endpointNumber), m_endpointCallout(p_endpointCallout) {
-        m_endpointCallout.registerHwEndpoint(*this);
         m_outEndpoint.registerEndpointCallback(*this);
     };
 
@@ -602,7 +572,6 @@ public:
      */
     ~BulkOutEndpointViaSTM32F4() {
         m_outEndpoint.unregisterEndpointCallback();
-        m_endpointCallout.unregisterHwEndpoint();
     }
 ///@}
 

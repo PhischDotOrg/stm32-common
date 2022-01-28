@@ -382,7 +382,7 @@ void
 CtrlOutEndpointViaSTM32F4::handleSetupDoneIrq(void) const {
     USB_PRINTF("CtrlOutEndpointViaSTM32F4::%s()\r\n", __func__);
 
-    this->m_endpointCallout.setupComplete(this->m_setupPacketBuffer);
+    // FIXME Used to be: this->m_endpointCallout.setupComplete(this->m_setupPacketBuffer);
 
     /*
      * The USB Core clears the Enable Bit in the OTG_FS_DIEPCTL after the Setup
